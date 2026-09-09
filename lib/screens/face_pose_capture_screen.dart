@@ -112,14 +112,14 @@ class _FacePoseCaptureScreenState extends ConsumerState<FacePoseCaptureScreen> {
                     _buildPoseContainer(
                       context: context,
                       title: "Left Profile",
-                      subtitle: "Turn your face to the left",
+                      subtitle: "Turn your face to the right",
                       image: state.leftPoseImage,
                       onTap: () => _handlePoseTap(context, 'left'),
                     ),
                     _buildPoseContainer(
                       context: context,
                       title: "Right Profile",
-                      subtitle: "Turn your face to the right",
+                      subtitle: "Turn your face to the left",
                       image: state.rightPoseImage,
                       onTap: () => _handlePoseTap(context, 'right'),
                     ),

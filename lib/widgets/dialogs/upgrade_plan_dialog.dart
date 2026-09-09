@@ -42,7 +42,7 @@ void showUpgradePlanDialog(BuildContext context) {
               ),
               SizedBox(height: context.h(24)),
               Text(
-                "Upgrade Plan",
+                "Limit Reached!",
                 textAlign: TextAlign.center,
                 style: CustomFonts.black20w600,
               ),
