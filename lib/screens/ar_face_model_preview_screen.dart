@@ -35,6 +35,7 @@ import '../widgets/medical_disclaimer_banner.dart';
 import '../widgets/message_cycler.dart';
 import '../widgets/selected_treatments_summary_card.dart';
 import '../widgets/service_type_button.dart';
+import 'bottom_nav_screens/face_detection_screen.dart';
 import 'consent_forms/ai_transparency_policy_screen.dart';
 import 'treatment_journey_detail_screen.dart';
 import 'treatment_journey_screen.dart';
@@ -740,15 +741,64 @@ class _ArFaceModelPreviewScreenState
                 },
               ),
             ),
+
             _buildAfterLabel(),
             _buildBeforeLabel(),
+            _buildEditButton(),
             //  _buildDownloadButton(),
           ],
         ),
       ),
     );
   }
+Widget _buildEditButton() {
+    return Positioned(
+      bottom: context.h(12),
+      right: context.w(12),
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.9),
+        shape: const CircleBorder(),
+        child: IconButton(
+          tooltip: 'Edit',
+          icon: Icon(
+            Icons.edit_outlined,
+            color: Colors.black,
+            size: context.sp(20),
+          ),
+          onPressed: () async {
+            final stateBefore = ref.read(treatmentViewModel);
 
+            final oldImagePath = switch (_selectedPose) {
+              'left' => stateBefore.leftPoseImage?.path,
+              'right' => stateBefore.rightPoseImage?.path,
+              _ => stateBefore.frontPoseImage?.path,
+            };
+
+            await Navigator.pushNamed(
+              context,
+              FaceDetectionScreen.routeName,
+              arguments: _selectedPose,
+            );
+
+            if (!mounted) return;
+
+            final stateAfter = ref.read(treatmentViewModel);
+
+            final newImagePath = switch (_selectedPose) {
+              'left' => stateAfter.leftPoseImage?.path,
+              'right' => stateAfter.rightPoseImage?.path,
+              _ => stateAfter.frontPoseImage?.path,
+            };
+
+            if (newImagePath != null && newImagePath != oldImagePath) {
+              ref.read(treatmentViewModel.notifier).clearAiImage();
+            }
+          },
+        ),
+      ),
+    );
+  }
+ 
   Widget _buildPoseSelector() {
     return Consumer(
       builder: (context, ref, _) {
