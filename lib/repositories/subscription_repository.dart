@@ -6,11 +6,11 @@ import '../utils/enums.dart';
 abstract class SubscriptionRepository {
   Future<PatientPlansResponse> getPatientCurrentPlan();
   Future<SubscriptionResponse> upgradePlan({
-    required int planId,
-    int? durationId,
+    required String planId,
+    String? durationId,
   });
   Future<BaseResponseModel> recordUsage({
     required UsageType usageType,
-    required int subscriptionId,
+    required String subscriptionId,
   });
 }

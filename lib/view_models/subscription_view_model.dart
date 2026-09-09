@@ -57,7 +57,7 @@ class SubscriptionViewModel extends BaseViewModel<SubscriptionState> {
     }
   }
 
-  Future<bool> upgradePlan(int planId, {int? durationId}) async {
+  Future<bool> upgradePlan(String planId, {String? durationId}) async {
     EasyLoading.show(status: 'Upgrading...');
     try {
       final response = await _repository.upgradePlan(
@@ -98,7 +98,7 @@ class SubscriptionViewModel extends BaseViewModel<SubscriptionState> {
 
   Future<bool> recordUsage({
     required UsageType usageType,
-    required int subscriptionId,
+    required String subscriptionId,
   }) async {
     EasyLoading.show(status: 'Updating usage...');
     final result = await runSafely(() async {

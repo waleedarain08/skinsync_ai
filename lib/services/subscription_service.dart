@@ -23,8 +23,8 @@ class SubscriptionService implements SubscriptionRepository {
 
   @override
   Future<SubscriptionResponse> upgradePlan({
-    required int planId,
-    int? durationId,
+    required String planId,
+    String? durationId,
   }) async {
     final Map<String, dynamic> body = {"plan_id": planId};
     if (durationId != null) {
@@ -42,7 +42,7 @@ class SubscriptionService implements SubscriptionRepository {
   @override
   Future<BaseResponseModel> recordUsage({
     required UsageType usageType,
-    required int subscriptionId,
+    required String subscriptionId,
   }) async {
     final Map<String, dynamic> body = {
       "usage_type": usageType.value,

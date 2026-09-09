@@ -26,7 +26,7 @@ class SubscriptionPlansScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionPlansScreenState
     extends ConsumerState<SubscriptionPlansScreen> {
-  int? selectedPlanId;
+  String? selectedPlanId;
 
   @override
   Widget build(BuildContext context) {
@@ -193,11 +193,11 @@ class _SubscriptionPlansScreenState
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          option.name ?? 'N/A',
+                          option.interval?.label ?? 'N/A',
                           style: CustomFonts.black16w600,
                         ),
                         Text(
-                          "\$${option.price}",
+                          "\$${option.amount?.toStringAsFixed(2) ?? 0}",
                           style: CustomFonts.black16w600.copyWith(
                             color: CustomColors.purpleColor,
                           ),
@@ -430,7 +430,7 @@ class _SubscriptionPlansScreenState
           : "\$${plan.basePrice}";
     }
     return plan.durationOptions!
-        .map((opt) => "\$${opt.price}/${opt.name}")
+        .map((opt) => "\$${opt.amount}/${opt.interval?.label}")
         .join("\n"); // Using newline for better fit in comparison column
   }
 

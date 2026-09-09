@@ -207,7 +207,7 @@ class SubscriptionPlanCard extends StatelessWidget {
           : "\$${plan.basePrice}";
     }
     return plan.durationOptions!
-        .map((opt) => "\$${opt.price}/${opt.name}")
+        .map((opt) => "\$${opt.amount}/${opt.interval?.label ?? ''}")
         .join(" | ");
   }
 

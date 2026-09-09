@@ -1,3 +1,5 @@
+import 'string_utils.dart';
+
 enum SharedPreferencesKeys {
   themeModeKey("theme-mode"),
   biometricAuthKey("biometric-auth"),
@@ -89,9 +91,9 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-  apiQa('https://api-dev.skinsyncai.com/api/');
+  // apiQa('https://api-dev.skinsyncai.com/api/');
 
- // apiQa('http://10.0.2.2:8084/api/');
+ apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);
@@ -205,5 +207,15 @@ enum EventType {
       (e) => e.value.toLowerCase() == val,
       orElse: () => EventType.chat,
     );
+  }
+}
+
+enum PlanInterval {
+  week,
+  month,
+  year;
+
+  String get label {
+    return name.capitalize;
   }
 }

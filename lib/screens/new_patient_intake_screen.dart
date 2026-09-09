@@ -209,62 +209,68 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: const Text("New Patient Intake Form"),
+        title: const Text(
+          "New Patient Intake Form",
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        foregroundColor: Colors.black,
         elevation: 0.5,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-          child: Column(
-            children: [
-              _buildPatientInfoCard(),
-              const SizedBox(height: 12),
-              _buildEmergencyContactCard(),
-              const SizedBox(height: 12),
-              _buildHowDidYouHearCard(),
-              const SizedBox(height: 12),
-              _buildHipaaCard(),
-              const SizedBox(height: 12),
-              _buildPhysiciansInfoCard(),
-              const SizedBox(height: 12),
-              _buildSocialHistoryCard(),
-              const SizedBox(height: 12),
-              _buildSurgicalHistoryCard(),
-              const SizedBox(height: 12),
-              _buildMedicalHistoryCard(),
-              const SizedBox(height: 12),
-              _buildFamilyHistoryCard(),
-              const SizedBox(height: 12),
-              _buildMedicationsCard(),
-              const SizedBox(height: 12),
-              _buildFemalePatientsCard(),
-              const SizedBox(height: 12),
-              _buildFinalSignatureCard(),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F766E),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      body: DefaultTextStyle.merge(
+        style: const TextStyle(color: Colors.black),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+            child: Column(
+              children: [
+                _buildPatientInfoCard(),
+                const SizedBox(height: 12),
+                _buildEmergencyContactCard(),
+                const SizedBox(height: 12),
+                _buildHowDidYouHearCard(),
+                const SizedBox(height: 12),
+                _buildHipaaCard(),
+                const SizedBox(height: 12),
+                _buildPhysiciansInfoCard(),
+                const SizedBox(height: 12),
+                _buildSocialHistoryCard(),
+                const SizedBox(height: 12),
+                _buildSurgicalHistoryCard(),
+                const SizedBox(height: 12),
+                _buildMedicalHistoryCard(),
+                const SizedBox(height: 12),
+                _buildFamilyHistoryCard(),
+                const SizedBox(height: 12),
+                _buildMedicationsCard(),
+                const SizedBox(height: 12),
+                _buildFemalePatientsCard(),
+                const SizedBox(height: 12),
+                _buildFinalSignatureCard(),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F766E),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Intake Form Submitted Successfully!")),
+                        );
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text("Submit Intake Form", style: TextStyle(fontSize: 16, color: Colors.white)),
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Intake Form Submitted Successfully!")),
-                      );
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text("Submit Intake Form", style: TextStyle(fontSize: 16)),
                 ),
-              ),
-              const SizedBox(height: 30),
-            ],
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),
@@ -282,7 +288,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
         children: [
           Row(
             children: [
-              const Text("Title: ", style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text("Title: ", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
               Wrap(
                 spacing: 4,
                 children: ['Dr', 'Mr', 'Mrs', 'Ms'].map((t) {
@@ -294,7 +300,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                         groupValue: _selectedTitle,
                         onChanged: (val) => setState(() => _selectedTitle = val),
                       ),
-                      Text(t),
+                      Text(t, style: const TextStyle(color: Colors.black)),
                     ],
                   );
                 }).toList(),
@@ -328,7 +334,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
             children: [
               Expanded(child: _buildTextField(_dobController, "Date of Birth (MM/DD/YYYY)")),
               const SizedBox(width: 12),
-              const Text("Gender: ", style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text("Gender: ", style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black)),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: ['M', 'F'].map((g) {
@@ -339,7 +345,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                         groupValue: _gender,
                         onChanged: (val) => setState(() => _gender = val),
                       ),
-                      Text(g),
+                      Text(g, style: const TextStyle(color: Colors.black)),
                     ],
                   );
                 }).toList(),
@@ -365,7 +371,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           const SizedBox(height: 8),
           _buildTextField(_emailController, "Email Address"),
           const SizedBox(height: 10),
-          const Text("Preferred method of contact:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("Preferred method of contact:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           Wrap(
             spacing: 10,
             children: _contactMethods.keys.map((method) {
@@ -376,7 +382,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                     value: _contactMethods[method],
                     onChanged: (v) => setState(() => _contactMethods[method] = v ?? false),
                   ),
-                  Text(method, style: const TextStyle(fontSize: 12.5)),
+                  Text(method, style: const TextStyle(fontSize: 12.5, color: Colors.black)),
                 ],
               );
             }).toList(),
@@ -419,7 +425,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Text("Preferred method of contact:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("Preferred method of contact:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           Wrap(
             spacing: 10,
             children: _emergContactMethods.keys.map((method) {
@@ -430,7 +436,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                     value: _emergContactMethods[method],
                     onChanged: (v) => setState(() => _emergContactMethods[method] = v ?? false),
                   ),
-                  Text(method, style: const TextStyle(fontSize: 12.5)),
+                  Text(method, style: const TextStyle(fontSize: 12.5, color: Colors.black)),
                 ],
               );
             }).toList(),
@@ -462,7 +468,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                     value: _hearAboutUs[ch],
                     onChanged: (v) => setState(() => _hearAboutUs[ch] = v ?? false),
                   ),
-                  Text(ch, style: const TextStyle(fontSize: 12.5)),
+                  Text(ch, style: const TextStyle(fontSize: 12.5, color: Colors.black)),
                 ],
               );
             }).toList(),
@@ -484,7 +490,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           Expanded(
             child: _hearAboutUs[key] == true
                 ? _buildTextField(controller, label)
-                : Text(label, style: const TextStyle(fontSize: 12.5)),
+                : Text(label, style: const TextStyle(fontSize: 12.5, color: Colors.black)),
           ),
         ],
       ),
@@ -504,7 +510,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
             "HIPAA is an acronym for the Health Insurance Portability & Accountability Act of 1996. "
             "It is our policy to not release confidential information except appointment confirmation. "
             "I authorize the doctor's office to leave medical information pertaining to my care by the following methods:",
-            style: TextStyle(fontSize: 12, height: 1.4, color: Colors.black87),
+            style: TextStyle(fontSize: 12, height: 1.4, color: Colors.black),
           ),
           const SizedBox(height: 12),
           _buildYesNoRadioRow("Home telephone", _hipaaHomePhone, (v) => setState(() => _hipaaHomePhone = v)),
@@ -512,7 +518,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           _buildYesNoRadioRow("Cell phone / voice mail", _hipaaCellPhone, (v) => setState(() => _hipaaCellPhone = v)),
           _buildYesNoRadioRow("May we fax medical records for referrals?", _hipaaFaxRecords, (v) => setState(() => _hipaaFaxRecords = v)),
           const SizedBox(height: 12),
-          const Text("Signature of Patient or Guardian:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("Signature of Patient or Guardian:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           const SizedBox(height: 4),
           _buildSignatureBox(_hipaaSignatureController),
         ],
@@ -585,7 +591,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           const SizedBox(height: 10),
           _buildYesNoRadioRow("Vapor Device:", _useVaporDevice, (v) => setState(() => _useVaporDevice = v)),
           const SizedBox(height: 10),
-          const Text("Alcohol Use:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("Alcohol Use:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           Wrap(
             spacing: 8,
             children: ['NONE', 'RARE', 'OCCASIONALLY', 'FREQUENT'].map((val) {
@@ -597,14 +603,14 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                     groupValue: _alcoholUse,
                     onChanged: (v) => setState(() => _alcoholUse = v),
                   ),
-                  Text(val, style: const TextStyle(fontSize: 12)),
+                  Text(val, style: const TextStyle(fontSize: 12, color: Colors.black)),
                 ],
               );
             }).toList(),
           ),
           _buildYesNoRadioRow("History of Alcohol Abuse:", _historyAlcoholAbuse, (v) => setState(() => _historyAlcoholAbuse = v)),
           const SizedBox(height: 10),
-          const Text("Recreational Drug Use:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("Recreational Drug Use:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           Wrap(
             spacing: 12,
             children: _recreationalDrugs.keys.map((d) {
@@ -615,7 +621,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                     value: _recreationalDrugs[d],
                     onChanged: (v) => setState(() => _recreationalDrugs[d] = v ?? false),
                   ),
-                  Text(d, style: const TextStyle(fontSize: 12)),
+                  Text(d, style: const TextStyle(fontSize: 12, color: Colors.black)),
                 ],
               );
             }).toList(),
@@ -703,7 +709,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
               children: [
                 SizedBox(
                   width: 140,
-                  child: Text(entry.key, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500)),
+                  child: Text(entry.key, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: Colors.black)),
                 ),
                 Expanded(child: _buildTextField(entry.value, "Relative (e.g. Mother, Father)")),
               ],
@@ -729,13 +735,13 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                 value: _medsSeeList,
                 onChanged: (v) => setState(() => _medsSeeList = v ?? false),
               ),
-              const Text("See List (Please list dosage/schedule)", style: TextStyle(fontSize: 12)),
+              const Text("See List (Please list dosage/schedule)", style: TextStyle(fontSize: 12, color: Colors.black)),
               const Spacer(),
               Checkbox(
                 value: _medsNone,
                 onChanged: (v) => setState(() => _medsNone = v ?? false),
               ),
-              const Text("None", style: TextStyle(fontSize: 12)),
+              const Text("None", style: TextStyle(fontSize: 12, color: Colors.black)),
             ],
           ),
           if (!_medsNone) ...[
@@ -749,7 +755,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
               ),
           ],
           const SizedBox(height: 12),
-          const Text("NON-PRESCRIPTION DRUGS:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("NON-PRESCRIPTION DRUGS:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           Wrap(
             spacing: 12,
             children: [
@@ -771,7 +777,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
             ],
           ),
           const Divider(height: 20),
-          const Text("ALLERGIES TO MEDICATIONS:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("ALLERGIES TO MEDICATIONS:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           Wrap(
             spacing: 12,
             children: _allergies.keys.map((all) {
@@ -782,7 +788,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
                     value: _allergies[all],
                     onChanged: (v) => setState(() => _allergies[all] = v ?? false),
                   ),
-                  Text(all, style: const TextStyle(fontSize: 12)),
+                  Text(all, style: const TextStyle(fontSize: 12, color: Colors.black)),
                 ],
               );
             }).toList(),
@@ -840,19 +846,19 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Text("When was your last mammogram? ", style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500)),
+              const Text("When was your last mammogram? ", style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w500, color: Colors.black)),
               Radio<String>(
                 value: "1 year",
                 groupValue: _femaleMammogram,
                 onChanged: (v) => setState(() => _femaleMammogram = v),
               ),
-              const Text("1 year", style: TextStyle(fontSize: 12)),
+              const Text("1 year", style: TextStyle(fontSize: 12, color: Colors.black)),
               Radio<String>(
                 value: "> 1 year",
                 groupValue: _femaleMammogram,
                 onChanged: (v) => setState(() => _femaleMammogram = v),
               ),
-              const Text("> 1 year", style: TextStyle(fontSize: 12)),
+              const Text("> 1 year", style: TextStyle(fontSize: 12, color: Colors.black)),
             ],
           ),
         ],
@@ -869,7 +875,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Patient / Parent's Guardian Signature:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+          const Text("Patient / Parent's Guardian Signature:", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.black)),
           const SizedBox(height: 4),
           _buildSignatureBox(_finalSignatureController),
           const SizedBox(height: 12),
@@ -877,7 +883,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           const SizedBox(height: 6),
           Text(
             "Date: ${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}",
-            style: const TextStyle(fontSize: 12, color: Colors.black54),
+            style: const TextStyle(fontSize: 12, color: Colors.black),
           ),
         ],
       ),
@@ -904,7 +910,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 13.5,
-              color: Color(0xFF0F172A),
+              color: Colors.black,
               letterSpacing: 0.3,
             ),
           ),
@@ -918,10 +924,11 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
   Widget _buildTextField(TextEditingController controller, String label) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(fontSize: 12.5),
+      style: const TextStyle(fontSize: 12.5, color: Colors.black),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 12, color: Colors.black54),
+        labelStyle: const TextStyle(fontSize: 12, color: Colors.black),
+        hintStyle: const TextStyle(color: Colors.black54),
         filled: true,
         fillColor: const Color(0xFFF8FAFC),
         isDense: true,
@@ -940,15 +947,15 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Text(label, style: const TextStyle(fontSize: 12)),
+            child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.black)),
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Radio<bool>(value: true, groupValue: value, onChanged: onChanged),
-              const Text("YES", style: TextStyle(fontSize: 11)),
+              const Text("YES", style: TextStyle(fontSize: 11, color: Colors.black)),
               Radio<bool>(value: false, groupValue: value, onChanged: onChanged),
-              const Text("NO", style: TextStyle(fontSize: 11)),
+              const Text("NO", style: TextStyle(fontSize: 11, color: Colors.black)),
             ],
           ),
         ],
@@ -960,11 +967,11 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500)),
+        Text(label, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: Colors.black)),
         Radio<bool>(value: true, groupValue: value, onChanged: onChanged),
-        const Text("Y", style: TextStyle(fontSize: 11)),
+        const Text("Y", style: TextStyle(fontSize: 11, color: Colors.black)),
         Radio<bool>(value: false, groupValue: value, onChanged: onChanged),
-        const Text("N", style: TextStyle(fontSize: 11)),
+        const Text("N", style: TextStyle(fontSize: 11, color: Colors.black)),
       ],
     );
   }
@@ -995,7 +1002,7 @@ class _NewPatientIntakeScreenState extends State<NewPatientIntakeScreen> {
           children: [
             TextButton(
               onPressed: () => controller.currentState?.clear(),
-              child: const Text("Clear Signature", style: TextStyle(fontSize: 12)),
+              child: const Text("Clear Signature", style: TextStyle(fontSize: 12, color: Colors.black)),
             ),
           ],
         )
