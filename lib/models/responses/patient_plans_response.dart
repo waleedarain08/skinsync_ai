@@ -76,90 +76,27 @@ class CurrentPlan {
     this.benefits,
   });
 
-  factory CurrentPlan.fromJson(Map<String, dynamic> json) {
-    final Map<String, dynamic> sub = json["subscription"] ?? {};
-    final Map<String, dynamic> plan = json["plan"] ?? {};
-
-    return CurrentPlan(
-      id: sub["id"] ?? plan["id"] ?? json["id"],
-      userId: sub["user_id"] ?? plan["user_id"] ?? json["user_id"],
-      planId: sub["plan_id"] ?? plan["plan_id"] ?? json["plan_id"],
-      name: sub["name"] ?? plan["name"] ?? json["name"],
-      simulationCount:
-          sub["simulation_count"] ??
-          plan["simulation_count"] ??
-          json["simulation_count"],
-      unlimitedSimulation:
-          sub["unlimited_simulation"] ??
-          plan["unlimited_simulation"] ??
-          json["unlimited_simulation"],
-      postsViewCount:
-          sub["posts_view_count"] ??
-          plan["posts_view_count"] ??
-          json["posts_view_count"],
-      unlimitedPostsView:
-          sub["unlimited_posts_view"] ??
-          plan["unlimited_posts_view"] ??
-          json["unlimited_posts_view"],
-      usedSimulationCount:
-          sub["used_simulation_count"] ??
-          plan["used_simulation_count"] ??
-          json["used_simulation_count"],
-      usedPostCount:
-          sub["used_post_count"] ??
-          plan["used_post_count"] ??
-          json["used_post_count"],
-      isActive: sub["is_active"] ?? plan["is_active"] ?? json["is_active"],
-      isDefault: sub["is_default"] ?? plan["is_default"] ?? json["is_default"],
-      isLifetime:
-          sub["is_lifetime"] ?? plan["is_lifetime"] ?? json["is_lifetime"],
-      startDate: (sub["start_date"] ?? plan["start_date"] ?? json["start_date"]) ==
-              null
-          ? null
-          : DateTime.parse(
-            sub["start_date"] ?? plan["start_date"] ?? json["start_date"],
-          ),
-      endDate: (sub["end_date"] ?? plan["end_date"] ?? json["end_date"]) == null
-          ? null
-          : DateTime.parse(
-            sub["end_date"] ?? plan["end_date"] ?? json["end_date"],
-          ),
-      durationId: sub["duration_id"] ?? plan["duration_id"] ?? json["duration_id"],
-      durationName:
-          sub["duration_name"] ?? plan["duration_name"] ?? json["duration_name"],
-      price: (sub["price"] ?? plan["price"] ?? json["price"])?.toDouble(),
-      benefits:
-          json["benefits"] == null
-              ? []
-              : List<Benefit>.from(
-                json["benefits"]!.map((x) => Benefit.fromJson(x)),
-              ),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "user_id": userId,
-    "plan_id": planId,
-    "name": name,
-    "simulation_count": simulationCount,
-    "unlimited_simulation": unlimitedSimulation,
-    "posts_view_count": postsViewCount,
-    "unlimited_posts_view": unlimitedPostsView,
-    "used_simulation_count": usedSimulationCount,
-    "used_post_count": usedPostCount,
-    "is_active": isActive,
-    "is_default": isDefault,
-    "is_lifetime": isLifetime,
-    "start_date": startDate?.toIso8601String(),
-    "end_date": endDate?.toIso8601String(),
-    "duration_id": durationId,
-    "duration_name": durationName,
-    "price": price,
-    "benefits": benefits == null
-        ? []
-        : List<dynamic>.from(benefits!.map((x) => x.toJson())),
-  };
+  factory CurrentPlan.fromJson(Map<String, dynamic> json) => CurrentPlan(
+    id: json["id"],
+    userId: json["user_id"],
+    planId: json["plan_id"],
+    name: json["name"],
+    simulationCount: json["simulation_count"],
+    unlimitedSimulation: json["unlimited_simulation"],
+    postsViewCount: json["posts_view_count"],
+    unlimitedPostsView: json["unlimited_posts_view"],
+    usedSimulationCount: json["used_simulation_count"],
+    usedPostCount: json["used_post_count"],
+    isActive: json["is_active"],
+    isDefault: json["is_default"],
+    isLifetime: json["is_lifetime"],
+    startDate: json["start_date"] == null ? null : DateTime.parse(json["start_date"]),
+    endDate: json["end_date"] == null ? null : DateTime.parse(json["end_date"]),
+    durationId: json["duration_id"],
+    durationName: json["duration_name"],
+    price: json["price"]?.toDouble(),
+    benefits: json["benefits"] == null ? [] : List<Benefit>.from(json["benefits"]!.map((x) => Benefit.fromJson(x))),
+  );
 }
 
 class Benefit {
