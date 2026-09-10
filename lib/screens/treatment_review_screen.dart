@@ -11,6 +11,7 @@ import '../models/responses/get_clinic_response.dart';
 import '../models/responses/simulation_history_response.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
+import '../utils/date_time_utils.dart';
 import '../view_models/auth_view_model.dart';
 import '../view_models/treatment_journey_view_model.dart';
 import '../widgets/custom_app_bar.dart';
@@ -36,8 +37,7 @@ class TreatmentReviewScreen extends ConsumerStatefulWidget {
       _TreatmentReviewScreenState();
 }
 
-class _TreatmentReviewScreenState
-    extends ConsumerState<TreatmentReviewScreen> {
+class _TreatmentReviewScreenState extends ConsumerState<TreatmentReviewScreen> {
   bool _shareMedicalHistory = false;
 
   @override
@@ -127,10 +127,7 @@ class _TreatmentReviewScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Share Medical History",
-                    style: CustomFonts.black14w600,
-                  ),
+                  Text("Share Medical History", style: CustomFonts.black14w600),
                   SizedBox(height: context.h(2)),
                   Text(
                     "Allow the clinic to view your allergy & medical history.",
@@ -188,10 +185,7 @@ class _TreatmentReviewScreenState
                       style: CustomFonts.black18w600,
                     ),
                     SizedBox(height: context.h(2)),
-                    Text(
-                      "Clinic Details",
-                      style: CustomFonts.grey12w400,
-                    ),
+                    Text("Clinic Details", style: CustomFonts.grey12w400),
                   ],
                 ),
               ),
@@ -276,15 +270,9 @@ class _TreatmentReviewScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      name,
-                      style: CustomFonts.black18w600,
-                    ),
+                    Text(name, style: CustomFonts.black18w600),
                     SizedBox(height: context.h(2)),
-                    Text(
-                      "Patient Details",
-                      style: CustomFonts.grey12w400,
-                    ),
+                    Text("Patient Details", style: CustomFonts.grey12w400),
                   ],
                 ),
               ),
@@ -295,18 +283,10 @@ class _TreatmentReviewScreenState
             const Divider(height: 1),
             SizedBox(height: context.h(16)),
             if (phone.isNotEmpty)
-              _buildDetailRow(
-                context,
-                Icons.phone_outlined,
-                phone,
-              ),
+              _buildDetailRow(context, Icons.phone_outlined, phone),
             if (email.isNotEmpty) ...[
               if (phone.isNotEmpty) SizedBox(height: context.h(8)),
-              _buildDetailRow(
-                context,
-                Icons.email_outlined,
-                email,
-              ),
+              _buildDetailRow(context, Icons.email_outlined, email),
             ],
           ],
         ],
@@ -332,18 +312,9 @@ class _TreatmentReviewScreenState
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: CustomColors.purpleColor,
-        ),
+        Icon(icon, size: 18, color: CustomColors.purpleColor),
         SizedBox(width: context.w(12)),
-        Expanded(
-          child: Text(
-            text,
-            style: CustomFonts.grey14w400,
-          ),
-        ),
+        Expanded(child: Text(text, style: CustomFonts.grey14w400)),
       ],
     );
   }
@@ -390,13 +361,9 @@ class _TreatmentReviewScreenState
         SizedBox(height: context.h(8)),
         Row(
           children: [
-            Expanded(
-              child: _buildSingleImage(context, "Before", before),
-            ),
+            Expanded(child: _buildSingleImage(context, "Before", before)),
             SizedBox(width: context.w(12)),
-            Expanded(
-              child: _buildSingleImage(context, "After", after),
-            ),
+            Expanded(child: _buildSingleImage(context, "After", after)),
           ],
         ),
       ],
@@ -421,13 +388,10 @@ class _TreatmentReviewScreenState
             child: CachedNetworkImage(
               imageUrl: url ?? "",
               fit: BoxFit.cover,
-              placeholder: (context, url) => const Center(
-                child: CupertinoActivityIndicator(),
-              ),
-              errorWidget: (context, url, error) => const Icon(
-                Icons.broken_image,
-                color: Colors.grey,
-              ),
+              placeholder: (context, url) =>
+                  const Center(child: CupertinoActivityIndicator()),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.broken_image, color: Colors.grey),
             ),
           ),
         ),
@@ -473,7 +437,8 @@ class _TreatmentReviewScreenState
                     SizedBox(height: context.h(4)),
                     if (treatment.areas != null)
                       ...treatment.areas!.map((area) {
-                        final material = (area.materials != null &&
+                        final material =
+                            (area.materials != null &&
                                 area.materials!.isNotEmpty)
                             ? area.materials!.first
                             : null;
@@ -554,7 +519,8 @@ class _TreatmentReviewScreenState
                   ),
                   Expanded(
                     child: Text(
-                      "${slot.date} at ${slot.time}",
+                      "${DateTimeUtils.fromTimestamp(slot.date).formattedDate} at "
+                      "${DateTimeUtils.fromTimestamp(slot.time).formattedTime24}",
                       style: CustomFonts.black13w500,
                     ),
                   ),
@@ -599,9 +565,7 @@ class _TreatmentReviewScreenState
               ),
               child: Text(
                 "No",
-                style: CustomFonts.black14w600.copyWith(
-                  color: Colors.black54,
-                ),
+                style: CustomFonts.black14w600.copyWith(color: Colors.black54),
               ),
             ),
           ),

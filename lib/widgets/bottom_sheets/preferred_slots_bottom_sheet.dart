@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
@@ -62,27 +63,91 @@ class _PreferredSlotsBottomSheetState extends State<PreferredSlotsBottomSheet> {
   }
 
   Future<void> _selectTime(int index) async {
-    final TimeOfDay? picked = await showTimePicker(
+    TimeOfDay selectedTime = _selectedTimes[index] ?? TimeOfDay.now();
+
+    Duration selectedDuration = Duration(
+      hours: selectedTime.hour,
+      minutes: selectedTime.minute,
+    );
+
+    await showDialog<void>(
       context: context,
-      initialTime: _selectedTimes[index] ?? TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: CustomColors.purpleColor,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          contentPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(context.r(20)),
+          ),
+          content: SizedBox(
+            width: context.w(320),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.w(20),
+                    context.h(20),
+                    context.w(20),
+                    context.h(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Select Time", style: CustomFonts.black18w600),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(dialogContext),
+                        child: const Icon(
+                          Iconsax.close_circle,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(
+                  height: 216,
+                  child: CupertinoTimerPicker(
+                    mode: CupertinoTimerPickerMode.hm,
+                    initialTimerDuration: selectedDuration,
+                    onTimerDurationChanged: (Duration newDuration) {
+                      selectedDuration = newDuration;
+                    },
+                  ),
+                ),
+
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    context.w(20),
+                    context.h(8),
+                    context.w(20),
+                    context.h(20),
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: CustomButton(
+                      text: "Done",
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: child!,
         );
       },
     );
-    if (picked != null) {
-      setState(() {
-        _selectedTimes[index] = picked;
-      });
-    }
+
+    setState(() {
+      _selectedTimes[index] = TimeOfDay(
+        hour: selectedDuration.inHours % 24,
+        minute: selectedDuration.inMinutes.remainder(60),
+      );
+    });
   }
 
   bool get _canConfirm {
@@ -102,6 +167,12 @@ class _PreferredSlotsBottomSheetState extends State<PreferredSlotsBottomSheet> {
       }
     }
     return false;
+  }
+
+  String? _formattedTime(int index) {
+    final TimeOfDay? time = _selectedTimes[index];
+    if (time == null) return null;
+    return DateTime(0, 0, 0, time.hour, time.minute).formattedTime24;
   }
 
   @override
@@ -209,9 +280,7 @@ class _PreferredSlotsBottomSheetState extends State<PreferredSlotsBottomSheet> {
                             Expanded(
                               child: _buildPickerButton(
                                 icon: Iconsax.clock,
-                                label:
-                                    _selectedTimes[index]?.format(context) ??
-                                    "Select Time",
+                                label: _formattedTime(index) ?? "Select Time",
                                 isSelected: _selectedTimes[index] != null,
                                 onTap: () => _selectTime(index),
                               ),
@@ -234,10 +303,19 @@ class _PreferredSlotsBottomSheetState extends State<PreferredSlotsBottomSheet> {
                     for (int i = 0; i < 3; i++) {
                       if (_selectedDates[i] != null &&
                           _selectedTimes[i] != null) {
+                        final selectedDate = _selectedDates[i]!;
+                        final selectedTime = _selectedTimes[i]!;
+                        final selectedDateTime = DateTime(
+                          selectedDate.year,
+                          selectedDate.month,
+                          selectedDate.day,
+                          selectedTime.hour,
+                          selectedTime.minute,
+                        );
                         slots.add(
                           PreferredSlot(
-                            date: _selectedDates[i]!.formattedDate,
-                            time: _selectedTimes[i]!.format(context),
+                            date: selectedDate.secondsSinceEpoch,
+                            time: selectedDateTime.secondsSinceEpoch,
                           ),
                         );
                       }

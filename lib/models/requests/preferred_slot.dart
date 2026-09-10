@@ -1,6 +1,6 @@
 class  PreferredSlot {
-  final String date;
-  final String time;
+  final int date;
+  final int time;
 
   PreferredSlot({required this.date, required this.time});
 

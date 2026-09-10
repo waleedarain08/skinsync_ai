@@ -41,6 +41,7 @@ class DateTimeUtils {
   static DateTime fromTimestamp(int timestamp) {
     return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
   }
+  
 
   static String formatTimestamp(int timestamp, {String pattern = 'dd MMM yyyy'}) {
     return DateFormat(pattern).format(fromTimestamp(timestamp));
@@ -85,11 +86,15 @@ extension DateTimeExtension on DateTime {
     return DateFormat('EEEE, MMM d, yyyy').format(this);
   }
 
+  String get formattedTime24 {
+  return DateFormat('HH:mm').format(this);
+}
+
   String get formattedFullDate {
     return DateFormat('MMMM dd, yyyy').format(this);
   }
 
-  int get secondsSinceEpoch {
-    return millisecondsSinceEpoch ~/ 1000;
-  }
+    int get secondsSinceEpoch {
+      return millisecondsSinceEpoch ~/ 1000;
+    }
 }
