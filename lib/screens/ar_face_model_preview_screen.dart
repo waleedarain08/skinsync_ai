@@ -216,6 +216,9 @@ class _ArFaceModelPreviewScreenState
       next,
     ) {
       if (next == true && prev != true) {
+        setState(() {
+          _tappedAreaResult = null;
+        });
         _scrollController.animateTo(
           0,
           duration: const Duration(milliseconds: 500),
@@ -700,13 +703,28 @@ class _ArFaceModelPreviewScreenState
                 behavior: HitTestBehavior.opaque,
                 onTapDown: (details) async {
                   final state = ref.read(treatmentViewModel);
+
+                  // Do NOT run FaceAreaDetectorUtil if AI generated image is present or generated
+                  XFile? afterImage;
+                  if (_selectedPose == 'left') {
+                    afterImage = state.leftAiImage;
+                  } else if (_selectedPose == 'right') {
+                    afterImage = state.rightAiImage;
+                  } else {
+                    afterImage = state.frontAiImage;
+                  }
+
+                  if (state.isAiImageGenerated || afterImage != null) {
+                    return;
+                  }
+
                   XFile? currentImage;
                   if (_selectedPose == 'left') {
-                    currentImage = state.leftPoseImage ?? state.leftAiImage;
+                    currentImage = state.leftPoseImage;
                   } else if (_selectedPose == 'right') {
-                    currentImage = state.rightPoseImage ?? state.rightAiImage;
+                    currentImage = state.rightPoseImage;
                   } else {
-                    currentImage = state.frontPoseImage ?? state.frontAiImage;
+                    currentImage = state.frontPoseImage;
                   }
 
                   if (currentImage == null) return;
