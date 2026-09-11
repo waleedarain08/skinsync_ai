@@ -7,19 +7,25 @@ class TreatmentDetailResponse extends BaseResponseModel {
   TreatmentDetailResponse({super.isSuccess, super.message, this.data});
 
   TreatmentDetailResponse.fromJson(Map<String, dynamic> json) {
-    isSuccess = json['is_success'];
-    message = json['message'];
-    data = json['data'] != null ? TreatmentDetailModel.fromJson(json['data']) : null;
+    isSuccess = json['is_success'] ?? (json['id'] != null || json['data'] != null);
+    message = json['message'] as String?;
+    if (json['data'] != null && json['data'] is Map<String, dynamic>) {
+      data = TreatmentDetailModel.fromJson(json['data'] as Map<String, dynamic>);
+    } else if (json['id'] != null) {
+      data = TreatmentDetailModel.fromJson(json);
+    } else {
+      data = null;
+    }
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['is_success'] = isSuccess;
-    data['message'] = message;
-    if (this.data != null) {
-      data['data'] = this.data!.toJson();
+    final Map<String, dynamic> dataMap = <String, dynamic>{};
+    dataMap['is_success'] = isSuccess;
+    dataMap['message'] = message;
+    if (data != null) {
+      dataMap['data'] = data!.toJson();
     }
-    return data;
+    return dataMap;
   }
 }
 
@@ -121,112 +127,154 @@ class TreatmentDetailModel {
   });
 
   TreatmentDetailModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    currentStep = json['current_step'];
-    status = json['status'];
-    selectedCategoryIds = json['selected_category_ids'] != null
-        ? List<int>.from(json['selected_category_ids'])
-        : null;
-    if (json['selected_categories'] != null) {
+    id = json['id'] as int?;
+    patientDisplayName = json['patient_display_name'] as String? ?? json['name'] as String?;
+    name = json['name'] as String? ?? json['patient_display_name'] as String?;
+    currentStep = json['current_step'] as int?;
+    status = json['status'] as String?;
+
+    if (json['selected_category_ids'] != null) {
+      selectedCategoryIds = (json['selected_category_ids'] as List).map((e) => (e as num).toInt()).toList();
+    }
+
+    if (json['selected_categories'] != null && json['selected_categories'] is List) {
       selectedCategories = <TreatmentCategoryModel>[];
-      json['selected_categories'].forEach((v) {
-        selectedCategories!.add(TreatmentCategoryModel.fromJson(v));
-      });
+      for (final v in json['selected_categories'] as List) {
+        if (v is Map<String, dynamic>) {
+          selectedCategories!.add(TreatmentCategoryModel.fromJson(v));
+        }
+      }
     }
-    globalSku = json['global_sku'];
-    patientDisplayName = json['patient_display_name'];
-    image = json['image'];
-    icon = json['icon'];
-    shortDescription = json['short_description'];
-    description = json['description'];
-    selectedAreaIds = json['selected_area_ids'] != null
-        ? List<int>.from(json['selected_area_ids'])
-        : null;
-    if (json['selected_areas'] != null) {
+
+    globalSku = json['global_sku'] as String?;
+    image = json['image'] as String?;
+    icon = json['icon'] as String?;
+    shortDescription = json['short_description'] as String?;
+    description = json['description'] as String?;
+
+    if (json['selected_area_ids'] != null) {
+      selectedAreaIds = (json['selected_area_ids'] as List).map((e) => (e as num).toInt()).toList();
+    }
+
+    if (json['selected_areas'] != null && json['selected_areas'] is List) {
       selectedAreas = <SelectedArea>[];
-      json['selected_areas'].forEach((v) {
-        selectedAreas!.add(SelectedArea.fromJson(v));
-      });
+      for (final v in json['selected_areas'] as List) {
+        if (v is Map<String, dynamic>) {
+          selectedAreas!.add(SelectedArea.fromJson(v));
+        }
+      }
     }
-    if (json['product_usages'] != null) {
+
+    if (json['product_usages'] != null && json['product_usages'] is List) {
       productUsages = <ProductUsage>[];
-      json['product_usages'].forEach((v) {
-        productUsages!.add(ProductUsage.fromJson(v));
-      });
+      for (final v in json['product_usages'] as List) {
+        if (v is Map<String, dynamic>) {
+          productUsages!.add(ProductUsage.fromJson(v));
+        }
+      }
     }
-    baseDuration = json['base_duration'];
-    prepTime = json['prep_time'];
-    cleanupTime = json['cleanup_time'];
-    if (json['product_durations'] != null) {
+
+    baseDuration = json['base_duration'] as int?;
+    prepTime = json['prep_time'] as int?;
+    cleanupTime = json['cleanup_time'] as int?;
+
+    if (json['product_durations'] != null && json['product_durations'] is List) {
       productDurations = <ProductDuration>[];
-      json['product_durations'].forEach((v) {
-        productDurations!.add(ProductDuration.fromJson(v));
-      });
+      for (final v in json['product_durations'] as List) {
+        if (v is Map<String, dynamic>) {
+          productDurations!.add(ProductDuration.fromJson(v));
+        }
+      }
     }
-    allowClinicOverride = json['allow_clinic_override'];
-    allowProviderOverride = json['allow_provider_override'];
-    onlineBookable = json['online_bookable'];
-    manualApprovalRequired = json['manual_approval_required'];
-    minimumBookingNotice = json['minimum_booking_notice'];
-    maximumDaysInAdvance = json['maximum_days_in_advance'];
-    basePrice = json['base_price'];
-    if (json['unit_price_overrides'] != null) {
+
+    allowClinicOverride = json['allow_clinic_override'] as bool?;
+    allowProviderOverride = json['allow_provider_override'] as bool?;
+    onlineBookable = json['online_bookable'] as bool?;
+    manualApprovalRequired = json['manual_approval_required'] as bool?;
+    minimumBookingNotice = json['minimum_booking_notice'] as int?;
+    maximumDaysInAdvance = json['maximum_days_in_advance'] as int?;
+    basePrice = json['base_price'] as num?;
+
+    if (json['unit_price_overrides'] != null && json['unit_price_overrides'] is List) {
       unitPriceOverrides = <UnitPriceOverride>[];
-      json['unit_price_overrides'].forEach((v) {
-        unitPriceOverrides!.add(UnitPriceOverride.fromJson(v));
-      });
+      for (final v in json['unit_price_overrides'] as List) {
+        if (v is Map<String, dynamic>) {
+          unitPriceOverrides!.add(UnitPriceOverride.fromJson(v));
+        }
+      }
     }
-    clinicalProtocolPdf = json['clinical_protocol_pdf'] != null
-        ? ClinicalProtocolPdf.fromJson(json['clinical_protocol_pdf'])
-        : null;
-    preTreatmentInstructions = json['pre_treatment_instructions'];
-    if (json['pre_treatment_attachments'] != null) {
+
+    if (json['clinical_protocol_pdf'] != null && json['clinical_protocol_pdf'] is Map<String, dynamic>) {
+      clinicalProtocolPdf = ClinicalProtocolPdf.fromJson(json['clinical_protocol_pdf'] as Map<String, dynamic>);
+    }
+
+    preTreatmentInstructions = json['pre_treatment_instructions'] as String?;
+    if (json['pre_treatment_attachments'] != null && json['pre_treatment_attachments'] is List) {
       preTreatmentAttachments = <Attachment>[];
-      json['pre_treatment_attachments'].forEach((v) {
-        preTreatmentAttachments!.add(Attachment.fromJson(v));
-      });
+      for (final v in json['pre_treatment_attachments'] as List) {
+        if (v is Map<String, dynamic>) {
+          preTreatmentAttachments!.add(Attachment.fromJson(v));
+        }
+      }
     }
-    postTreatmentInstructions = json['post_treatment_instructions'];
-    if (json['post_treatment_attachments'] != null) {
+
+    postTreatmentInstructions = json['post_treatment_instructions'] as String?;
+    if (json['post_treatment_attachments'] != null && json['post_treatment_attachments'] is List) {
       postTreatmentAttachments = <Attachment>[];
-      json['post_treatment_attachments'].forEach((v) {
-        postTreatmentAttachments!.add(Attachment.fromJson(v));
-      });
+      for (final v in json['post_treatment_attachments'] as List) {
+        if (v is Map<String, dynamic>) {
+          postTreatmentAttachments!.add(Attachment.fromJson(v));
+        }
+      }
     }
-    requirePostTreatmentPhotos = json['require_post_treatment_photos'];
-    requiredPostTreatmentPhotoCount = json['required_post_treatment_photo_count'];
-    if (json['pre_notifications'] != null) {
+
+    requirePostTreatmentPhotos = json['require_post_treatment_photos'] as bool?;
+    requiredPostTreatmentPhotoCount = json['required_post_treatment_photo_count'] as int?;
+
+    if (json['pre_notifications'] != null && json['pre_notifications'] is List) {
       preNotifications = <NotificationModel>[];
-      json['pre_notifications'].forEach((v) {
-        preNotifications!.add(NotificationModel.fromJson(v));
-      });
+      for (final v in json['pre_notifications'] as List) {
+        if (v is Map<String, dynamic>) {
+          preNotifications!.add(NotificationModel.fromJson(v));
+        }
+      }
     }
-    if (json['post_notifications'] != null) {
+
+    if (json['post_notifications'] != null && json['post_notifications'] is List) {
       postNotifications = <NotificationModel>[];
-      json['post_notifications'].forEach((v) {
-        postNotifications!.add(NotificationModel.fromJson(v));
-      });
+      for (final v in json['post_notifications'] as List) {
+        if (v is Map<String, dynamic>) {
+          postNotifications!.add(NotificationModel.fromJson(v));
+        }
+      }
     }
-    downtimeLevel = json['downtime_level'];
-    downtimeDays = json['downtime_days'];
-    allowedRoles = json['allowed_roles'] != null
-        ? List<String>.from(json['allowed_roles'])
-        : null;
-    totalSessions = json['total_sessions'];
-    if (json['sessions'] != null) {
+
+    downtimeLevel = json['downtime_level'] as String?;
+    downtimeDays = json['downtime_days'] as int?;
+
+    if (json['allowed_roles'] != null && json['allowed_roles'] is List) {
+      allowedRoles = List<String>.from(json['allowed_roles']);
+    }
+
+    totalSessions = json['total_sessions'] as int?;
+
+    if (json['sessions'] != null && json['sessions'] is List) {
       sessions = <Session>[];
-      json['sessions'].forEach((v) {
-        sessions!.add(Session.fromJson(v));
-      });
+      for (final v in json['sessions'] as List) {
+        if (v is Map<String, dynamic>) {
+          sessions!.add(Session.fromJson(v));
+        }
+      }
     }
-    preTreatmentConsentForm = json['pre_treatment_consent_form'] != null
-        ? ConsentForm.fromJson(json['pre_treatment_consent_form'])
-        : null;
-    enableByDefault = json['enable_by_default'];
-    useInAiSimulator = json['use_in_ai_simulator'];
-    createdAt = json['created_at'];
-    updatedAt = json['updated_at'];
+
+    if (json['pre_treatment_consent_form'] != null && json['pre_treatment_consent_form'] is Map<String, dynamic>) {
+      preTreatmentConsentForm = ConsentForm.fromJson(json['pre_treatment_consent_form'] as Map<String, dynamic>);
+    }
+
+    enableByDefault = json['enable_by_default'] as bool?;
+    useInAiSimulator = json['use_in_ai_simulator'] as bool?;
+    createdAt = json['created_at'] as String?;
+    updatedAt = json['updated_at'] as String?;
   }
 
   Map<String, dynamic> toJson() {
@@ -242,6 +290,7 @@ class TreatmentDetailModel {
     }
     data['global_sku'] = globalSku;
     data['patient_display_name'] = patientDisplayName;
+    data['name'] = name;
     data['image'] = image;
     data['icon'] = icon;
     data['short_description'] = shortDescription;
@@ -328,12 +377,12 @@ class SelectedArea {
   });
 
   SelectedArea.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    globalSku = json['global_sku'];
-    icon = json['icon'];
-    image = json['image'];
-    status = json['status'];
+    id = json['id'] as int?;
+    name = json['name'] as String?;
+    globalSku = json['global_sku'] as String?;
+    icon = json['icon'] as String?;
+    image = json['image'] as String?;
+    status = json['status'] as String?;
   }
 
   Map<String, dynamic> toJson() {
@@ -370,18 +419,20 @@ class ProductUsage {
   });
 
   ProductUsage.fromJson(Map<String, dynamic> json) {
-    productId = json['product_id'];
-    productName = json['product_name'];
-    productImage = json['product_image'];
-    productSku = json['product_sku'];
-    deductionTiming = json['deduction_timing'];
-    allowSubstitution = json['allow_substitution'];
-    notes = json['notes'];
-    if (json['sub_area_consumptions'] != null) {
+    productId = json['product_id'] as int?;
+    productName = json['product_name'] as String?;
+    productImage = json['product_image'] as String?;
+    productSku = json['product_sku'] as String?;
+    deductionTiming = json['deduction_timing'] as String?;
+    allowSubstitution = json['allow_substitution'] as bool?;
+    notes = json['notes'] as String?;
+    if (json['sub_area_consumptions'] != null && json['sub_area_consumptions'] is List) {
       subAreaConsumptions = <SubAreaConsumption>[];
-      json['sub_area_consumptions'].forEach((v) {
-        subAreaConsumptions!.add(SubAreaConsumption.fromJson(v));
-      });
+      for (final v in json['sub_area_consumptions'] as List) {
+        if (v is Map<String, dynamic>) {
+          subAreaConsumptions!.add(SubAreaConsumption.fromJson(v));
+        }
+      }
     }
   }
 
@@ -415,10 +466,10 @@ class SubAreaConsumption {
   });
 
   SubAreaConsumption.fromJson(Map<String, dynamic> json) {
-    subAreaId = json['sub_area_id'];
-    subAreaName = json['sub_area_name'];
-    minQuantity = json['min_quantity'];
-    maxQuantity = json['max_quantity'];
+    subAreaId = json['sub_area_id'] as int?;
+    subAreaName = json['sub_area_name'] as String?;
+    minQuantity = json['min_quantity'] as num?;
+    maxQuantity = json['max_quantity'] as num?;
   }
 
   Map<String, dynamic> toJson() {
@@ -439,9 +490,9 @@ class ProductDuration {
   ProductDuration({this.productId, this.productName, this.perUnitDuration});
 
   ProductDuration.fromJson(Map<String, dynamic> json) {
-    productId = json['product_id'];
-    productName = json['product_name'];
-    perUnitDuration = json['per_unit_duration'];
+    productId = json['product_id'] as int?;
+    productName = json['product_name'] as String?;
+    perUnitDuration = json['per_unit_duration'] as num?;
   }
 
   Map<String, dynamic> toJson() {
@@ -461,9 +512,9 @@ class UnitPriceOverride {
   UnitPriceOverride({this.productId, this.productName, this.pricePerUnit});
 
   UnitPriceOverride.fromJson(Map<String, dynamic> json) {
-    productId = json['product_id'];
-    productName = json['product_name'];
-    pricePerUnit = json['price_per_unit'];
+    productId = json['product_id'] as int?;
+    productName = json['product_name'] as String?;
+    pricePerUnit = json['price_per_unit'] as num?;
   }
 
   Map<String, dynamic> toJson() {
@@ -482,8 +533,8 @@ class ClinicalProtocolPdf {
   ClinicalProtocolPdf({this.name, this.url});
 
   ClinicalProtocolPdf.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    url = json['url'];
+    name = json['name'] as String?;
+    url = json['url'] as String?;
   }
 
   Map<String, dynamic> toJson() {
@@ -502,9 +553,9 @@ class Attachment {
   Attachment({this.name, this.url, this.type});
 
   Attachment.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    url = json['url'];
-    type = json['type'];
+    name = json['name'] as String?;
+    url = json['url'] as String?;
+    type = json['type'] as String?;
   }
 
   Map<String, dynamic> toJson() {
@@ -532,11 +583,11 @@ class NotificationModel {
   });
 
   NotificationModel.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    message = json['message'];
-    timing = json['timing'];
-    timingUnit = json['timing_unit'];
-    type = json['type'];
+    title = json['title'] as String?;
+    message = json['message'] as String?;
+    timing = json['timing'] as int?;
+    timingUnit = json['timing_unit'] as String?;
+    type = json['type'] as String?;
   }
 
   Map<String, dynamic> toJson() {
@@ -557,12 +608,14 @@ class Session {
   Session({this.sessionNumber, this.followUps});
 
   Session.fromJson(Map<String, dynamic> json) {
-    sessionNumber = json['session_number'];
-    if (json['follow_ups'] != null) {
+    sessionNumber = json['session_number'] as int?;
+    if (json['follow_ups'] != null && json['follow_ups'] is List) {
       followUps = <FollowUp>[];
-      json['follow_ups'].forEach((v) {
-        followUps!.add(FollowUp.fromJson(v));
-      });
+      for (final v in json['follow_ups'] as List) {
+        if (v is Map<String, dynamic>) {
+          followUps!.add(FollowUp.fromJson(v));
+        }
+      }
     }
   }
 
@@ -596,13 +649,13 @@ class FollowUp {
   });
 
   FollowUp.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
-    durationValue = json['duration_value'];
-    durationUnit = json['duration_unit'];
-    intervalValue = json['interval_value'];
-    intervalUnit = json['interval_unit'];
-    isImageRequired = json['is_image_required'];
-    notes = json['notes'];
+    type = json['type'] as String?;
+    durationValue = json['duration_value'] as int?;
+    durationUnit = json['duration_unit'] as String?;
+    intervalValue = json['interval_value'] as int?;
+    intervalUnit = json['interval_unit'] as String?;
+    isImageRequired = json['is_image_required'] as bool?;
+    notes = json['notes'] as String?;
   }
 
   Map<String, dynamic> toJson() {
@@ -625,8 +678,8 @@ class ConsentForm {
   ConsentForm({this.name, this.url});
 
   ConsentForm.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    url = json['url'];
+    name = json['name'] as String?;
+    url = json['url'] as String?;
   }
 
   Map<String, dynamic> toJson() {
