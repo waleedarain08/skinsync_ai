@@ -19,6 +19,8 @@ import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/enums.dart';
+import '../utils/face_area_detector_util.dart';
+import '../utils/face_area_sku_mapper.dart';
 import '../utils/secure_storage_service.dart';
 import '../view_models/checkout_view_model.dart';
 import '../view_models/subscription_view_model.dart';
@@ -35,6 +37,7 @@ import '../widgets/medical_disclaimer_banner.dart';
 import '../widgets/message_cycler.dart';
 import '../widgets/selected_treatments_summary_card.dart';
 import '../widgets/service_type_button.dart';
+import '../widgets/sticky_tooltip.dart';
 import 'bottom_nav_screens/face_detection_screen.dart';
 import 'consent_forms/ai_transparency_policy_screen.dart';
 import 'treatment_journey_detail_screen.dart';
@@ -60,6 +63,9 @@ class _ArFaceModelPreviewScreenState
   bool _hasInitialized = false;
   double _sliderValue = 0.5;
   String _selectedPose = 'front';
+
+  FaceAreaResult? _tappedAreaResult;
+  Timer? _tappedAreaTimer;
 
   late final ScrollController _scrollController;
   late final AnimationController _pulseController;
@@ -192,6 +198,8 @@ class _ArFaceModelPreviewScreenState
     _scrollController.dispose();
     _pagingController.dispose();
     _pulseController.dispose();
+    _tappedAreaTimer?.cancel();
+    FaceAreaDetectorUtil.dispose();
     super.dispose();
   }
 
@@ -670,88 +678,300 @@ class _ArFaceModelPreviewScreenState
 
   Widget _buildFacePreview() {
     const cardRadius = 20.0;
+    final previewHeight = context.h(326);
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.w(10)),
-      child: Card(
-        elevation: 10,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardRadius.r),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(cardRadius.r),
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final state = ref.watch(treatmentViewModel);
+      child: SizedBox(
+        height: previewHeight,
+        width: double.infinity,
+        child: Card(
+          elevation: 10,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(cardRadius.r),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final widgetSize = Size(constraints.maxWidth, constraints.maxHeight);
 
-                  XFile? beforeImage;
-                  XFile? afterImage;
-
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (details) async {
+                  final state = ref.read(treatmentViewModel);
+                  XFile? currentImage;
                   if (_selectedPose == 'left') {
-                    beforeImage = state.leftPoseImage;
-                    afterImage = state.leftAiImage;
+                    currentImage = state.leftPoseImage ?? state.leftAiImage;
                   } else if (_selectedPose == 'right') {
-                    beforeImage = state.rightPoseImage;
-                    afterImage = state.rightAiImage;
+                    currentImage = state.rightPoseImage ?? state.rightAiImage;
                   } else {
-                    beforeImage = state.frontPoseImage;
-                    afterImage = state.frontAiImage;
+                    currentImage = state.frontPoseImage ?? state.frontAiImage;
                   }
 
-                  debugPrint(
-                    'PREVIEW: pose=$_selectedPose, before=${beforeImage?.path}, after=${afterImage?.path}',
+                  if (currentImage == null) return;
+
+                  final result = await FaceAreaDetectorUtil.detectAreaFromTap(
+                    imagePath: currentImage.path,
+                    tapPosition: details.localPosition,
+                    widgetSize: widgetSize,
+                    pose: _selectedPose,
                   );
 
-                  final errorMessage = state.errorMessage;
+                  _tappedAreaTimer?.cancel();
+                  setState(() {
+                    _tappedAreaResult = result;
+                  });
 
-                  if (errorMessage != null && beforeImage == null) {
-                    return _buildErrorState(errorMessage, cardRadius);
+                  _tappedAreaTimer = Timer(const Duration(seconds: 4), () {
+                    if (mounted) {
+                      setState(() {
+                        _tappedAreaResult = null;
+                      });
+                    }
+                  });
+
+                  // Smart Area SKU Binding & Tooltip open
+                  final checkoutState = ref.read(checkoutViewModel);
+                  final selectedTreatment = checkoutState.selectedTreatments;
+                  final fetchedAreas = ref.read(treatmentAreaProvider).areas;
+
+                  final matchedArea = FaceAreaSkuMapper.findMatchingArea(
+                    tapResult: result,
+                    fetchedAreas: fetchedAreas,
+                    treatmentGlobalSku: selectedTreatment?.globalSku,
+                  );
+
+                  if (matchedArea != null && context.mounted) {
+                    final String title = matchedArea.name ?? result.displayName;
+                    final String? description = (matchedArea.description != null &&
+                            matchedArea.description!.trim().isNotEmpty)
+                        ? matchedArea.description!.trim()
+                        : null;
+                    final String? imageUrl = (matchedArea.infoImageUrl != null &&
+                            matchedArea.infoImageUrl!.trim().isNotEmpty)
+                        ? matchedArea.infoImageUrl!.trim()
+                        : ((matchedArea.image != null &&
+                                matchedArea.image!.trim().isNotEmpty)
+                            ? matchedArea.image!.trim()
+                            : null);
+
+                    if (description != null || imageUrl != null) {
+                      showStickyTooltip(
+                        context: context,
+                        title: title,
+                        description: description,
+                        imageUrl: imageUrl,
+                      );
+                    }
                   }
-
-                  if (beforeImage != null && afterImage != null) {
-                    return BeforeAfter(
-                      key: ValueKey(
-                        'preview_${_selectedPose}_${beforeImage.path}_${afterImage.path}',
-                      ),
-                      value: _sliderValue,
-                      onValueChanged: (value) =>
-                          setState(() => _sliderValue = value),
-                      before: _buildPreviewImage(afterImage.path),
-                      after: _buildPreviewImage(beforeImage.path),
-                      trackColor: Colors.white,
-                      trackWidth: context.w(2),
-                      thumbDecoration: const BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(PngAssets.customMarker),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      thumbWidth: context.w(32),
-                      thumbHeight: context.w(32),
-                    );
-                  }
-
-                  if (beforeImage != null) {
-                    return _buildPreviewImage(beforeImage.path);
-                  }
-
-                  return _buildNoImageState();
                 },
-              ),
-            ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(cardRadius.r),
+                      child: Consumer(
+                        builder: (context, ref, _) {
+                          final state = ref.watch(treatmentViewModel);
 
-            _buildAfterLabel(),
-            _buildBeforeLabel(),
-            _buildEditButton(),
-            //  _buildDownloadButton(),
-          ],
+                          XFile? beforeImage;
+                          XFile? afterImage;
+
+                          if (_selectedPose == 'left') {
+                            beforeImage = state.leftPoseImage;
+                            afterImage = state.leftAiImage;
+                          } else if (_selectedPose == 'right') {
+                            beforeImage = state.rightPoseImage;
+                            afterImage = state.rightAiImage;
+                          } else {
+                            beforeImage = state.frontPoseImage;
+                            afterImage = state.frontAiImage;
+                          }
+
+                          debugPrint(
+                            'PREVIEW: pose=$_selectedPose, before=${beforeImage?.path}, after=${afterImage?.path}',
+                          );
+
+                          final errorMessage = state.errorMessage;
+
+                          if (errorMessage != null && beforeImage == null) {
+                            return _buildErrorState(errorMessage, cardRadius);
+                          }
+
+                          if (beforeImage != null && afterImage != null) {
+                            return BeforeAfter(
+                              key: ValueKey(
+                                'preview_${_selectedPose}_${beforeImage.path}_${afterImage.path}',
+                              ),
+                              value: _sliderValue,
+                              onValueChanged: (value) =>
+                                  setState(() => _sliderValue = value),
+                              before: _buildPreviewImage(afterImage.path),
+                              after: _buildPreviewImage(beforeImage.path),
+                              trackColor: Colors.white,
+                              trackWidth: context.w(2),
+                              thumbDecoration: const BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage(PngAssets.customMarker),
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                              thumbWidth: context.w(32),
+                              thumbHeight: context.w(32),
+                            );
+                          }
+
+                          if (beforeImage != null) {
+                            return _buildPreviewImage(beforeImage.path);
+                          }
+
+                          return _buildNoImageState();
+                        },
+                      ),
+                    ),
+
+                    _buildAfterLabel(),
+                    _buildBeforeLabel(),
+                    _buildEditButton(),
+                    if (_tappedAreaResult != null) ..._buildTappedAreaWidgets(),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
   }
-Widget _buildEditButton() {
+
+  List<Widget> _buildTappedAreaWidgets() {
+    if (_tappedAreaResult == null) return [];
+
+    final result = _tappedAreaResult!;
+
+    return [
+      Positioned(
+        left: result.tapPosition.dx - 12,
+        top: result.tapPosition.dy - 12,
+        child: IgnorePointer(
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: CustomColors.purpleColor.withValues(alpha: 0.35),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: const [
+                BoxShadow(color: Colors.black38, blurRadius: 6),
+              ],
+            ),
+            child: Center(
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: CustomColors.purpleColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      Positioned(
+        top: context.h(12),
+        left: context.w(60),
+        right: context.w(60),
+        child: Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.w(12),
+                vertical: context.h(6),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(context.r(20)),
+                border: Border.all(
+                  color: CustomColors.lightBlueColor,
+                  width: 1.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black38,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _getAreaIcon(result.mainArea),
+                    color: CustomColors.lightBlueColor,
+                    size: context.sp(16),
+                  ),
+                  SizedBox(width: context.w(6)),
+                  Flexible(
+                    child: Text(
+                      result.displayName,
+                      style: CustomFonts.white14w600.copyWith(
+                        fontSize: context.sp(12),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: context.w(6)),
+                  InkWell(
+                    onTap: () {
+                      _tappedAreaTimer?.cancel();
+                      setState(() {
+                        _tappedAreaResult = null;
+                      });
+                    },
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white70,
+                      size: context.sp(14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+
+  IconData _getAreaIcon(String mainArea) {
+    switch (mainArea.toLowerCase()) {
+      case 'eyes':
+        return Icons.remove_red_eye_outlined;
+      case 'cheeks':
+        return Icons.face_outlined;
+      case 'lips':
+        return Icons.sentiment_satisfied_alt_outlined;
+      case 'nose':
+        return Icons.center_focus_strong;
+      case 'forehead':
+        return Icons.face_retouching_natural;
+      case 'chin':
+      case 'jawline':
+        return Icons.person_outline;
+      case 'eyebrow':
+        return Icons.remove_red_eye;
+      case 'temple':
+        return Icons.hdr_strong;
+      default:
+        return Icons.touch_app_outlined;
+    }
+  }
+
+  Widget _buildEditButton() {
     return Positioned(
       bottom: context.h(12),
       right: context.w(12),
@@ -798,7 +1018,7 @@ Widget _buildEditButton() {
       ),
     );
   }
- 
+
   Widget _buildPoseSelector() {
     return Consumer(
       builder: (context, ref, _) {
@@ -874,7 +1094,10 @@ Widget _buildEditButton() {
           CustomButton(
             text: label,
             onPressed: canTap
-                ? () => setState(() => _selectedPose = value)
+                ? () => setState(() {
+                      _selectedPose = value;
+                      _tappedAreaResult = null;
+                    })
                 : null,
             height: context.h(42),
             borderRadius: context.r(100),
