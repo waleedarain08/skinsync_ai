@@ -122,6 +122,9 @@ class _TreatmentDetailScreenState
       );
     }
 
+    final String displayName =
+        detail.name ?? detail.patientDisplayName ?? widget.treatments.name ?? "Treatment Details";
+
     return Scaffold(
       extendBody: true,
       backgroundColor: CustomColors.whiteColor,
@@ -153,7 +156,9 @@ class _TreatmentDetailScreenState
                         ],
                       ),
                       child: CachedNetworkImage(
-                        imageUrl: detail.image ?? '',
+                        imageUrl: (detail.image != null && detail.image!.isNotEmpty)
+                            ? detail.image!
+                            : (widget.treatments.image ?? ''),
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(
                           decoration: const BoxDecoration(
@@ -241,7 +246,7 @@ class _TreatmentDetailScreenState
 
             SizedBox(height: context.h(24)),
 
-            // 2. Title & Reviews Section
+            // 2. Title & Icon Section
             Padding(
               padding: EdgeInsets.symmetric(horizontal: context.w(24)),
               child: Column(
@@ -280,7 +285,7 @@ class _TreatmentDetailScreenState
                         SizedBox(width: 6.w),
                       Expanded(
                         child: Text(
-                          detail.name ?? "",
+                          displayName,
                           style: CustomFonts.black28w600,
                         ),
                       ),
@@ -290,20 +295,169 @@ class _TreatmentDetailScreenState
               ),
             ),
 
-            SizedBox(height: context.h(20)),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: context.w(24)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    detail.shortDescription ?? '',
-                    style: CustomFonts.textGrey16w400,
+            if (detail.shortDescription != null && detail.shortDescription!.trim().isNotEmpty) ...[
+              SizedBox(height: context.h(16)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.w(24)),
+                child: Text(
+                  detail.shortDescription!.trim(),
+                  style: CustomFonts.textGrey16w400.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
+
+            if (detail.description != null && detail.description!.trim().isNotEmpty) ...[
+              SizedBox(height: context.h(20)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.w(24)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("About Treatment", style: CustomFonts.black18w600),
+                    SizedBox(height: context.h(8)),
+                    Text(
+                      detail.description!.trim(),
+                      style: CustomFonts.textGrey16w400.copyWith(
+                        height: 1.5,
+                        fontSize: context.sp(14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            if (detail.selectedAreas != null && detail.selectedAreas!.isNotEmpty) ...[
+              SizedBox(height: context.h(24)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.w(24)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Treatment Areas", style: CustomFonts.black18w600),
+                    SizedBox(height: context.h(12)),
+                    Wrap(
+                      spacing: context.w(8),
+                      runSpacing: context.h(8),
+                      children: detail.selectedAreas!.map((area) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.w(12),
+                            vertical: context.h(8),
+                          ),
+                          decoration: BoxDecoration(
+                            color: CustomColors.purpleColor.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(context.r(20)),
+                            border: Border.all(
+                              color: CustomColors.purpleColor.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (area.icon != null && area.icon!.isNotEmpty) ...[
+                                CachedNetworkImage(
+                                  imageUrl: area.icon!,
+                                  width: context.w(18),
+                                  height: context.w(18),
+                                  errorWidget: (context, url, error) => const Icon(
+                                    Icons.spa_outlined,
+                                    size: 16,
+                                    color: CustomColors.purpleColor,
+                                  ),
+                                ),
+                                SizedBox(width: context.w(6)),
+                              ],
+                              Text(
+                                area.name ?? '',
+                                style: CustomFonts.black13w600.copyWith(
+                                  color: CustomColors.purpleColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            if (detail.preTreatmentInstructions != null &&
+                detail.preTreatmentInstructions!.trim().isNotEmpty) ...[
+              SizedBox(height: context.h(24)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.w(24)),
+                child: Container(
+                  padding: EdgeInsets.all(context.w(16)),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(context.r(16)),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.assignment_outlined, color: CustomColors.purpleColor),
+                          SizedBox(width: context.w(8)),
+                          Text("Pre-Treatment Instructions", style: CustomFonts.black16w600),
+                        ],
+                      ),
+                      SizedBox(height: context.h(8)),
+                      Text(
+                        detail.preTreatmentInstructions!.trim(),
+                        style: CustomFonts.textGrey16w400.copyWith(
+                          fontSize: context.sp(13),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            if (detail.postTreatmentInstructions != null &&
+                detail.postTreatmentInstructions!.trim().isNotEmpty) ...[
+              SizedBox(height: context.h(16)),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.w(24)),
+                child: Container(
+                  padding: EdgeInsets.all(context.w(16)),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(context.r(16)),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.health_and_safety_outlined, color: CustomColors.purpleColor),
+                          SizedBox(width: context.w(8)),
+                          Text("Post-Treatment Instructions", style: CustomFonts.black16w600),
+                        ],
+                      ),
+                      SizedBox(height: context.h(8)),
+                      Text(
+                        detail.postTreatmentInstructions!.trim(),
+                        style: CustomFonts.textGrey16w400.copyWith(
+                          fontSize: context.sp(13),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
 
             SizedBox(height: context.h(40)),
           ],

@@ -5,7 +5,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
-import '../main.dart';
 import '../models/responses/messages_response.dart';
 import '../services/websocket_service.dart';
 import '../view_models/bottom_nav_view_model.dart';
@@ -25,6 +24,7 @@ import 'treatment_journey_screen.dart';
 
 class BottomNavPage extends ConsumerStatefulWidget {
   const BottomNavPage({super.key});
+
   static const String routeName = '/BottomNavPage';
 
   @override
@@ -109,19 +109,17 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const ScanFaceButton(),
-                      if (!isDeploymentMode) ...[
-                        SizedBox(width: 12.w),
-                        const HelpChatButton(),
-                      ],
+
+                      SizedBox(width: 12.w),
+                      const HelpChatButton(),
                     ],
                   ),
                 ),
-              if (!isDeploymentMode)
-                Positioned(
-                  right: 20.w,
-                  bottom: 110.h + MediaQuery.paddingOf(context).bottom,
-                  child: const ChatButton(),
-                ),
+              Positioned(
+                right: 20.w,
+                bottom: 110.h + MediaQuery.paddingOf(context).bottom,
+                child: const ChatButton(),
+              ),
             ],
           ),
           extendBody: true,
