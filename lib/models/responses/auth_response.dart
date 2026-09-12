@@ -97,6 +97,36 @@ class AuthData {
     }
     return false;
   }
+
+  AuthData copyWith({
+    bool? isFirstLogin,
+    bool? pushNotification,
+    bool? isActive,
+    String? accessToken,
+    String? refreshToken,
+    int? isActiveExpiry,
+    int? refreshTokenExpiry,
+    AppVersionInfo? android,
+    AppVersionInfo? ios,
+    List<TreatmentData>? treatment,
+    User? user,
+    DashboardData? dashboard,
+  }) {
+    return AuthData(
+      isFirstLogin: isFirstLogin ?? this.isFirstLogin,
+      pushNotification: pushNotification ?? this.pushNotification,
+      isActive: isActive ?? this.isActive,
+      accessToken: accessToken ?? this.accessToken,
+      refreshToken: refreshToken ?? this.refreshToken,
+      isActiveExpiry: isActiveExpiry ?? this.isActiveExpiry,
+      refreshTokenExpiry: refreshTokenExpiry ?? this.refreshTokenExpiry,
+      android: android ?? this.android,
+      ios: ios ?? this.ios,
+      treatment: treatment ?? this.treatment,
+      user: user ?? this.user,
+      dashboard: dashboard ?? this.dashboard,
+    );
+  }
 }
 
 class AppVersionInfo {
@@ -236,6 +266,25 @@ class DashboardData {
         ?.map((x) => x.toJson())
         .toList(),
   };
+
+  DashboardData copyWith({
+    List<AppointmentItem>? appointments,
+    List<TreatmentData>? suggestedTreatments,
+    List<TopDoctor>? topDoctors,
+    List<TopClinic>? topClinics,
+    List<RequestClinicTreatmentModel>? requestTreatmentClinic,
+    List<DashboardSimulation>? recentSimulations,
+  }) {
+    return DashboardData(
+      appointments: appointments ?? this.appointments,
+      suggestedTreatments: suggestedTreatments ?? this.suggestedTreatments,
+      topDoctors: topDoctors ?? this.topDoctors,
+      topClinics: topClinics ?? this.topClinics,
+      requestTreatmentClinic:
+          requestTreatmentClinic ?? this.requestTreatmentClinic,
+      recentSimulations: recentSimulations ?? this.recentSimulations,
+    );
+  }
 }
 
 class RequestClinicTreatmentModel {
@@ -277,6 +326,26 @@ class RequestClinicTreatmentModel {
     'address': address,
     'total_treatment_count': totalTreatmentCount,
   };
+
+  RequestClinicTreatmentModel copyWith({
+    int? id,
+    String? clinicName,
+    String? clinicEmail,
+    String? image,
+    String? address,
+    int? chatId,
+    int? totalTreatmentCount,
+  }) {
+    return RequestClinicTreatmentModel(
+      id: id ?? this.id,
+      clinicName: clinicName ?? this.clinicName,
+      clinicEmail: clinicEmail ?? this.clinicEmail,
+      image: image ?? this.image,
+      address: address ?? this.address,
+      chatId: chatId ?? this.chatId,
+      totalTreatmentCount: totalTreatmentCount ?? this.totalTreatmentCount,
+    );
+  }
 }
 
 class DashboardSimulation {

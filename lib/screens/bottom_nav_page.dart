@@ -5,8 +5,10 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
+import '../models/responses/appointments_list_response.dart';
 import '../models/responses/messages_response.dart';
 import '../services/websocket_service.dart';
+import '../view_models/auth_view_model.dart';
 import '../view_models/bottom_nav_view_model.dart';
 import '../view_models/chat_view_model.dart';
 import '../view_models/forms_view_model.dart';
@@ -54,6 +56,14 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
                 if (error != null) {
                   EasyLoading.showError(error);
                 }
+                break;
+              case .appointment:
+                break;
+              case .newAppointment:
+                log('DATA: ${event.data}');
+                ref
+                    .read(authViewModel.notifier)
+                    .addAppointment(AppointmentItem.fromJson(event.data));
                 break;
               case .chat:
                 final message = Message.fromJson(event.data);
