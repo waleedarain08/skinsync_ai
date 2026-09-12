@@ -6,7 +6,6 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import '../main.dart';
-import '../models/flat_selection_model.dart';
 import '../models/responses/get_clinic_response.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
@@ -19,6 +18,7 @@ import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_clinic_grid_view_title.dart';
 import '../widgets/custom_search_field.dart';
+import '../widgets/selected_treatment_and_areas_widget.dart';
 import 'clinics_detail_screen.dart';
 
 class ExploreClinicsScreen extends ConsumerStatefulWidget {
@@ -100,20 +100,9 @@ class _ExploreClinicsScreenState extends ConsumerState<ExploreClinicsScreen> {
                 ),
 
                 // Selected Treatment & Sub-Areas Horizontal Scrollable Chips Row
-                Consumer(
-                  builder: (context, ref, _) {
-                    final checkoutState = ref.watch(checkoutViewModel);
-                    final checkoutTreatmentsList =
-                        checkoutState.checkoutTreatmentsList;
-
-                    if (checkoutTreatmentsList.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-
-                    return _buildSelectedTreatmentAndAreas(
-                      ref: ref,
-                      checkoutTreatmentsList: checkoutTreatmentsList,
-                    );
+                SelectedTreatmentAndAreasWidget(
+                  onRemove: () {
+                    _pagingController.refresh();
                   },
                 ),
                 SizedBox(height: context.h(16)),
@@ -223,132 +212,6 @@ class _ExploreClinicsScreenState extends ConsumerState<ExploreClinicsScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Container _buildSelectedTreatmentAndAreas({
-    required WidgetRef ref,
-    required List<FlatSelectionModel> checkoutTreatmentsList,
-  }) {
-    return Container(
-      height: context.h(38),
-      margin: EdgeInsets.only(top: context.h(12)),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: context.w(24)),
-        itemCount: checkoutTreatmentsList.length,
-        itemBuilder: (context, index) {
-          final selection = checkoutTreatmentsList[index];
-          final materialInfo = selection.material != null
-              ? " (${selection.material!.selectedQuantity} ${selection.material!.name})"
-              : "";
-          final chipText =
-              "${selection.treatmentName} - ${selection.areaName}$materialInfo";
-
-          return Container(
-            margin: EdgeInsets.only(right: context.w(8)),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(context.r(16)),
-              gradient: CustomColors.purpleBlueGradient,
-              boxShadow: [
-                BoxShadow(
-                  color: CustomColors.purpleColor.withValues(alpha: 0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(context.r(16)),
-              child: Stack(
-                children: [
-                  // 1. White Tint Mask Overlay (Consistent with preview screen chips)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.white.withValues(alpha: 0.85),
-                    ),
-                  ),
-
-                  // 2. High-Contrast Content
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.w(14),
-                      vertical: context.h(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.insights_rounded,
-                          color: CustomColors.purpleColor,
-                          size: context.sp(13),
-                        ),
-                        SizedBox(width: context.w(8)),
-                        Text(
-                          chipText,
-                          style: CustomFonts.black10w600.copyWith(
-                            fontSize: context.sp(11),
-                          ),
-                        ),
-                        SizedBox(width: context.w(8)),
-                        // Visual thin line divider
-                        Container(
-                          width: context.w(1),
-                          height: context.h(14),
-                          color: Colors.black12,
-                        ),
-                        SizedBox(width: context.w(8)),
-                        // Clickable Cancel Cross Button
-                        GestureDetector(
-                          onTap: () {
-                            // 2. Sync checkoutViewModel — remove just this flat entry
-                            ref
-                                .read(checkoutViewModel.notifier)
-                                .removeFlatSelection(
-                                  treatmentId: selection.treatmentId,
-                                  areaId: selection.areaId,
-                                );
-                            // final subAreaId = subArea.id!;
-                            // // 1. Remove from treatmentViewModel
-                            // ref
-                            //     .read(treatmentViewModel.notifier)
-                            //     .removeSubArea(subAreaId);
-                            //
-                            // // 2. Sync and update checkoutViewModel (Do not clear entire state, keep parent treatment intact)
-                            // final updatedSubAreas = subAreas
-                            //     .where((e) => e.id != subAreaId)
-                            //     .toList();
-                            // final updatedSubAreaIds =
-                            //     updatedSubAreas
-                            //         .map((e) => e.id!)
-                            //         .toList();
-
-                            // ref
-                            //     .read(checkoutViewModel.notifier)
-                            //     .setSelectedAreas(updatedSubAreas.firstOrNull);
-
-                            // 3. Re-fetch clinics with updated sub-area filters
-                            _pagingController.refresh();
-                            // ref
-                            //     .read(clinicProvider.notifier)
-                            //     .getClinic();
-                          },
-                          child: Icon(
-                            Icons.cancel_rounded,
-                            size: context.sp(14),
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

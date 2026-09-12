@@ -33,6 +33,7 @@ import '../widgets/dialogs/save_option_confirmation_dialog.dart';
 import '../widgets/dialogs/upgrade_plan_dialog.dart';
 import '../widgets/medical_disclaimer_banner.dart';
 import '../widgets/message_cycler.dart';
+import '../widgets/selected_treatment_and_areas_widget.dart';
 import '../widgets/selected_treatments_summary_card.dart';
 import '../widgets/service_type_button.dart';
 import 'bottom_nav_screens/face_detection_screen.dart';
@@ -294,7 +295,13 @@ class _ArFaceModelPreviewScreenState
                         SizedBox(height: context.h(12)),
                         _buildFacePreview(),
                         const MedicalDisclaimerBanner(),
-                        SizedBox(height: context.h(30)),
+                        SelectedTreatmentAndAreasWidget(
+                          margin: EdgeInsets.only(top: context.h(8)),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.w(20),
+                          ),
+                        ),
+                        SizedBox(height: context.h(20)),
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: context.w(20),
