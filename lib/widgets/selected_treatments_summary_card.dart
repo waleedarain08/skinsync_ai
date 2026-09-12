@@ -42,7 +42,7 @@ class SelectedTreatmentsSummaryCard extends StatelessWidget {
           final Map<int, SelectedMaterialModel> groupedMaterials = {};
           for (final areaItem in areas) {
             final m = areaItem.material;
-            if (m != null) {
+            if (m != null && m.selectedQuantity > 0) {
               if (groupedMaterials.containsKey(m.id)) {
                 groupedMaterials[m.id] = groupedMaterials[m.id]!.copyWith(
                   selectedQuantity:
@@ -138,7 +138,8 @@ class SelectedTreatmentsSummaryCard extends StatelessWidget {
                                 children: areas.map((areaItem) {
                                   final areaTarget = areaItem.target;
                                   final materialInfo =
-                                      areaItem.material != null
+                                      (areaItem.material != null &&
+                                              areaItem.material!.selectedQuantity > 0)
                                           ? " (${areaItem.material!.selectedQuantity} ${areaItem.material!.name})"
                                           : "";
 

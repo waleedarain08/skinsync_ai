@@ -255,9 +255,11 @@ class ReviewScreen extends ConsumerWidget {
                                   checkoutState.checkoutTreatmentsList.length -
                                       1;
 
-                              final materialInfo = selection.material != null
-                                  ? " (${selection.material!.selectedQuantity} ${selection.material!.name})"
-                                  : "";
+                              final materialInfo =
+                                  (selection.material != null &&
+                                          selection.material!.selectedQuantity > 0)
+                                      ? " (${selection.material!.selectedQuantity} ${selection.material!.name})"
+                                      : "";
 
                               return Column(
                                 children: [

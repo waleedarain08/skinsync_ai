@@ -37,9 +37,11 @@ class SelectedTreatmentAndAreasWidget extends ConsumerWidget {
         itemCount: checkoutTreatmentsList.length,
         itemBuilder: (context, index) {
           final selection = checkoutTreatmentsList[index];
-          final materialInfo = selection.material != null
-              ? " (${selection.material!.selectedQuantity} ${selection.material!.name})"
-              : "";
+          final materialInfo =
+              (selection.material != null &&
+                      selection.material!.selectedQuantity > 0)
+                  ? " (${selection.material!.selectedQuantity} ${selection.material!.name})"
+                  : "";
           final chipText =
               "${selection.treatmentName} - ${selection.areaName}$materialInfo";
 
