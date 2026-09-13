@@ -105,16 +105,13 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
               if (index != 2)
                 Positioned(
                   bottom: 110.h + MediaQuery.paddingOf(context).bottom,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const ScanFaceButton(),
-
-                      SizedBox(width: 12.w),
-                      const HelpChatButton(),
-                    ],
-                  ),
+                  child: const ScanFaceButton(),
                 ),
+              Positioned(
+                left: 20.w,
+                bottom: 110.h + MediaQuery.paddingOf(context).bottom,
+                child: const HelpChatButton(),
+              ),
               Positioned(
                 right: 20.w,
                 bottom: 110.h + MediaQuery.paddingOf(context).bottom,
