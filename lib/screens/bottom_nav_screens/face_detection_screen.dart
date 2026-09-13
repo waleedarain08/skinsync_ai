@@ -888,7 +888,7 @@ class _FaceDetectionScreenState extends ConsumerState<FaceDetectionScreen>
       return const Center(child: CircularProgressIndicator());
     }
     final aspectRatio = previewSize.height / previewSize.width;
-    const circleRadiusPercent = 0.42;
+    const circleRadiusPercent = 0.35;
     const circleCenterYPercent = 0.50;
 
     return GestureDetector(
