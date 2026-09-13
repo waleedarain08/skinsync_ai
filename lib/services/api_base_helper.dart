@@ -29,7 +29,7 @@ class ApiBaseHelper {
       final url = '$baseUrl${endPoint.path}${params ?? ''}';
       log('URL: $url');
       log('BODY: $requestBody');
-      await _refreshToken();
+      await refreshToken();
       final headers = await getHeaders();
       switch (requestType) {
         case .get:
@@ -130,7 +130,7 @@ class ApiBaseHelper {
     return headers;
   }
 
-  Future<void> _refreshToken() async {
+  Future<void> refreshToken() async {
     final token = await _secureStorage.getToken();
     if (token == null) {
       log('TOKEN IS NULL');

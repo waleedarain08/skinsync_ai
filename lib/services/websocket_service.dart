@@ -27,11 +27,21 @@ class WebSocketService {
   WebSocket? _socket;
   StreamSubscription<dynamic>? _msgSub;
   StreamSubscription<dynamic>? _connSub;
+  ValueSetter<WsEvent>? _savedOnEvent;
+  bool _isRefreshingAndReconnecting = false;
 
   bool get isConnected => _socket != null;
 
   Future<void> connect({required ValueSetter<WsEvent> onEvent}) async {
+    _savedOnEvent = onEvent;
     if (_socket != null) return;
+
+    // Check & Refresh token before connecting if needed
+    try {
+      await ApiBaseHelper().refreshToken();
+    } catch (e) {
+      log('WebSocket pre-connect token check error: $e');
+    }
 
     final token = await SecureStorage().getToken();
     final baseUrl = ApiBaseHelper().baseUrl;
@@ -49,13 +59,26 @@ class WebSocketService {
       );
 
       _msgSub = _socket!.messages.listen(
-        (event) {
+        (event) async {
           try {
             if (event is String) {
               final payload = jsonDecode(event) as Map<String, dynamic>;
               final typeStr = payload['event_type'] as String?;
               final eventType = EventType.fromValue(typeStr);
               final data = payload['data'] as Map<String, dynamic>? ?? payload;
+
+              // Intercept token expiry / unauthorized error events
+              if (eventType == EventType.error) {
+                final errorMsg = (data['error'] as String? ?? '').toLowerCase();
+                if (errorMsg.contains('unauthorized') ||
+                    errorMsg.contains('expired') ||
+                    errorMsg.contains('token')) {
+                  log('WebSocket received token expiry event: $errorMsg');
+                  await _refreshAndReconnect();
+                  return;
+                }
+              }
+
               onEvent(WsEvent(type: eventType, data: data));
             }
           } catch (e, s) {
@@ -65,9 +88,17 @@ class WebSocketService {
         onDone: () {
           _cleanupSocket();
         },
-        onError: (error) {
+        onError: (error) async {
           log('WebSocket error: $error');
-          _cleanupSocket();
+          final errorStr = error.toString().toLowerCase();
+          if (errorStr.contains('401') ||
+              errorStr.contains('unauthorized') ||
+              errorStr.contains('expired') ||
+              errorStr.contains('token')) {
+            await _refreshAndReconnect();
+          } else {
+            _cleanupSocket();
+          }
         },
       );
 
@@ -80,6 +111,25 @@ class WebSocketService {
     } catch (e, s) {
       log('WebSocket connect failed: $e', stackTrace: s);
       _cleanupSocket();
+    }
+  }
+
+  Future<void> _refreshAndReconnect() async {
+    if (_isRefreshingAndReconnecting) return;
+    _isRefreshingAndReconnecting = true;
+    log('WebSocket token expired. Running refresh token and reconnecting...');
+
+    try {
+      await _cleanupSocket();
+      await ApiBaseHelper().refreshToken();
+      final onEvent = _savedOnEvent;
+      if (onEvent != null) {
+        await connect(onEvent: onEvent);
+      }
+    } catch (e) {
+      log('WebSocket refresh & reconnect failed: $e');
+    } finally {
+      _isRefreshingAndReconnecting = false;
     }
   }
 
