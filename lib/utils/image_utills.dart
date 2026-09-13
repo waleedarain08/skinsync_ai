@@ -67,24 +67,22 @@ Future<XFile> cropImageToCircle(XFile xFile, {
   final imageWidth = original.width;
   final imageHeight = original.height;
 
-  // Calculate circle center and radius in image coordinates
-  final centerX = (imageWidth * centerXPercent).round();
+  // Calculate circle center Y and radius in image coordinates
   final centerY = (imageHeight * centerYPercent).round();
   final radius = (imageWidth * radiusPercent).round();
 
-  // Calculate crop rectangle (square that fits the circle)
-  final cropSize = radius * 2;
-  final cropX = (centerX - radius).clamp(0, imageWidth - cropSize);
-  final cropY = (centerY - radius).clamp(0, imageHeight - cropSize);
-  final finalCropSize = cropSize.clamp(0, imageWidth - cropX).clamp(0, imageHeight - cropY);
+  // Keep full width, crop height only around centerY
+  final cropHeight = radius * 2;
+  final cropY = (centerY - radius).clamp(0, imageHeight - cropHeight);
+  final finalCropHeight = cropHeight.clamp(0, imageHeight - cropY);
 
   // Crop the image
   final img.Image cropped = img.copyCrop(
     original,
-    x: cropX,
+    x: 0,
     y: cropY,
-    width: finalCropSize,
-    height: finalCropSize,
+    width: imageWidth,
+    height: finalCropHeight,
   );
 
   // Create a new file with a unique name

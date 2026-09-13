@@ -1009,7 +1009,7 @@ class _ArFaceModelPreviewScreenState
       File(path),
       fit: BoxFit.fitHeight,
       width: double.infinity,
-      height: context.h(326),
+      height: context.h(350),
     );
   }
 
