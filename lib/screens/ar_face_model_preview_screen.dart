@@ -10,6 +10,7 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../models/responses/materials_response.dart';
 import '../models/responses/treatment_area_list_response.dart';
@@ -62,6 +63,18 @@ class _ArFaceModelPreviewScreenState
   double _sliderValue = 0.5;
   String _selectedPose = 'front';
   bool _isSideBySideView = false;
+
+  final GlobalKey _keyFrontPose = GlobalKey();
+  final GlobalKey _keyLeftPose = GlobalKey();
+  final GlobalKey _keyRightPose = GlobalKey();
+  final GlobalKey _keyFacePreview = GlobalKey();
+  final GlobalKey _keySideBySideToggle = GlobalKey();
+  final GlobalKey _keyEditButton = GlobalKey();
+  final GlobalKey _keyTreatmentSelection = GlobalKey();
+  final GlobalKey _keyAreaSelection = GlobalKey();
+  final GlobalKey _keyGenerateAiButton = GlobalKey();
+  final GlobalKey _keySaveOptionButton = GlobalKey();
+  BuildContext? _showcaseContext;
 
   late final ScrollController _scrollController;
   late final AnimationController _pulseController;
@@ -121,6 +134,8 @@ class _ArFaceModelPreviewScreenState
             .read(treatmentAreaProvider.notifier)
             .fetchAreasByTreatment(selectedTreatment.id ?? 0);
       }
+
+      _startShowcaseGuide();
     });
   }
 
@@ -258,29 +273,64 @@ class _ArFaceModelPreviewScreenState
       }
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        await handleBackNavigation();
+    return ShowCaseWidget(
+      onStart: (index, key) async {
+        if (key == _keyTreatmentSelection) {
+          // 1. Select treatment 0 and fetch areas first
+          await _selectFirstTreatmentOnly();
+          // 2. Allow layout to settle after areas insertion into widget tree
+          await Future.delayed(const Duration(milliseconds: 200));
+          // 3. Scroll to treatment item
+          await _scrollToKey(_keyTreatmentSelection, alignment: 0.3);
+          // 4. Short delay so spotlight measures exact settled coordinates
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else if (key == _keyAreaSelection) {
+          await _selectFirstAreaOnly();
+          await Future.delayed(const Duration(milliseconds: 150));
+          await _scrollToKey(_keyAreaSelection, alignment: 0.3);
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else if (key == _keyGenerateAiButton ||
+            key == _keySaveOptionButton) {
+          await _scrollToKey(_keyGenerateAiButton, alignment: 0.8);
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else if (_scrollController.hasClients) {
+          await _scrollController.animateTo(
+            0,
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeInOut,
+          );
+        }
       },
-      child: AbsorbPointer(
-        absorbing: isLoading,
-        child: Scaffold(
-          appBar: CustomAppBar(
-            showTitle: true,
-            title: "AR Face Model Preview",
-            onBackTap: handleBackNavigation, // Intercept AppBar back button tap
-            actions: [
-              IconButton(
-                onPressed: () => Navigator.pushNamed(
-                  context,
-                  TreatmentJourneyScreen.routeName,
-                ),
-                icon: const FaIcon(FontAwesomeIcons.route),
+      builder: (showcaseContext) {
+        _showcaseContext = showcaseContext;
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            await handleBackNavigation();
+          },
+          child: AbsorbPointer(
+            absorbing: isLoading,
+            child: Scaffold(
+              appBar: CustomAppBar(
+                showTitle: true,
+                title: "AR Face Model Preview",
+                onBackTap: handleBackNavigation,
+                actions: [
+                  IconButton(
+                    onPressed: _startShowcaseGuide,
+                    icon: const Icon(Icons.help_outline_rounded),
+                    tooltip: 'Show Feature Guide',
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      TreatmentJourneyScreen.routeName,
+                    ),
+                    icon: const FaIcon(FontAwesomeIcons.route),
+                  ),
+                ],
               ),
-            ],
-          ),
           body: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,6 +386,8 @@ class _ArFaceModelPreviewScreenState
         ),
       ),
     );
+  },
+);
   }
 
   // ---------------------------------------------------------------------------
@@ -420,6 +472,44 @@ class _ArFaceModelPreviewScreenState
                       .selectedTreatmentsAndAreas
                       .any((item) => item.treatment.id == treatment.id);
 
+                  Widget serviceBtn = ServiceTypeButton(
+                    imageUrl: treatment.image ?? treatment.imageUrl,
+                    icon: treatment.icon ?? PngAssets.syringe,
+                    text: treatment.name ?? '-',
+                    selected: isSelected,
+                    description: treatment.shortDescription,
+                    onPressed: () async {
+                      ref
+                          .read(treatmentViewModel.notifier)
+                          .onTapTreatment(
+                            treatmentModel: treatment,
+                            isCallPredictAPI: !isSelected,
+                          );
+                      ref
+                          .read(checkoutViewModel.notifier)
+                          .addSelectedTreatment(treatment);
+                      await ref
+                          .read(treatmentAreaProvider.notifier)
+                          .fetchAreasByTreatment(treatment.id ?? 0);
+                    },
+                  );
+
+                  if (index == 0) {
+                    serviceBtn = Showcase.withWidget(
+                      key: _keyTreatmentSelection,
+                      height: context.h(140),
+                      width: context.w(250),
+                      container: _buildCustomTooltip(
+                        title: "Select Treatment",
+                        description:
+                            "Tap on a treatment option (like this one) to select it and load its target facial treatment areas.",
+                        currentStep: 5,
+                        totalSteps: 8,
+                      ),
+                      child: serviceBtn,
+                    );
+                  }
+
                   return AnimationConfiguration.staggeredList(
                     position: index,
                     duration: const Duration(milliseconds: 600),
@@ -436,27 +526,7 @@ class _ArFaceModelPreviewScreenState
                                         .isEmpty)
                                 ? _pulseAnimation
                                 : const AlwaysStoppedAnimation<double>(1.0),
-                            child: ServiceTypeButton(
-                              imageUrl: treatment.image ?? treatment.imageUrl,
-                              icon: treatment.icon ?? PngAssets.syringe,
-                              text: treatment.name ?? '-',
-                              selected: isSelected,
-                              description: treatment.shortDescription,
-                              onPressed: () async {
-                                ref
-                                    .read(treatmentViewModel.notifier)
-                                    .onTapTreatment(
-                                      treatmentModel: treatment,
-                                      isCallPredictAPI: !isSelected,
-                                    );
-                                ref
-                                    .read(checkoutViewModel.notifier)
-                                    .addSelectedTreatment(treatment);
-                                await ref
-                                    .read(treatmentAreaProvider.notifier)
-                                    .fetchAreasByTreatment(treatment.id ?? 0);
-                              },
-                            ),
+                            child: serviceBtn,
                           ),
                         ),
                       ),
@@ -580,90 +650,104 @@ class _ArFaceModelPreviewScreenState
           child: Row(
             children: [
               Expanded(
-                child: ScaleTransition(
-                  scale: _pulseAnimation,
-                  child: CustomButton(
-                    text: "Generate Ai Image",
-                    isBorder: true,
-                    borderRadius: context.r(30),
-                    textColor: CustomColors.blackColor,
-                    height: context.h(58),
-                    onPressed: () async {
-                      if (isLimitReached) {
-                        showUpgradePlanDialog(context);
-                        return;
-                      }
-
-                      final bool hasAccepted = await SecureStorage()
-                          .getAiPolicyAccepted();
-
-                      if (!hasAccepted) {
-                        if (!context.mounted) return;
-                        final result = await Navigator.pushNamed(
-                          context,
-                          AiTransparencyPolicyScreen.routeName,
-                        );
-                        if (result != true) return;
-                      }
-
-                      // Show non-dismissible dialog that cycles messages every 2 seconds
-                      if (context.mounted) {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => const MessageCycler(),
-                        );
-                      }
-
-                      bool success = false;
-                      try {
-                        success = await ref
-                            .read(treatmentViewModel.notifier)
-                            .callPredictAPI();
-                      } finally {
-                        // Dismiss the dialog if still visible
-                        if (context.mounted) {
-                          try {
-                            Navigator.of(context, rootNavigator: true).pop();
-                          } catch (_) {}
+                child: Showcase.withWidget(
+                  key: _keyGenerateAiButton,
+                  height: context.h(140),
+                  width: context.w(250),
+                  container: _buildCustomTooltip(
+                    title: "Generate AI Image",
+                    description:
+                        "Tap this button to trigger AI synthesis and render the visual transformation on your face model.",
+                    currentStep: 7,
+                    totalSteps: 8,
+                  ),
+                  child: ScaleTransition(
+                    scale: _pulseAnimation,
+                    child: CustomButton(
+                      text: "Generate Ai Image",
+                      isBorder: true,
+                      borderRadius: context.r(30),
+                      textColor: CustomColors.blackColor,
+                      height: context.h(58),
+                      onPressed: () async {
+                        if (isLimitReached) {
+                          showUpgradePlanDialog(context);
+                          return;
                         }
-                      }
 
-                      if (success && currentPlan?.id != null) {
-                        await ref
-                            .read(subscriptionProvider.notifier)
-                            .recordUsage(
-                              usageType: UsageType.simulation,
-                              subscriptionId: currentPlan!.id!,
-                            );
-                      }
-                    },
+                        final bool hasAccepted = await SecureStorage()
+                            .getAiPolicyAccepted();
+
+                        if (!hasAccepted) {
+                          if (!context.mounted) return;
+                          final result = await Navigator.pushNamed(
+                            context,
+                            AiTransparencyPolicyScreen.routeName,
+                          );
+                          if (result != true) return;
+                        }
+
+                        // Show non-dismissible dialog that cycles messages every 2 seconds
+                        if (context.mounted) {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const MessageCycler(),
+                          );
+                        }
+
+                        bool success = false;
+                        try {
+                          success = await ref
+                              .read(treatmentViewModel.notifier)
+                              .callPredictAPI();
+                        } finally {
+                          // Dismiss the dialog if still visible
+                          if (context.mounted) {
+                            try {
+                              Navigator.of(context, rootNavigator: true).pop();
+                            } catch (_) {}
+                          }
+                        }
+
+                        if (success && currentPlan?.id != null) {
+                          await ref
+                              .read(subscriptionProvider.notifier)
+                              .recordUsage(
+                                usageType: UsageType.simulation,
+                                subscriptionId: currentPlan!.id!,
+                              );
+                        }
+                      },
+                    ),
                   ),
                 ),
               ),
               context.horizontalSpace(10),
               Consumer(
                 builder: (context, ref, _) {
-                  final afterImage = ref.watch(
-                    treatmentViewModel.select(
-                      (state) =>
-                          state.frontAiImage ??
-                          state.leftAiImage ??
-                          state.rightAiImage,
-                    ),
-                  );
-                  if (afterImage == null) return const SizedBox.shrink();
-
                   return Expanded(
-                    child: ScaleTransition(
-                      scale: _pulseAnimation,
-                      child: CustomButton(
-                        onPressed: _onSaveOptionPressed,
-                        isBorder: true,
-                        text: "Save Option",
-                        borderRadius: context.r(30),
-                        textColor: CustomColors.blackColor,
-                        height: context.h(58),
+                    child: Showcase.withWidget(
+                      key: _keySaveOptionButton,
+                      height: context.h(140),
+                      width: context.w(250),
+                      container: _buildCustomTooltip(
+                        title: "Save Option & Journey",
+                        description:
+                            "Tap to save this AI simulation and treatment plan directly into your Treatment History & Journey.",
+                        currentStep: 8,
+                        totalSteps: 8,
+                      ),
+                      child: ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: CustomButton(
+                          onPressed: _onSaveOptionPressed,
+                          isBorder: true,
+                          text: "Save Option",
+                          borderRadius: context.r(30),
+                          textColor: CustomColors.blackColor,
+                          height: context.h(58),
+                        ),
                       ),
                     ),
                   );
@@ -680,9 +764,20 @@ class _ArFaceModelPreviewScreenState
     const cardRadius = 20.0;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.w(10)),
-      child: Card(
-        elevation: 10,
-        shape: RoundedRectangleBorder(
+      child: Showcase.withWidget(
+        key: _keyFacePreview,
+        height: context.h(140),
+        width: context.w(250),
+        container: _buildCustomTooltip(
+          title: "Face Image Preview",
+          description:
+              "This main preview card displays your scanned face model and AI simulation. Use the Split icon at bottom-right for side-by-side view or Edit to re-capture.",
+          currentStep: 4,
+          totalSteps: 8,
+        ),
+        child: Card(
+          elevation: 10,
+          shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius.r),
         ),
         clipBehavior: Clip.antiAlias,
@@ -804,6 +899,202 @@ class _ArFaceModelPreviewScreenState
           ],
         ),
       ),
+    ),
+  );
+}
+
+  Future<void> _selectFirstTreatmentOnly() async {
+    try {
+      final treatments = _pagingController.value.items;
+      if (treatments != null && treatments.isNotEmpty) {
+        final firstTreatment = treatments.first;
+        final checkoutNotifier = ref.read(checkoutViewModel.notifier);
+        final treatmentNotifier = ref.read(treatmentViewModel.notifier);
+
+        checkoutNotifier.addSelectedTreatment(firstTreatment);
+        await treatmentNotifier.onTapTreatment(
+          treatmentModel: firstTreatment,
+          isCallPredictAPI: false,
+        );
+
+        final areaNotifier = ref.read(treatmentAreaProvider.notifier);
+        await areaNotifier.fetchAreasByTreatment(firstTreatment.id ?? 0);
+      }
+    } catch (e) {
+      debugPrint('Error selecting first treatment for showcase: $e');
+    }
+  }
+
+  Future<void> _selectFirstAreaOnly() async {
+    try {
+      final checkoutNotifier = ref.read(checkoutViewModel.notifier);
+      final areas = ref.read(treatmentAreaProvider).areas;
+      final leafGroups = _getGroupedLeafAreas(areas);
+      if (leafGroups.isNotEmpty) {
+        final firstGroupAreas = leafGroups.values.first;
+        if (firstGroupAreas.isNotEmpty) {
+          final firstArea = firstGroupAreas.first;
+          checkoutNotifier.addSelectedArea(firstArea);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error selecting first area for showcase: $e');
+    }
+  }
+
+  Future<void> _scrollToKey(GlobalKey key, {double alignment = 0.3}) async {
+    final keyContext = key.currentContext;
+    if (keyContext != null) {
+      await Scrollable.ensureVisible(
+        keyContext,
+        alignment: alignment,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOut,
+      );
+    } else if (_scrollController.hasClients) {
+      if (key == _keyGenerateAiButton || key == _keySaveOptionButton) {
+        await _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+    }
+  }
+
+  Future<void> _startShowcaseGuide() async {
+    if (_showcaseContext == null) return;
+
+    ShowCaseWidget.of(_showcaseContext!).startShowCase([
+      _keyFrontPose,
+      _keyLeftPose,
+      _keyRightPose,
+      _keyFacePreview,
+      _keyTreatmentSelection,
+      _keyAreaSelection,
+      _keyGenerateAiButton,
+      _keySaveOptionButton,
+    ]);
+  }
+
+  Widget _buildCustomTooltip({
+    required String title,
+    required String description,
+    required int currentStep,
+    required int totalSteps,
+  }) {
+    final isLastStep = currentStep == totalSteps;
+
+    return Container(
+      width: context.w(250),
+      padding: EdgeInsets.all(context.w(14)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(context.r(16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.w(8),
+                  vertical: context.h(2),
+                ),
+                decoration: BoxDecoration(
+                  color: CustomColors.purpleColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(context.r(8)),
+                ),
+                child: Text(
+                  "Step $currentStep of $totalSteps",
+                  style: CustomFonts.darkPurple12w600,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  if (_showcaseContext != null) {
+                    ShowCaseWidget.of(_showcaseContext!).dismiss();
+                  }
+                },
+                child: const Icon(
+                  Icons.close,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: context.h(8)),
+          Text(
+            title,
+            style: CustomFonts.black16w600,
+          ),
+          SizedBox(height: context.h(4)),
+          Text(
+            description,
+            style: CustomFonts.grey12w400.copyWith(height: 1.3),
+          ),
+          SizedBox(height: context.h(12)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              InkWell(
+                onTap: () {
+                  if (_showcaseContext != null) {
+                    ShowCaseWidget.of(_showcaseContext!).dismiss();
+                  }
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.w(4),
+                    vertical: context.h(4),
+                  ),
+                  child: Text(
+                    "Skip",
+                    style: CustomFonts.grey14w400,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (_showcaseContext != null) {
+                    if (isLastStep) {
+                      ShowCaseWidget.of(_showcaseContext!).dismiss();
+                    } else {
+                      ShowCaseWidget.of(_showcaseContext!).next();
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CustomColors.purpleColor,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(context.r(20)),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.w(16),
+                    vertical: context.h(6),
+                  ),
+                ),
+                child: Text(
+                  isLastStep ? "Finish" : "Next",
+                  style: CustomFonts.white14w600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -837,69 +1128,93 @@ class _ArFaceModelPreviewScreenState
 
               return Padding(
                 padding: EdgeInsets.only(right: context.w(8)),
-                child: Material(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  shape: const CircleBorder(),
-                  child: IconButton(
-                    tooltip: _isSideBySideView
-                        ? 'Slider View'
-                        : 'Side by Side View',
-                    icon: Icon(
-                      _isSideBySideView
-                          ? Icons.tune_rounded
-                          : Icons.splitscreen_rounded,
-                      color: Colors.black,
-                      size: context.sp(20),
+                child: Showcase.withWidget(
+                  key: _keySideBySideToggle,
+                  height: context.h(140),
+                  width: context.w(250),
+                  container: _buildCustomTooltip(
+                    title: "Side-by-Side & Edit",
+                    description:
+                        "Use the Split button to compare Before & After images side-by-side, or the Edit button to re-capture any pose.",
+                    currentStep: 7,
+                    totalSteps: 9,
+                  ),
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      tooltip: _isSideBySideView
+                          ? 'Slider View'
+                          : 'Side by Side View',
+                      icon: Icon(
+                        _isSideBySideView
+                            ? Icons.tune_rounded
+                            : Icons.splitscreen_rounded,
+                        color: Colors.black,
+                        size: context.sp(20),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isSideBySideView = !_isSideBySideView;
+                        });
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isSideBySideView = !_isSideBySideView;
-                      });
-                    },
                   ),
                 ),
               );
             },
           ),
-          Material(
-            color: Colors.white.withValues(alpha: 0.9),
-            shape: const CircleBorder(),
-            child: IconButton(
-              tooltip: 'Edit',
-              icon: Icon(
-                Icons.edit_outlined,
-                color: Colors.black,
-                size: context.sp(20),
+          Showcase.withWidget(
+            key: _keyEditButton,
+            height: context.h(140),
+            width: context.w(250),
+            container: _buildCustomTooltip(
+              title: "Edit Photo",
+              description:
+                  "Tap to re-capture or edit the photo for the active pose view.",
+              currentStep: 5,
+              totalSteps: 5,
+            ),
+            child: Material(
+              color: Colors.white.withValues(alpha: 0.9),
+              shape: const CircleBorder(),
+              child: IconButton(
+                tooltip: 'Edit',
+                icon: Icon(
+                  Icons.edit_outlined,
+                  color: Colors.black,
+                  size: context.sp(20),
+                ),
+                onPressed: () async {
+                  final stateBefore = ref.read(treatmentViewModel);
+
+                  final oldImagePath = switch (_selectedPose) {
+                    'left' => stateBefore.leftPoseImage?.path,
+                    'right' => stateBefore.rightPoseImage?.path,
+                    _ => stateBefore.frontPoseImage?.path,
+                  };
+
+                  await Navigator.pushNamed(
+                    context,
+                    FaceDetectionScreen.routeName,
+                    arguments: _selectedPose,
+                  );
+
+                  if (!mounted) return;
+
+                  final stateAfter = ref.read(treatmentViewModel);
+
+                  final newImagePath = switch (_selectedPose) {
+                    'left' => stateAfter.leftPoseImage?.path,
+                    'right' => stateAfter.rightPoseImage?.path,
+                    _ => stateAfter.frontPoseImage?.path,
+                  };
+
+                  if (newImagePath != null && newImagePath != oldImagePath) {
+                    ref.read(treatmentViewModel.notifier).clearAiImage();
+                  }
+                },
               ),
-              onPressed: () async {
-                final stateBefore = ref.read(treatmentViewModel);
-
-                final oldImagePath = switch (_selectedPose) {
-                  'left' => stateBefore.leftPoseImage?.path,
-                  'right' => stateBefore.rightPoseImage?.path,
-                  _ => stateBefore.frontPoseImage?.path,
-                };
-
-                await Navigator.pushNamed(
-                  context,
-                  FaceDetectionScreen.routeName,
-                  arguments: _selectedPose,
-                );
-
-                if (!mounted) return;
-
-                final stateAfter = ref.read(treatmentViewModel);
-
-                final newImagePath = switch (_selectedPose) {
-                  'left' => stateAfter.leftPoseImage?.path,
-                  'right' => stateAfter.rightPoseImage?.path,
-                  _ => stateAfter.frontPoseImage?.path,
-                };
-
-                if (newImagePath != null && newImagePath != oldImagePath) {
-                  ref.read(treatmentViewModel.notifier).clearAiImage();
-                }
-              },
             ),
           ),
         ],
@@ -949,18 +1264,64 @@ class _ArFaceModelPreviewScreenState
               ),
               Row(
                 children: [
-                  _poseChip(
-                    "Front View",
-                    'front',
-                    state.frontPoseImage != null,
+                  Expanded(
+                    child: Showcase.withWidget(
+                      key: _keyFrontPose,
+                      height: context.h(140),
+                      width: context.w(250),
+                      container: _buildCustomTooltip(
+                        title: "Front View",
+                        description:
+                            "Displays your front face scan. Compare before & after AI generated results for front facial areas.",
+                        currentStep: 1,
+                        totalSteps: 8,
+                      ),
+                      child: _poseChip(
+                        "Front View",
+                        'front',
+                        state.frontPoseImage != null,
+                      ),
+                    ),
                   ),
                   SizedBox(width: context.w(10)),
-                  _poseChip("Left View", 'left', state.leftPoseImage != null),
+                  Expanded(
+                    child: Showcase.withWidget(
+                      key: _keyLeftPose,
+                      height: context.h(140),
+                      width: context.w(250),
+                      container: _buildCustomTooltip(
+                        title: "Left View",
+                        description:
+                            "Displays your left side profile. View before & after AI generated results for left facial features.",
+                        currentStep: 2,
+                        totalSteps: 8,
+                      ),
+                      child: _poseChip(
+                        "Left View",
+                        'left',
+                        state.leftPoseImage != null,
+                      ),
+                    ),
+                  ),
                   SizedBox(width: context.w(10)),
-                  _poseChip(
-                    "Right View",
-                    'right',
-                    state.rightPoseImage != null,
+                  Expanded(
+                    child: Showcase.withWidget(
+                      key: _keyRightPose,
+                      height: context.h(140),
+                      width: context.w(250),
+                      container: _buildCustomTooltip(
+                        title: "Right View",
+                        description:
+                            "Displays your right side profile. View before & after AI generated results for right facial features.",
+                        currentStep: 3,
+                        totalSteps: 8,
+                      ),
+                      child: _poseChip(
+                        "Right View",
+                        'right',
+                        state.rightPoseImage != null,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -975,10 +1336,9 @@ class _ArFaceModelPreviewScreenState
     final isSelected = _selectedPose == value;
     final bool canTap = hasImage;
 
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
           CustomButton(
             text: label,
             onPressed: canTap
@@ -1000,8 +1360,7 @@ class _ArFaceModelPreviewScreenState
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildPreviewImage(String path) {
@@ -1210,6 +1569,8 @@ class _ArFaceModelPreviewScreenState
     final groupedLeafs = _getGroupedLeafAreas(rootAreas);
     if (groupedLeafs.isEmpty) return const SizedBox.shrink();
 
+    int areaItemIndex = 0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1249,7 +1610,10 @@ class _ArFaceModelPreviewScreenState
                         FlipAnimation(child: FadeInAnimation(child: widget)),
                     children: entry.value.map((area) {
                       final isSelected = selectedAreaIds.contains(area.id);
-                      return ServiceTypeButton(
+                      final isFirstArea = (areaItemIndex == 0);
+                      areaItemIndex++;
+
+                      Widget areaBtn = ServiceTypeButton(
                         imageUrl: area.image,
                         icon: area.icon,
                         text: area.name ?? '-',
@@ -1259,6 +1623,24 @@ class _ArFaceModelPreviewScreenState
                         onPressed: () =>
                             _onAreaPressed(area, isSelected, treatment),
                       );
+
+                      if (isFirstArea) {
+                        areaBtn = Showcase.withWidget(
+                          key: _keyAreaSelection,
+                          height: context.h(140),
+                          width: context.w(250),
+                          container: _buildCustomTooltip(
+                            title: "Select Target Area",
+                            description:
+                                "Tap on a facial target area (like this one) to select where you want to apply the treatment.",
+                            currentStep: 6,
+                            totalSteps: 8,
+                          ),
+                          child: areaBtn,
+                        );
+                      }
+
+                      return areaBtn;
                     }).toList(),
                   ),
                 ),

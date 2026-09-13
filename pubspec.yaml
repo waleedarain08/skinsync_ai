@@ -103,6 +103,7 @@ dependencies:
   syncfusion_flutter_pdfviewer: ^34.2.5
   web_socket_client: ^0.2.1
   mobile_scanner: ^7.4.0
+  showcaseview: ^3.0.0
 
 dev_dependencies:
   flutter_test:
