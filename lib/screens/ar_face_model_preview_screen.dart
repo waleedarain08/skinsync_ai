@@ -1007,7 +1007,7 @@ class _ArFaceModelPreviewScreenState
   Widget _buildPreviewImage(String path) {
     return Image.file(
       File(path),
-      fit: BoxFit.cover,
+      fit: BoxFit.fitHeight,
       width: double.infinity,
       height: context.h(326),
     );
