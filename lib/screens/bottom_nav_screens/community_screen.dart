@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import '../../models/social_post_model.dart';
+import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../view_models/explore_view_model.dart';
 import '../../widgets/app_loader.dart';
@@ -114,6 +115,71 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
               ],
             ),
           ),
+          // Horizontal Tags Filter Chips
+          SizedBox(height: context.h(4)),
+          SizedBox(
+            height: context.h(36),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: context.w(20)),
+              itemCount: state.tags.length,
+              itemBuilder: (context, index) {
+                final tag = state.tags[index];
+                final isSelected = tag == state.selectedTag;
+                return GestureDetector(
+                  onTap: () {
+                    ref.read(exploreViewModel.notifier).selectTag(tag);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: EdgeInsets.only(right: context.w(8)),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.w(14),
+                      vertical: context.h(6),
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: isSelected
+                          ? CustomColors.purpleBlueGradient
+                          : null,
+                      color: isSelected ? null : Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(context.r(20)),
+                      border: Border.all(
+                        color: isSelected
+                            ? Colors.transparent
+                            : Colors.grey.shade300,
+                        width: 1,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: CustomColors.purpleColor
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        "#$tag",
+                        style: isSelected
+                            ? CustomFonts.black14w600.copyWith(
+                                fontSize: context.sp(13),
+                              )
+                            : CustomFonts.grey14w400.copyWith(
+                                fontSize: context.sp(13),
+                                color: CustomColors.textGreyColor,
+                              ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SizedBox(height: context.h(10)),
           Expanded(
             child: state.postsLoading && state.posts.isEmpty
                 ? const Center(child: AppLoader())

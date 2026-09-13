@@ -61,6 +61,7 @@ class _ArFaceModelPreviewScreenState
   bool _hasInitialized = false;
   double _sliderValue = 0.5;
   String _selectedPose = 'front';
+  bool _isSideBySideView = false;
 
   late final ScrollController _scrollController;
   late final AnimationController _pulseController;
@@ -718,6 +719,52 @@ class _ArFaceModelPreviewScreenState
                   }
 
                   if (beforeImage != null && afterImage != null) {
+                    if (_isSideBySideView) {
+                      return SizedBox(
+                        height: context.h(326),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  _buildPreviewImage(beforeImage.path),
+                                  Positioned(
+                                    top: context.h(12),
+                                    left: context.w(12),
+                                    child: _buildBadge(
+                                      "BEFORE",
+                                      Colors.black.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 2,
+                              color: Colors.white,
+                            ),
+                            Expanded(
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  _buildPreviewImage(afterImage.path),
+                                  Positioned(
+                                    top: context.h(12),
+                                    right: context.w(12),
+                                    child: _buildBadge(
+                                      "AFTER",
+                                      Colors.black.withValues(alpha: 0.6),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
                     return BeforeAfter(
                       key: ValueKey(
                         'preview_${_selectedPose}_${beforeImage.path}_${afterImage.path}',
@@ -749,63 +796,117 @@ class _ArFaceModelPreviewScreenState
               ),
             ),
 
-            _buildAfterLabel(),
-            _buildBeforeLabel(),
-            _buildEditButton(),
-            //  _buildDownloadButton(),
+            if (!_isSideBySideView) ...[
+              _buildAfterLabel(),
+              _buildBeforeLabel(),
+            ],
+            _buildActionButtons(),
           ],
         ),
       ),
     );
   }
-Widget _buildEditButton() {
+
+  Widget _buildActionButtons() {
     return Positioned(
       bottom: context.h(12),
       right: context.w(12),
-      child: Material(
-        color: Colors.white.withValues(alpha: 0.9),
-        shape: const CircleBorder(),
-        child: IconButton(
-          tooltip: 'Edit',
-          icon: Icon(
-            Icons.edit_outlined,
-            color: Colors.black,
-            size: context.sp(20),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Consumer(
+            builder: (context, ref, _) {
+              final state = ref.watch(treatmentViewModel);
+              XFile? beforeImage;
+              XFile? afterImage;
+
+              if (_selectedPose == 'left') {
+                beforeImage = state.leftPoseImage;
+                afterImage = state.leftAiImage;
+              } else if (_selectedPose == 'right') {
+                beforeImage = state.rightPoseImage;
+                afterImage = state.rightAiImage;
+              } else {
+                beforeImage = state.frontPoseImage;
+                afterImage = state.frontAiImage;
+              }
+
+              if (beforeImage == null || afterImage == null) {
+                return const SizedBox.shrink();
+              }
+
+              return Padding(
+                padding: EdgeInsets.only(right: context.w(8)),
+                child: Material(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    tooltip: _isSideBySideView
+                        ? 'Slider View'
+                        : 'Side by Side View',
+                    icon: Icon(
+                      _isSideBySideView
+                          ? Icons.tune_rounded
+                          : Icons.splitscreen_rounded,
+                      color: Colors.black,
+                      size: context.sp(20),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isSideBySideView = !_isSideBySideView;
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
           ),
-          onPressed: () async {
-            final stateBefore = ref.read(treatmentViewModel);
+          Material(
+            color: Colors.white.withValues(alpha: 0.9),
+            shape: const CircleBorder(),
+            child: IconButton(
+              tooltip: 'Edit',
+              icon: Icon(
+                Icons.edit_outlined,
+                color: Colors.black,
+                size: context.sp(20),
+              ),
+              onPressed: () async {
+                final stateBefore = ref.read(treatmentViewModel);
 
-            final oldImagePath = switch (_selectedPose) {
-              'left' => stateBefore.leftPoseImage?.path,
-              'right' => stateBefore.rightPoseImage?.path,
-              _ => stateBefore.frontPoseImage?.path,
-            };
+                final oldImagePath = switch (_selectedPose) {
+                  'left' => stateBefore.leftPoseImage?.path,
+                  'right' => stateBefore.rightPoseImage?.path,
+                  _ => stateBefore.frontPoseImage?.path,
+                };
 
-            await Navigator.pushNamed(
-              context,
-              FaceDetectionScreen.routeName,
-              arguments: _selectedPose,
-            );
+                await Navigator.pushNamed(
+                  context,
+                  FaceDetectionScreen.routeName,
+                  arguments: _selectedPose,
+                );
 
-            if (!mounted) return;
+                if (!mounted) return;
 
-            final stateAfter = ref.read(treatmentViewModel);
+                final stateAfter = ref.read(treatmentViewModel);
 
-            final newImagePath = switch (_selectedPose) {
-              'left' => stateAfter.leftPoseImage?.path,
-              'right' => stateAfter.rightPoseImage?.path,
-              _ => stateAfter.frontPoseImage?.path,
-            };
+                final newImagePath = switch (_selectedPose) {
+                  'left' => stateAfter.leftPoseImage?.path,
+                  'right' => stateAfter.rightPoseImage?.path,
+                  _ => stateAfter.frontPoseImage?.path,
+                };
 
-            if (newImagePath != null && newImagePath != oldImagePath) {
-              ref.read(treatmentViewModel.notifier).clearAiImage();
-            }
-          },
-        ),
+                if (newImagePath != null && newImagePath != oldImagePath) {
+                  ref.read(treatmentViewModel.notifier).clearAiImage();
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
- 
+
   Widget _buildPoseSelector() {
     return Consumer(
       builder: (context, ref, _) {

@@ -47,6 +47,9 @@ class ExploreState extends BaseStateModel {
   final bool reelsLoading;
   final bool postsLoading;
 
+  final String selectedTag;
+  final List<String> tags;
+
   const ExploreState({
     super.loading,
     super.errorMessage,
@@ -60,6 +63,18 @@ class ExploreState extends BaseStateModel {
     this.viewType = ExploreViewType.community,
     this.reelsLoading = false,
     this.postsLoading = false,
+    this.selectedTag = 'All',
+    this.tags = const [
+      'All',
+      'Skincare',
+      'Botox',
+      'Acne Treatment',
+      'Anti-Aging',
+      'Laser & Glow',
+      'Dermatology',
+      'Facials & Peels',
+      'Fillers',
+    ],
   });
 
   @override
@@ -76,6 +91,8 @@ class ExploreState extends BaseStateModel {
     ExploreViewType? viewType,
     bool? reelsLoading,
     bool? postsLoading,
+    String? selectedTag,
+    List<String>? tags,
   }) {
     return ExploreState(
       loading: loading ?? this.loading,
@@ -90,6 +107,8 @@ class ExploreState extends BaseStateModel {
       viewType: viewType ?? this.viewType,
       reelsLoading: reelsLoading ?? this.reelsLoading,
       postsLoading: postsLoading ?? this.postsLoading,
+      selectedTag: selectedTag ?? this.selectedTag,
+      tags: tags ?? this.tags,
     );
   }
 
@@ -107,6 +126,8 @@ class ExploreState extends BaseStateModel {
       viewType: viewType,
       reelsLoading: reelsLoading,
       postsLoading: postsLoading,
+      selectedTag: selectedTag,
+      tags: tags,
     );
   }
 }
@@ -180,5 +201,9 @@ Future<void> fetchPosts({int page = 1}) async {
           ? ExploreViewType.reels
           : ExploreViewType.community,
     );
+  }
+
+  void selectTag(String tag) {
+    state = state.copyWith(selectedTag: tag);
   }
 }
