@@ -73,6 +73,13 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
               Navigator.pushNamed(context, MyProfileScreen.routeName);
             },
           ),
+          HelpChatOption(
+            id: 'opt_back',
+            label: "Go back",
+            action: (context, ref) {
+              Navigator.pop(context);
+            },
+          ),
         ],
       ),
       HelpChatQuestion(
@@ -99,7 +106,9 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
           HelpChatOption(
             id: 'opt_scan_back',
             label: "Go back",
-            nextQuestionId: 'q_initial',
+            action: (context, ref) {
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -117,7 +126,9 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
           HelpChatOption(
             id: 'opt_clinics_back',
             label: "Go back",
-            nextQuestionId: 'q_initial',
+            action: (context, ref) {
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -135,7 +146,9 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
           HelpChatOption(
             id: 'opt_treatments_back',
             label: "Go back",
-            nextQuestionId: 'q_initial',
+            action: (context, ref) {
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -153,7 +166,9 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
           HelpChatOption(
             id: 'opt_appointments_back',
             label: "Go back",
-            nextQuestionId: 'q_initial',
+            action: (context, ref) {
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -237,6 +252,7 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
       
       // Optionally continue conversation or reset
       Future.delayed(const Duration(milliseconds: 500), () {
+        if (!context.mounted) return;
         final resetId = "${DateTime.now().millisecondsSinceEpoch}_a";
         final resetMsg = HelpChatMessage(
           id: resetId,
