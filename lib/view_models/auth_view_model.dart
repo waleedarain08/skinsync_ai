@@ -15,6 +15,7 @@ import '../models/requests/onboarding_profile_request.dart';
 import '../models/requests/otp_request.dart';
 import '../models/requests/sign_in_request.dart';
 import '../models/responses/address_data.dart';
+import '../models/responses/appointments_list_response.dart';
 import '../models/responses/auth_response.dart';
 import '../models/responses/base_response_model.dart';
 import '../repositories/auth_repository.dart';
@@ -318,9 +319,9 @@ class AuthViewModel extends BaseViewModel<AuthState> {
         country: state.country.name,
         profileImageUrl:
             state.profileImage ?? state.authData?.user?.profileImageUrl,
-            dob: dobController.text
+        dob: dobController.text,
       );
-       log('SDFSDXgs--$request');
+      log('SDFSDXgs--$request');
       final BaseResponseModel response = await _authRepository
           .onboardingProfile(onBoardingProfileRequest: request);
 
@@ -462,6 +463,19 @@ class AuthViewModel extends BaseViewModel<AuthState> {
       log("Error getting FCM token: $e");
       return null;
     }
+  }
+
+  void addAppointment(AppointmentItem appointment) {
+    state = state.copyWith(
+      authData: state.authData?.copyWith(
+        dashboard: state.authData!.dashboard?.copyWith(
+          appointments: [
+            appointment,
+            ...state.authData!.dashboard!.appointments!,
+          ],
+        ),
+      ),
+    );
   }
 
   @override
