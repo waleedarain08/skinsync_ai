@@ -4,6 +4,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../models/chat_appointment_model.dart';
 import '../models/chat_treatment_request_model.dart';
@@ -162,17 +163,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
     if (request != null) {
       final user = data?.user;
+      final chatTreatments = request.treatments?.map((t) {
+            return ChatTreatmentData(
+              treatmentId: t.id ?? 0,
+              treatmentName: t.name ?? '',
+              description: t.description,
+              image: t.image,
+              icon: t.icon,
+              areas: t.areas?.map((a) {
+                    return ChatTreatmentAreaData(
+                      areaId: a.id ?? 0,
+                      areaName: a.name ?? '',
+                      image: a.image,
+                      icon: a.icon,
+                      materials: a.materials?.map((m) {
+                            return ChatTreatmentMaterialData(
+                              id: m.id ?? 0,
+                              name: m.name ?? '',
+                              selectedQuantity: m.selectedQuantity ?? 0,
+                            );
+                          }).toList() ??
+                          [],
+                    );
+                  }).toList() ??
+                  [],
+            );
+          }).toList() ??
+          [];
+
       final chatTreatmentRequest = ChatTreatmentRequestModel(
         text: '',
         id: request.id!,
         userId: request.userId!,
         groupId: request.groupId!,
         name: request.name!,
-        treatments: request.treatments!,
+        treatments: chatTreatments,
         frontImageAfter: request.frontImageAfter,
         frontImageBefore: request.frontImageBefore,
-        leftImageAfter: request.frontImageAfter,
-        leftImageBefore: request.frontImageBefore,
+        leftImageAfter: request.leftImageAfter,
+        leftImageBefore: request.leftImageBefore,
         rightImageAfter: request.rightImageAfter,
         rightImageBefore: request.rightImageBefore,
         patientEmail: user?.emailAddress,
@@ -201,9 +230,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(
+      chatProvider.select((s) => s.messagesData?.messages?.length),
+      (previous, next) {
+        if (next != null && next != previous) {
+          _scrollToBottom();
+        }
+      },
+    );
+
     return PopScope(
-      onPopInvokedWithResult: (_, _) {
-        ref.read(chatProvider.notifier).clearSelectedChatAndMessages();
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          ref.read(chatProvider.notifier).clearSelectedChatAndMessages();
+        }
       },
       child: Scaffold(
         backgroundColor: CustomColors.whiteColor,
@@ -380,29 +420,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildClinicInfoBanner(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: context.w(16),
-        vertical: context.h(4),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.w(16),
-        vertical: context.h(12),
-      ),
-      decoration: BoxDecoration(
-        color: CustomColors.whiteColor,
-        borderRadius: BorderRadius.circular(context.r(16)),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-        boxShadow: CustomColors.cardShadow,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildInfoItem(context, 'Email', 'info@skinsync.com'),
-          _buildInfoItem(context, 'Phone', '+1 (800) 555-0199'),
-          _buildInfoItem(context, 'Location', 'Beverly Hills, CA'),
-        ],
-      ),
+    return Consumer(
+      builder: (context, ref, _) {
+        final clinic = ref.watch(
+          chatProvider.select((s) => s.messagesData?.clinic),
+        );
+        return Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: context.w(16),
+            vertical: context.h(4),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.w(16),
+            vertical: context.h(12),
+          ),
+          decoration: BoxDecoration(
+            color: CustomColors.whiteColor,
+            borderRadius: BorderRadius.circular(context.r(16)),
+            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            boxShadow: CustomColors.cardShadow,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildInfoItem(
+                context,
+                'Email',
+                clinic?.email ?? clinic?.ownerEmail ?? 'N/A',
+              ),
+              _buildInfoItem(context, 'Phone', clinic?.phone ?? 'N/A'),
+              _buildInfoItem(context, 'Location', clinic?.address ?? 'N/A'),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -418,22 +469,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildDateDivider(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: context.h(12)),
-      child: Center(
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.w(14),
-            vertical: context.h(4),
+    return Consumer(
+      builder: (context, ref, _) {
+        final messages = ref.watch(
+          chatProvider.select((s) => s.messagesData?.messages),
+        );
+        final latestMessage = messages?.firstOrNull;
+        final dateText = latestMessage?.createdAt != null
+            ? DateFormat('EEE, MMM d, yyyy').format(latestMessage!.createdAt!)
+            : DateFormat('EEE, MMM d, yyyy').format(DateTime.now());
+
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: context.h(12)),
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.w(14),
+                vertical: context.h(4),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(context.r(16)),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Text(dateText, style: CustomFonts.grey12w400),
+            ),
           ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(context.r(16)),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Text('Today, Aug 28, 2026', style: CustomFonts.grey12w400),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -510,23 +573,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ],
                 ),
               ),
-              // PopupMenuItem(
-              //   value: 'shared_request',
-              //   child: Row(
-              //     children: [
-              //       Icon(
-              //         Icons.assignment_outlined,
-              //         size: context.sp(18),
-              //         color: CustomColors.purpleColor,
-              //       ),
-              //       SizedBox(width: context.w(12)),
-              //       Text(
-              //         'Share Treatment Request',
-              //         style: CustomFonts.black14w400,
-              //       ),
-              //     ],
-              //   ),
-              // ),
+              PopupMenuItem(
+                value: 'shared_request',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.assignment_outlined,
+                      size: context.sp(18),
+                      color: CustomColors.purpleColor,
+                    ),
+                    SizedBox(width: context.w(12)),
+                    Text(
+                      'Share Treatment Request',
+                      style: CustomFonts.black14w400,
+                    ),
+                  ],
+                ),
+              ),
               // PopupMenuItem(
               //   value: 'appointment',
               //   child: Row(
