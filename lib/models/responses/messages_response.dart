@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../utils/enums.dart';
 import '../chat_treatment_request_model.dart';
+import 'appointment_detail_response.dart';
 import 'base_response_model.dart';
 import 'get_clinic_response.dart';
 
@@ -157,13 +158,27 @@ class Message {
 
   ChatTreatmentRequestModel? get sharedRequestData {
     try {
-      if (type != .sharedRequest) {
+      if (type != MessageType.sharedRequest) {
         return null;
       }
       if (content == null) {
         return null;
       }
-      return .fromJson(jsonDecode(content!));
+      return ChatTreatmentRequestModel.fromJson(jsonDecode(content!));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  AppointmentDetailData? get appointmentData {
+    try {
+      if (type != MessageType.appointment) {
+        return null;
+      }
+      if (content == null) {
+        return null;
+      }
+      return AppointmentDetailData.fromJson(jsonDecode(content!));
     } catch (_) {
       return null;
     }
