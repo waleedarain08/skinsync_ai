@@ -72,6 +72,7 @@ class _ArFaceModelPreviewScreenState
   final GlobalKey _keyEditButton = GlobalKey();
   final GlobalKey _keyTreatmentSelection = GlobalKey();
   final GlobalKey _keyAreaSelection = GlobalKey();
+  final GlobalKey _keySelectedSummary = GlobalKey();
   final GlobalKey _keyGenerateAiButton = GlobalKey();
   final GlobalKey _keySaveOptionButton = GlobalKey();
   BuildContext? _showcaseContext;
@@ -291,9 +292,12 @@ class _ArFaceModelPreviewScreenState
           await _prepareAndScrollToTreatmentShowcase();
         } else if (key == _keyAreaSelection) {
           await _prepareAndScrollToAreaShowcase();
+        } else if (key == _keySelectedSummary) {
+          await _prepareAndScrollToSummaryShowcase();
         } else if (key == _keyGenerateAiButton || key == _keySaveOptionButton) {
           await _scrollToKey(_keyGenerateAiButton, alignment: 0.8);
           await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) setState(() {});
         } else if (_scrollController.hasClients) {
           await _scrollController.animateTo(
             0,
@@ -301,6 +305,7 @@ class _ArFaceModelPreviewScreenState
             curve: Curves.easeInOut,
           );
           await Future.delayed(const Duration(milliseconds: 400));
+          if (mounted) setState(() {});
         }
       },
       builder: (showcaseContext) {
@@ -506,7 +511,7 @@ class _ArFaceModelPreviewScreenState
                         description:
                             "Tap on a treatment option (like this one) to select it and load its target facial treatment areas.",
                         currentStep: 5,
-                        totalSteps: 8,
+                        totalSteps: 9,
                       ),
                       child: serviceBtn,
                     );
@@ -589,18 +594,32 @@ class _ArFaceModelPreviewScreenState
             .watch(checkoutViewModel)
             .selectedTreatmentsAndAreas;
 
-        return SelectedTreatmentsSummaryCard(
-          selectedTreatmentsAndAreas: selectedTreatmentsAndAreas,
-          onRemoveTreatment: (item) {
-            ref
-                .read(checkoutViewModel.notifier)
-                .removeTreatment(item.treatment.id ?? 0);
-          },
-          onRemoveArea: (item, areaItem) {
-            ref
-                .read(checkoutViewModel.notifier)
-                .removeArea(areaItem.target.id ?? 0);
-          },
+        if (selectedTreatmentsAndAreas.isEmpty) return const SizedBox.shrink();
+
+        return Showcase.withWidget(
+          key: _keySelectedSummary,
+          height: context.h(140),
+          width: context.w(250),
+          container: _buildCustomTooltip(
+            title: "Selected Treatments Summary",
+            description:
+                "Review all your selected treatments and target areas here. You can also remove any item before generating your simulation.",
+            currentStep: 7,
+            totalSteps: 9,
+          ),
+          child: SelectedTreatmentsSummaryCard(
+            selectedTreatmentsAndAreas: selectedTreatmentsAndAreas,
+            onRemoveTreatment: (item) {
+              ref
+                  .read(checkoutViewModel.notifier)
+                  .removeTreatment(item.treatment.id ?? 0);
+            },
+            onRemoveArea: (item, areaItem) {
+              ref
+                  .read(checkoutViewModel.notifier)
+                  .removeArea(areaItem.target.id ?? 0);
+            },
+          ),
         );
       },
     );
@@ -660,8 +679,8 @@ class _ArFaceModelPreviewScreenState
                     title: "Generate AI Image",
                     description:
                         "Tap this button to trigger AI synthesis and render the visual transformation on your face model.",
-                    currentStep: 7,
-                    totalSteps: 8,
+                    currentStep: 8,
+                    totalSteps: 9,
                   ),
                   child: ScaleTransition(
                     scale: _pulseAnimation,
@@ -746,8 +765,8 @@ class _ArFaceModelPreviewScreenState
                         title: "Save Option & Journey",
                         description:
                             "Tap to save this AI simulation and treatment plan directly into your Treatment History & Journey.",
-                        currentStep: 8,
-                        totalSteps: 8,
+                        currentStep: 9,
+                        totalSteps: 9,
                       ),
                       child: ScaleTransition(
                         scale: _pulseAnimation,
@@ -784,7 +803,7 @@ class _ArFaceModelPreviewScreenState
           description:
               "This main preview card displays your scanned face model and AI simulation. Use the Split icon at bottom-right for side-by-side view or Edit to re-capture.",
           currentStep: 4,
-          totalSteps: 8,
+          totalSteps: 9,
         ),
         child: Card(
           elevation: 10,
@@ -957,8 +976,6 @@ class _ArFaceModelPreviewScreenState
         await areaNotifier.fetchAreasByTreatment(selectedTreatment.id ?? 0);
       }
 
-      await _selectFirstAreaOnly();
-
       await Future.delayed(const Duration(milliseconds: 300));
 
       int attempts = 0;
@@ -1000,23 +1017,6 @@ class _ArFaceModelPreviewScreenState
     }
   }
 
-  Future<void> _selectFirstAreaOnly() async {
-    try {
-      final checkoutNotifier = ref.read(checkoutViewModel.notifier);
-      final areas = ref.read(treatmentAreaProvider).areas;
-      final leafGroups = _getGroupedLeafAreas(areas);
-      if (leafGroups.isNotEmpty) {
-        final firstGroupAreas = leafGroups.values.first;
-        if (firstGroupAreas.isNotEmpty) {
-          final firstArea = firstGroupAreas.first;
-          checkoutNotifier.addSelectedArea(firstArea);
-        }
-      }
-    } catch (e) {
-      debugPrint('Error selecting first area for showcase: $e');
-    }
-  }
-
   Future<void> _scrollToKey(GlobalKey key, {double alignment = 0.3}) async {
     final keyContext = key.currentContext;
     if (keyContext != null) {
@@ -1037,6 +1037,25 @@ class _ArFaceModelPreviewScreenState
     }
   }
 
+  Future<void> _prepareAndScrollToSummaryShowcase() async {
+    try {
+      int attempts = 0;
+      while (_keySelectedSummary.currentContext == null && attempts < 5) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+
+      await _scrollToKey(_keySelectedSummary, alignment: 0.3);
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        setState(() {});
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      debugPrint('Error preparing selected summary showcase: $e');
+    }
+  }
+
   Future<void> _startShowcaseGuide() async {
     if (_showcaseContext == null) return;
 
@@ -1047,6 +1066,7 @@ class _ArFaceModelPreviewScreenState
       _keyFacePreview,
       _keyTreatmentSelection,
       _keyAreaSelection,
+      _keySelectedSummary,
       _keyGenerateAiButton,
       _keySaveOptionButton,
     ]);
@@ -1339,7 +1359,7 @@ class _ArFaceModelPreviewScreenState
                         description:
                             "Displays your front face scan. Compare before & after AI generated results for front facial areas.",
                         currentStep: 1,
-                        totalSteps: 8,
+                        totalSteps: 9,
                       ),
                       child: _poseChip(
                         "Front View",
@@ -1359,7 +1379,7 @@ class _ArFaceModelPreviewScreenState
                         description:
                             "Displays your left side profile. View before & after AI generated results for left facial features.",
                         currentStep: 2,
-                        totalSteps: 8,
+                        totalSteps: 9,
                       ),
                       child: _poseChip(
                         "Left View",
@@ -1379,7 +1399,7 @@ class _ArFaceModelPreviewScreenState
                         description:
                             "Displays your right side profile. View before & after AI generated results for right facial features.",
                         currentStep: 3,
-                        totalSteps: 8,
+                        totalSteps: 9,
                       ),
                       child: _poseChip(
                         "Right View",
@@ -1699,7 +1719,7 @@ class _ArFaceModelPreviewScreenState
                             description:
                                 "Tap on a facial target area (like this one) to select where you want to apply the treatment.",
                             currentStep: 6,
-                            totalSteps: 8,
+                            totalSteps: 9,
                           ),
                           child: areaBtn,
                         );
