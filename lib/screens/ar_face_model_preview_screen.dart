@@ -289,8 +289,7 @@ class _ArFaceModelPreviewScreenState
           await Future.delayed(const Duration(milliseconds: 150));
           await _scrollToKey(_keyAreaSelection, alignment: 0.3);
           await Future.delayed(const Duration(milliseconds: 100));
-        } else if (key == _keyGenerateAiButton ||
-            key == _keySaveOptionButton) {
+        } else if (key == _keyGenerateAiButton || key == _keySaveOptionButton) {
           await _scrollToKey(_keyGenerateAiButton, alignment: 0.8);
           await Future.delayed(const Duration(milliseconds: 100));
         } else if (_scrollController.hasClients) {
@@ -331,63 +330,63 @@ class _ArFaceModelPreviewScreenState
                   ),
                 ],
               ),
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: context.h(20)),
-                        _buildPoseSelector(),
-                        SizedBox(height: context.h(12)),
-                        _buildFacePreview(),
-                        const MedicalDisclaimerBanner(),
-                        SelectedTreatmentAndAreasWidget(
-                          margin: EdgeInsets.only(top: context.h(8)),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.w(20),
-                          ),
+              body: SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: _scrollController,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: context.h(20)),
+                            _buildPoseSelector(),
+                            SizedBox(height: context.h(12)),
+                            _buildFacePreview(),
+                            const MedicalDisclaimerBanner(),
+                            SelectedTreatmentAndAreasWidget(
+                              margin: EdgeInsets.only(top: context.h(8)),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: context.w(20),
+                              ),
+                            ),
+                            SizedBox(height: context.h(20)),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: context.w(20),
+                              ),
+                              child: _buildTreatmentHeader(),
+                            ),
+                            SizedBox(height: context.h(8)),
+                            _buildTreatmentsList(),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: context.w(20),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(height: context.h(30)),
+                                  _buildAreaSelectionSection(),
+                                  SizedBox(height: context.h(20)),
+                                  _buildSummarySection(),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        SizedBox(height: context.h(20)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.w(20),
-                          ),
-                          child: _buildTreatmentHeader(),
-                        ),
-                        SizedBox(height: context.h(8)),
-                        _buildTreatmentsList(),
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.w(20),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: context.h(30)),
-                              _buildAreaSelectionSection(),
-                              SizedBox(height: context.h(20)),
-                              _buildSummarySection(),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                    _buildBottomActions(),
+                  ],
                 ),
-                _buildBottomActions(),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
-  },
-);
   }
 
   // ---------------------------------------------------------------------------
@@ -726,6 +725,15 @@ class _ArFaceModelPreviewScreenState
               context.horizontalSpace(10),
               Consumer(
                 builder: (context, ref, _) {
+                  final afterImage = ref.watch(
+                    treatmentViewModel.select(
+                      (state) =>
+                          state.frontAiImage ??
+                          state.leftAiImage ??
+                          state.rightAiImage,
+                    ),
+                  );
+                  if (afterImage == null) return const SizedBox.shrink();
                   return Expanded(
                     child: Showcase.withWidget(
                       key: _keySaveOptionButton,
@@ -778,130 +786,127 @@ class _ArFaceModelPreviewScreenState
         child: Card(
           elevation: 10,
           shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardRadius.r),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(cardRadius.r),
-              child: Consumer(
-                builder: (context, ref, _) {
-                  final state = ref.watch(treatmentViewModel);
+            borderRadius: BorderRadius.circular(cardRadius.r),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(cardRadius.r),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final state = ref.watch(treatmentViewModel);
 
-                  XFile? beforeImage;
-                  XFile? afterImage;
+                    XFile? beforeImage;
+                    XFile? afterImage;
 
-                  if (_selectedPose == 'left') {
-                    beforeImage = state.leftPoseImage;
-                    afterImage = state.leftAiImage;
-                  } else if (_selectedPose == 'right') {
-                    beforeImage = state.rightPoseImage;
-                    afterImage = state.rightAiImage;
-                  } else {
-                    beforeImage = state.frontPoseImage;
-                    afterImage = state.frontAiImage;
-                  }
+                    if (_selectedPose == 'left') {
+                      beforeImage = state.leftPoseImage;
+                      afterImage = state.leftAiImage;
+                    } else if (_selectedPose == 'right') {
+                      beforeImage = state.rightPoseImage;
+                      afterImage = state.rightAiImage;
+                    } else {
+                      beforeImage = state.frontPoseImage;
+                      afterImage = state.frontAiImage;
+                    }
 
-                  debugPrint(
-                    'PREVIEW: pose=$_selectedPose, before=${beforeImage?.path}, after=${afterImage?.path}',
-                  );
+                    debugPrint(
+                      'PREVIEW: pose=$_selectedPose, before=${beforeImage?.path}, after=${afterImage?.path}',
+                    );
 
-                  final errorMessage = state.errorMessage;
+                    final errorMessage = state.errorMessage;
 
-                  if (errorMessage != null && beforeImage == null) {
-                    return _buildErrorState(errorMessage, cardRadius);
-                  }
+                    if (errorMessage != null && beforeImage == null) {
+                      return _buildErrorState(errorMessage, cardRadius);
+                    }
 
-                  if (beforeImage != null && afterImage != null) {
-                    if (_isSideBySideView) {
-                      return SizedBox(
-                        height: context.h(326),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  _buildPreviewImage(beforeImage.path),
-                                  Positioned(
-                                    top: context.h(12),
-                                    left: context.w(12),
-                                    child: _buildBadge(
-                                      "BEFORE",
-                                      Colors.black.withValues(alpha: 0.6),
+                    if (beforeImage != null && afterImage != null) {
+                      if (_isSideBySideView) {
+                        return SizedBox(
+                          height: context.h(326),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    _buildPreviewImage(beforeImage.path),
+                                    Positioned(
+                                      top: context.h(12),
+                                      left: context.w(12),
+                                      child: _buildBadge(
+                                        "BEFORE",
+                                        Colors.black.withValues(alpha: 0.6),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            Container(
-                              width: 2,
-                              color: Colors.white,
-                            ),
-                            Expanded(
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  _buildPreviewImage(afterImage.path),
-                                  Positioned(
-                                    top: context.h(12),
-                                    right: context.w(12),
-                                    child: _buildBadge(
-                                      "AFTER",
-                                      Colors.black.withValues(alpha: 0.6),
+                              Container(width: 2, color: Colors.white),
+                              Expanded(
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    _buildPreviewImage(afterImage.path),
+                                    Positioned(
+                                      top: context.h(12),
+                                      right: context.w(12),
+                                      child: _buildBadge(
+                                        "AFTER",
+                                        Colors.black.withValues(alpha: 0.6),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        );
+                      }
+
+                      return BeforeAfter(
+                        key: ValueKey(
+                          'preview_${_selectedPose}_${beforeImage.path}_${afterImage.path}',
                         ),
+                        value: _sliderValue,
+                        onValueChanged: (value) =>
+                            setState(() => _sliderValue = value),
+                        before: _buildPreviewImage(afterImage.path),
+                        after: _buildPreviewImage(beforeImage.path),
+                        trackColor: Colors.white,
+                        trackWidth: context.w(2),
+                        thumbDecoration: const BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(PngAssets.customMarker),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        thumbWidth: context.w(32),
+                        thumbHeight: context.w(32),
                       );
                     }
 
-                    return BeforeAfter(
-                      key: ValueKey(
-                        'preview_${_selectedPose}_${beforeImage.path}_${afterImage.path}',
-                      ),
-                      value: _sliderValue,
-                      onValueChanged: (value) =>
-                          setState(() => _sliderValue = value),
-                      before: _buildPreviewImage(afterImage.path),
-                      after: _buildPreviewImage(beforeImage.path),
-                      trackColor: Colors.white,
-                      trackWidth: context.w(2),
-                      thumbDecoration: const BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(PngAssets.customMarker),
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      thumbWidth: context.w(32),
-                      thumbHeight: context.w(32),
-                    );
-                  }
+                    if (beforeImage != null) {
+                      return _buildPreviewImage(beforeImage.path);
+                    }
 
-                  if (beforeImage != null) {
-                    return _buildPreviewImage(beforeImage.path);
-                  }
-
-                  return _buildNoImageState();
-                },
+                    return _buildNoImageState();
+                  },
+                ),
               ),
-            ),
 
-            if (!_isSideBySideView) ...[
-              _buildAfterLabel(),
-              _buildBeforeLabel(),
+              if (!_isSideBySideView) ...[
+                _buildAfterLabel(),
+                _buildBeforeLabel(),
+              ],
+              _buildActionButtons(),
             ],
-            _buildActionButtons(),
-          ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Future<void> _selectFirstTreatmentOnly() async {
     try {
@@ -1026,19 +1031,12 @@ class _ArFaceModelPreviewScreenState
                     ShowCaseWidget.of(_showcaseContext!).dismiss();
                   }
                 },
-                child: const Icon(
-                  Icons.close,
-                  size: 18,
-                  color: Colors.grey,
-                ),
+                child: const Icon(Icons.close, size: 18, color: Colors.grey),
               ),
             ],
           ),
           SizedBox(height: context.h(8)),
-          Text(
-            title,
-            style: CustomFonts.black16w600,
-          ),
+          Text(title, style: CustomFonts.black16w600),
           SizedBox(height: context.h(4)),
           Text(
             description,
@@ -1059,10 +1057,7 @@ class _ArFaceModelPreviewScreenState
                     horizontal: context.w(4),
                     vertical: context.h(4),
                   ),
-                  child: Text(
-                    "Skip",
-                    style: CustomFonts.grey14w400,
-                  ),
+                  child: Text("Skip", style: CustomFonts.grey14w400),
                 ),
               ),
               ElevatedButton(
@@ -1339,28 +1334,28 @@ class _ArFaceModelPreviewScreenState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-          CustomButton(
-            text: label,
-            onPressed: canTap
-                ? () => setState(() => _selectedPose = value)
-                : null,
-            height: context.h(42),
-            borderRadius: context.r(100),
-            isBorder: !isSelected,
-            textColor: Colors.black,
+        CustomButton(
+          text: label,
+          onPressed: canTap
+              ? () => setState(() => _selectedPose = value)
+              : null,
+          height: context.h(42),
+          borderRadius: context.r(100),
+          isBorder: !isSelected,
+          textColor: Colors.black,
+        ),
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          margin: EdgeInsets.only(top: context.h(8)),
+          height: context.h(3),
+          width: isSelected ? context.w(30) : 0,
+          decoration: BoxDecoration(
+            color: CustomColors.lightBlueColor,
+            borderRadius: BorderRadius.circular(context.r(2)),
           ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: EdgeInsets.only(top: context.h(8)),
-            height: context.h(3),
-            width: isSelected ? context.w(30) : 0,
-            decoration: BoxDecoration(
-              color: CustomColors.lightBlueColor,
-              borderRadius: BorderRadius.circular(context.r(2)),
-            ),
-          ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildPreviewImage(String path) {
