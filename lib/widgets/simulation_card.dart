@@ -203,6 +203,13 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                 ),
               ],
             ),
+             if (widget.sim.clinic != null) ...[
+              SizedBox(height: context.h(12)),
+              Text('Treatment Shared With',style:CustomFonts.black14w700 ,),
+            SizedBox(height: context.h(8)),
+            _buildClinicCard(context, widget.sim.clinic!),
+          ],
+
           if (widget.showImages) ...[
             SizedBox(height: context.h(12)),
             Row(
@@ -450,6 +457,107 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
     );
   }
 
+  Widget _buildClinicCard(BuildContext context, ClinicData clinic) {
+    return Container(
+      padding: EdgeInsets.all(context.w(10)),
+      decoration: BoxDecoration(
+        color: CustomColors.lightBlueColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(context.r(14)),
+        border: Border.all(
+          color: CustomColors.greyColor.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(context.r(10)),
+            child: CachedNetworkImage(
+              imageUrl: clinic.image ?? '',
+              width: context.w(44),
+              height: context.w(44),
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                width: context.w(44),
+                height: context.w(44),
+                color: CustomColors.greyColor.withValues(alpha: 0.2),
+                child: const Icon(
+                  Icons.local_hospital_outlined,
+                  color: CustomColors.silverColor,
+                  size: 20,
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                width: context.w(44),
+                height: context.w(44),
+                color: CustomColors.greyColor.withValues(alpha: 0.2),
+                child: const Icon(
+                  Icons.local_hospital_outlined,
+                  color: CustomColors.silverColor,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: context.w(12)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  clinic.name ?? "Clinic",
+                  style: CustomFonts.black14w600,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (clinic.phoneNumber != null &&
+                    clinic.phoneNumber!.isNotEmpty) ...[
+                  SizedBox(height: context.h(2)),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.call_outlined,
+                        size: context.sp(12),
+                        color: CustomColors.textGreyColor,
+                      ),
+                      SizedBox(width: context.w(4)),
+                      Expanded(
+                        child: Text(
+                          clinic.phoneNumber!,
+                          style: CustomFonts.grey13w400,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ] ,if(clinic.email != null && clinic.email!.isNotEmpty) ...[
+                  SizedBox(height: context.h(2)),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        size: context.sp(12),
+                        color: CustomColors.textGreyColor,
+                      ),
+                      SizedBox(width: context.w(4)),
+                      Expanded(
+                        child: Text(
+                          clinic.email!,
+                          style: CustomFonts.grey13w400,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildImagePair(
     BuildContext context,
     String label,

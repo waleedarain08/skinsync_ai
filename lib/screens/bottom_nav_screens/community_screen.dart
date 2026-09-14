@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+
+import '../../models/explore_models.dart';
 import '../../models/social_post_model.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
+import '../../utils/string_utils.dart';
 import '../../view_models/explore_view_model.dart';
 import '../../widgets/app_loader.dart';
 import '../../widgets/social_post_card.dart';
@@ -17,34 +21,16 @@ class CommunityScreen extends ConsumerStatefulWidget {
 }
 
 class _CommunityScreenState extends ConsumerState<CommunityScreen> {
-  final ScrollController _scrollController = ScrollController();
+  late final PagingController<int, CommunityPostModel> _pagingController;
 
   @override
   void initState() {
     super.initState();
+    _pagingController =
+        ref.read(exploreViewModel.notifier).postsPagingController;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(exploreViewModel.notifier).fetchPosts();
+      ref.read(exploreViewModel.notifier).fetchPostTags();
     });
-    _scrollController.addListener(_onScroll);
-  }
-
-  void _onScroll() {
-    final state = ref.read(exploreViewModel);
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
-        state.postsCurrentPage < state.postsTotalPages &&
-        !state.postsLoading) {
-      ref
-          .read(exploreViewModel.notifier)
-          .fetchPosts(page: state.postsCurrentPage + 1);
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
   }
 
   @override
@@ -55,7 +41,6 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // const PostUsageContainer(),
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: context.w(20),
@@ -90,32 +75,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                       icon: Icons.play_circle_outline_rounded,
                       isReels: false,
                     ),
-                    // SizedBox(width: context.w(12)),
-                    // GestureDetector(
-                    //   onTap: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => const CreatePostScreen(),
-                    //       ),
-                    //     );
-                    //   },
-                    //   child: Container(
-                    //     padding: EdgeInsets.all(context.w(8)),
-                    //     decoration: const BoxDecoration(
-                    //       shape: BoxShape.circle,
-                    //       color: CustomColors.purpleColor,
-                    //     ),
-                    //     child: const Icon(Icons.add, color: Colors.white),
-                    //   ),
-                    // ),
-               
                   ],
                 ),
               ],
             ),
           ),
-          // Horizontal Tags Filter Chips
           SizedBox(height: context.h(4)),
           SizedBox(
             height: context.h(36),
@@ -123,10 +87,11 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.symmetric(horizontal: context.w(20)),
-              itemCount: state.tags.length,
+              itemCount: state.postTags.length,
               itemBuilder: (context, index) {
-                final tag = state.tags[index];
-                final isSelected = tag == state.selectedTag;
+                final tag = state.postTags[index];
+                final isSelected = tag.name == state.selectedTag;
+
                 return GestureDetector(
                   onTap: () {
                     ref.read(exploreViewModel.notifier).selectTag(tag);
@@ -150,20 +115,10 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
                             : Colors.grey.shade300,
                         width: 1,
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: CustomColors.purpleColor
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
                     ),
                     child: Center(
                       child: Text(
-                        "#$tag",
+                        tag.name == 'All' ? tag.name : "#${tag.name.capitalize}",
                         style: isSelected
                             ? CustomFonts.black14w600.copyWith(
                                 fontSize: context.sp(13),
@@ -181,36 +136,34 @@ class _CommunityScreenState extends ConsumerState<CommunityScreen> {
           ),
           SizedBox(height: context.h(10)),
           Expanded(
-            child: state.postsLoading && state.posts.isEmpty
-                ? const Center(child: AppLoader())
-                : state.posts.isEmpty
-                    ? const Center(
-                        child: Text(
-                          "No posts yet",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: EdgeInsets.only(bottom: context.h(120)),
-                        physics: const BouncingScrollPhysics(),
-                        itemCount:
-                            state.posts.length + (state.postsLoading ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index >= state.posts.length) {
-                            return Padding(
-                              padding:
-                                  EdgeInsets.symmetric(vertical: context.h(20)),
-                              child: const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-                          return SocialPostCard(
-                            post: SocialPost.fromCommunityPost(state.posts[index]),
-                          );
-                        },
+            child: PagingListener<int, CommunityPostModel>(
+              controller: _pagingController,
+              builder: (context, pagingState, fetchNextPage) {
+                return PagedListView<int, CommunityPostModel>(
+                  state: pagingState,
+                  fetchNextPage: fetchNextPage,
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.only(bottom: context.h(120)),
+                  builderDelegate: PagedChildBuilderDelegate<CommunityPostModel>(
+                    itemBuilder: (context, post, index) => SocialPostCard(
+                      post: SocialPost.fromCommunityPost(post),
+                    ),
+                    firstPageProgressIndicatorBuilder: (context) =>
+                        const Center(child: AppLoader()),
+                    newPageProgressIndicatorBuilder: (context) => Padding(
+                      padding: EdgeInsets.symmetric(vertical: context.h(20)),
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                    noItemsFoundIndicatorBuilder: (context) => const Center(
+                      child: Text(
+                        "No posts yet",
+                        style: TextStyle(color: Colors.grey),
                       ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),

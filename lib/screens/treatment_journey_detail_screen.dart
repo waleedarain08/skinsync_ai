@@ -562,4 +562,6 @@ class _TreatmentJourneyDetailScreenState
       ),
     );
   }
+
+  
 }

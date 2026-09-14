@@ -347,6 +347,7 @@ class MyProfileScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: context.w(18)),
+                
                   Expanded(
                     child: Consumer(
                       builder: (context, ref, _) {
@@ -379,6 +380,7 @@ class MyProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
+            
             SizedBox(height: context.h(20)),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: context.w(24)),
@@ -398,7 +400,9 @@ class MyProfileScreen extends StatelessWidget {
                   context.h(100),
                 ),
                 children: [
+                  if(!isDeploymentMode)
                   buildUpgradeBanner(),
+                   if(!isDeploymentMode)
                   SizedBox(height: context.h(20)),
                   // CARD 1: Clinical Portal Section
                   buildOptionCard([
@@ -455,6 +459,7 @@ class MyProfileScreen extends StatelessWidget {
                       icon: SvgAssets.appointment,
                       title: "Appointments",
                     ),
+                     if(!isDeploymentMode)
                     buildCardOption(
                       callBack: () {
                         Navigator.pushNamed(
