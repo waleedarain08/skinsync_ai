@@ -132,55 +132,57 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                     ],
                   ),
 
-                  SizedBox(height: context.h(8)),
+                  if (_grandTotalPrice > 0) ...[
+                    SizedBox(height: context.h(8)),
 
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Estimated Price:",
-                              style: CustomFonts.grey14w400,
-                            ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Estimated Price:",
+                                style: CustomFonts.grey14w400,
+                              ),
 
-                            SizedBox(height: context.h(4)),
+                              SizedBox(height: context.h(4)),
 
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.info_outline_rounded,
-                                  size: context.sp(16),
-                                  color: CustomColors.darkPurple,
-                                ),
-
-                                SizedBox(width: context.w(4)),
-
-                                Expanded(
-                                  child: Text(
-                                    "Prices may vary based on the final treatment plan and materials used.",
-                                    style: CustomFonts.grey13w400
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: context.sp(16),
+                                    color: CustomColors.darkPurple,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      SizedBox(width: context.w(8)),
+                                  SizedBox(width: context.w(4)),
 
-                      Text(
-                        "\$${_grandTotalPrice.toStringAsFixed(0)}",
-                        style: CustomFonts.black18w600.copyWith(
-                          color: CustomColors.darkPurple,
+                                  Expanded(
+                                    child: Text(
+                                      "Prices may vary based on the final treatment plan and materials used.",
+                                      style: CustomFonts.grey13w400
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+
+                        SizedBox(width: context.w(8)),
+
+                        Text(
+                          "\$${_grandTotalPrice.toStringAsFixed(0)}",
+                          style: CustomFonts.black18w600.copyWith(
+                            color: CustomColors.darkPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             )
@@ -349,12 +351,6 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                   );
                 }),
 
-                SizedBox(height: context.h(16)),
-
-                Text("Price Breakdown", style: CustomFonts.black16w600),
-
-                SizedBox(height: context.h(8)),
-
                 Builder(
                   builder: (context) {
                     final treatmentPrices = PriceUtils.calculateTreatmentPrices(
@@ -366,8 +362,19 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                       (total, treatment) => total + treatment.totalPrice,
                     );
 
+                    if (grandTotal <= 0) {
+                      return const SizedBox.shrink();
+                    }
+
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        SizedBox(height: context.h(16)),
+
+                        Text("Price Breakdown", style: CustomFonts.black16w600),
+
+                        SizedBox(height: context.h(8)),
+
                         // Treatment prices
                         ...treatmentPrices.map((treatment) {
                           return Padding(

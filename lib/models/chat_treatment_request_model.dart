@@ -1,3 +1,5 @@
+import 'responses/simulation_history_response.dart';
+
 class ChatTreatmentRequestModel {
   final String? text;
   final int id;
@@ -23,6 +25,63 @@ class ChatTreatmentRequestModel {
 
   final String? createdAt;
   final String? updatedAt;
+
+  SimulationData toSimulationData() {
+    DateTime? parsedCreatedAt;
+    if (createdAt != null) {
+      parsedCreatedAt = DateTime.tryParse(createdAt!);
+    }
+    DateTime? parsedUpdatedAt;
+    if (updatedAt != null) {
+      parsedUpdatedAt = DateTime.tryParse(updatedAt!);
+    }
+
+    return SimulationData(
+      id: id,
+      userId: userId,
+      groupId: groupId,
+      name: name,
+      frontImageBefore: frontImageBefore,
+      frontImageAfter: frontImageAfter,
+      rightImageBefore: rightImageBefore,
+      rightImageAfter: rightImageAfter,
+      leftImageBefore: leftImageBefore,
+      leftImageAfter: leftImageAfter,
+      treatments: treatments
+          .map(
+            (t) => SimulationTreatment(
+              id: t.treatmentId,
+              name: t.treatmentName,
+              description: t.description,
+              image: t.image,
+              icon: t.icon,
+              areas: t.areas
+                  .map(
+                    (a) => SimulationArea(
+                      id: a.areaId,
+                      name: a.areaName,
+                      image: a.image,
+                      icon: a.icon,
+                      price: a.price,
+                      materials: a.materials
+                          .map(
+                            (m) => SimulationMaterial(
+                              id: m.id,
+                              name: m.name,
+                              selectedQuantity: m.selectedQuantity,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  )
+                  .toList(),
+            ),
+          )
+          .toList(),
+      createdAt: parsedCreatedAt,
+      updatedAt: parsedUpdatedAt,
+    );
+  }
 
   ChatTreatmentRequestModel({
     this.text,
@@ -185,6 +244,7 @@ class ChatTreatmentAreaData {
   final String areaName;
   final String? image;
   final String? icon;
+  final num? price;
   final List<ChatTreatmentMaterialData> materials;
 
   ChatTreatmentAreaData({
@@ -192,6 +252,7 @@ class ChatTreatmentAreaData {
     required this.areaName,
     this.image,
     this.icon,
+    this.price,
     required this.materials,
   });
 
@@ -203,6 +264,9 @@ class ChatTreatmentAreaData {
       areaName: json['area_name']?.toString() ?? '',
       image: json['area_image']?.toString(),
       icon: json['area_icon']?.toString(),
+      price: json['price'] is num
+          ? json['price']
+          : num.tryParse('${json['price']}'),
       materials: (json['materials'] as List<dynamic>?)
               ?.map(
                 (e) => ChatTreatmentMaterialData.fromJson(
@@ -219,6 +283,7 @@ class ChatTreatmentAreaData {
     'area_name': areaName,
     'area_image': image,
     'area_icon': icon,
+    'price': price,
     'materials': materials.map((e) => e.toJson()).toList(),
   };
 }
