@@ -71,6 +71,7 @@ class MessagesData {
 
 class Message {
   final int? id;
+  final int? chatId;
   final MessageType? type;
   final String? senderType;
   final int? senderId;
@@ -85,6 +86,7 @@ class Message {
 
   Message({
     this.id,
+    this.chatId,
     this.type,
     this.senderType,
     this.senderId,
@@ -100,6 +102,7 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) => Message(
     id: json["id"],
+    chatId: json['chat_id'],
     type: MessageType.fromValue(json["type"]),
     senderType: json["sender_type"],
     senderId: json["sender_id"],
@@ -118,6 +121,7 @@ class Message {
 
   Message copyWith({
     int? id,
+    int? chatId,
     MessageType? type,
     String? senderType,
     int? senderId,
@@ -132,6 +136,7 @@ class Message {
   }) {
     return Message(
       id: id ?? this.id,
+      chatId: chatId ?? this.chatId,
       type: type ?? this.type,
       senderType: senderType ?? this.senderType,
       senderId: senderId ?? this.senderId,

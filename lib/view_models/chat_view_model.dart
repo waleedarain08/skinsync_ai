@@ -74,7 +74,12 @@ class ChatViewModel extends BaseViewModel<ChatState> {
       state.messagesData?.messages ?? <Message>[],
     );
     final alreadyExists = existingMessages.any((m) => m.id == message.id);
-    if (alreadyExists) return;
+    if (alreadyExists) {
+      return;
+    }
+    if (state.selectedChat?.id != message.chatId) {
+      return;
+    }
     final user = ref.read(authViewModel).authData?.user;
     if (user == null) {
       throw const AppException('Unauthorized');
