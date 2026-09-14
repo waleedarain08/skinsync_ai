@@ -46,29 +46,34 @@ class ChatTreatmentRequestModel {
 
   factory ChatTreatmentRequestModel.fromJson(Map<String, dynamic> json) {
     return ChatTreatmentRequestModel(
-      text: json['text'] ?? '',
-      id: json['id'] ?? 0,
-      userId: json['user_id'] ?? 0,
-      groupId: json['group_id'] ?? 0,
-      name: json['name'] ?? '',
-      patientName: json['patient_name'],
-      patientImage: json['patient_image'],
-      patientEmail: json['patient_email'],
-      frontImageBefore: json['front_image_before'],
-      frontImageAfter: json['front_image_after'],
-      rightImageBefore: json['right_image_before'],
-      rightImageAfter: json['right_image_after'],
-      leftImageBefore: json['left_image_before'],
-      leftImageAfter: json['left_image_after'],
-      treatments:
-      (json['treatments'] as List<dynamic>?)
-          ?.map(
-            (e) => ChatTreatmentData.fromJson(e as Map<String, dynamic>),
-      )
-          .toList() ??
+      text: json['text']?.toString() ?? '',
+      id: json['id'] is int ? json['id'] : int.tryParse('${json['id']}') ?? 0,
+      userId: json['user_id'] is int
+          ? json['user_id']
+          : int.tryParse('${json['user_id']}') ?? 0,
+      groupId: json['group_id'] is int
+          ? json['group_id']
+          : int.tryParse('${json['group_id']}') ?? 0,
+      name: json['name']?.toString() ?? '',
+      patientName: json['patient_name']?.toString(),
+      patientImage: json['patient_image']?.toString(),
+      patientEmail: json['patient_email']?.toString(),
+      frontImageBefore: json['front_image_before']?.toString(),
+      frontImageAfter: json['front_image_after']?.toString(),
+      rightImageBefore: json['right_image_before']?.toString(),
+      rightImageAfter: json['right_image_after']?.toString(),
+      leftImageBefore: json['left_image_before']?.toString(),
+      leftImageAfter: json['left_image_after']?.toString(),
+      treatments: (json['treatments'] as List<dynamic>?)
+              ?.map(
+                (e) => ChatTreatmentData.fromJson(
+                  e is Map<String, dynamic> ? e : {},
+                ),
+              )
+              .toList() ??
           [],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      createdAt: json['created_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
     );
   }
 
@@ -147,18 +152,20 @@ class ChatTreatmentData {
 
   factory ChatTreatmentData.fromJson(Map<String, dynamic> json) {
     return ChatTreatmentData(
-      treatmentId: json['treatment_id'] ?? 0,
-      treatmentName: json['treatment_name'] ?? '',
-      description: json['treatment_desc'],
-      image: json['treatment_image'],
-      icon: json['treatment_icon'],
-      areas:
-      (json['areas'] as List<dynamic>?)
-          ?.map(
-            (e) =>
-            ChatTreatmentAreaData.fromJson(e as Map<String, dynamic>),
-      )
-          .toList() ??
+      treatmentId: json['treatment_id'] is int
+          ? json['treatment_id']
+          : int.tryParse('${json['treatment_id']}') ?? 0,
+      treatmentName: json['treatment_name']?.toString() ?? '',
+      description: json['treatment_desc']?.toString(),
+      image: json['treatment_image']?.toString(),
+      icon: json['treatment_icon']?.toString(),
+      areas: (json['areas'] as List<dynamic>?)
+              ?.map(
+                (e) => ChatTreatmentAreaData.fromJson(
+                  e is Map<String, dynamic> ? e : {},
+                ),
+              )
+              .toList() ??
           [],
     );
   }
@@ -190,18 +197,19 @@ class ChatTreatmentAreaData {
 
   factory ChatTreatmentAreaData.fromJson(Map<String, dynamic> json) {
     return ChatTreatmentAreaData(
-      areaId: json['area_id'] ?? 0,
-      areaName: json['area_name'] ?? '',
-      image: json['area_image'],
-      icon: json['area_icon'],
-      materials:
-      (json['materials'] as List<dynamic>?)
-          ?.map(
-            (e) => ChatTreatmentMaterialData.fromJson(
-          e as Map<String, dynamic>,
-        ),
-      )
-          .toList() ??
+      areaId: json['area_id'] is int
+          ? json['area_id']
+          : int.tryParse('${json['area_id']}') ?? 0,
+      areaName: json['area_name']?.toString() ?? '',
+      image: json['area_image']?.toString(),
+      icon: json['area_icon']?.toString(),
+      materials: (json['materials'] as List<dynamic>?)
+              ?.map(
+                (e) => ChatTreatmentMaterialData.fromJson(
+                  e is Map<String, dynamic> ? e : {},
+                ),
+              )
+              .toList() ??
           [],
     );
   }
@@ -228,9 +236,11 @@ class ChatTreatmentMaterialData {
 
   factory ChatTreatmentMaterialData.fromJson(Map<String, dynamic> json) {
     return ChatTreatmentMaterialData(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      selectedQuantity: json['selected_quantity'] ?? 0,
+      id: json['id'] is int ? json['id'] : int.tryParse('${json['id']}') ?? 0,
+      name: json['name']?.toString() ?? '',
+      selectedQuantity: json['selected_quantity'] is int
+          ? json['selected_quantity']
+          : int.tryParse('${json['selected_quantity']}') ?? 0,
     );
   }
 
