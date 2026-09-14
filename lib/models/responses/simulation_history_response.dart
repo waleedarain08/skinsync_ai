@@ -28,6 +28,7 @@ class SimulationHistoryResponse extends BaseResponseModel {
 class SimulationData {
   final int? id;
   final int? userId;
+
   final int? groupId;
   final String? name;
   final String? frontImageBefore;
@@ -38,6 +39,7 @@ class SimulationData {
   final String? leftImageAfter;
   final List<SimulationTreatment>? treatments;
   final bool? isShared;
+   final ClinicData? clinic;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -54,6 +56,7 @@ class SimulationData {
     this.leftImageAfter,
     this.treatments,
     this.isShared,
+     this.clinic,
     this.createdAt,
     this.updatedAt,
   });
@@ -75,6 +78,9 @@ class SimulationData {
             json["treatments"]!.map((x) => SimulationTreatment.fromJson(x)),
           ),
     isShared: json["is_shared"],
+     clinic: json["clinic"] == null
+            ? null
+            : ClinicData.fromJson(json["clinic"]),
     createdAt: json["created_at"] == null
         ? null
         : DateTime.parse(json["created_at"]).toLocal(),
@@ -101,6 +107,45 @@ class SimulationData {
     "created_at": createdAt?.toIso8601String(),
     "updated_at": updatedAt?.toIso8601String(),
   };
+}
+
+
+class ClinicData {
+  final int? clinicId;
+  final String? image;
+  final String? banner;
+  final String? name;
+  final String? email;
+  final String? phoneNumber;
+
+  const ClinicData({
+    this.clinicId,
+    this.image,
+    this.banner,
+    this.name,
+    this.email,
+    this.phoneNumber,
+  });
+
+  factory ClinicData.fromJson(Map<String, dynamic> json) {
+    return ClinicData(
+      clinicId: json["clinic_id"],
+      image: json["image"],
+      banner: json["banner"],
+      name: json["name"],
+      email: json["email"],
+      phoneNumber: json["phone_number"],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        "clinic_id": clinicId,
+        "image": image,
+        "banner": banner,
+        "name": name,
+        "email": email,
+        "phone_number": phoneNumber,
+      };
 }
 
 class SimulationTreatment {

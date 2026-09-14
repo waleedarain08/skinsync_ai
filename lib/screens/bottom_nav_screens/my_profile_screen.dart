@@ -347,6 +347,7 @@ class MyProfileScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: context.w(18)),
+                  if(!isDeploymentMode)
                   Expanded(
                     child: Consumer(
                       builder: (context, ref, _) {
@@ -379,6 +380,7 @@ class MyProfileScreen extends StatelessWidget {
                 ],
               ),
             ),
+             if(!isDeploymentMode)
             SizedBox(height: context.h(20)),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: context.w(24)),
@@ -455,6 +457,7 @@ class MyProfileScreen extends StatelessWidget {
                       icon: SvgAssets.appointment,
                       title: "Appointments",
                     ),
+                     if(!isDeploymentMode)
                     buildCardOption(
                       callBack: () {
                         Navigator.pushNamed(

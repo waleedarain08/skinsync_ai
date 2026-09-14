@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 import '../models/base_state_model.dart';
 import '../models/explore_models.dart';
+import '../models/responses/filter_status.dart';
 import '../repositories/explore_repository.dart';
 import '../services/api_base_helper.dart';
 import '../services/explore_service.dart';
@@ -30,51 +34,36 @@ final exploreViewModel = NotifierProvider<ExploreViewModel, ExploreState>(() {
 
 class ExploreState extends BaseStateModel {
   final List<ReelModel> reels;
-  final List<CommunityPostModel> posts;
+  final List<CommunityPostModel> posts; // kept for reference/back-compat if used elsewhere
 
   final int reelsTotalPages;
   final int postsTotalPages;
 
   final int reelsCurrentPage;
-  final int postsCurrentPage;
 
   final int pageSize;
 
   final ExploreViewType viewType;
 
-  // Separate loading flags so Reels and Community fetches
-  // never clobber each other's spinner state.
   final bool reelsLoading;
-  final bool postsLoading;
-
+  final List<FilterStatus> postTags;
   final String selectedTag;
-  final List<String> tags;
+  final int? selectedTagId;
 
   const ExploreState({
     super.loading,
     super.errorMessage,
     this.reels = const [],
     this.posts = const [],
+    this.postTags = const [],
     this.reelsTotalPages = 1,
     this.postsTotalPages = 1,
     this.reelsCurrentPage = 1,
-    this.postsCurrentPage = 1,
     this.pageSize = 20,
     this.viewType = ExploreViewType.community,
     this.reelsLoading = false,
-    this.postsLoading = false,
     this.selectedTag = 'All',
-    this.tags = const [
-      'All',
-      'Skincare',
-      'Botox',
-      'Acne Treatment',
-      'Anti-Aging',
-      'Laser & Glow',
-      'Dermatology',
-      'Facials & Peels',
-      'Fillers',
-    ],
+    this.selectedTagId,
   });
 
   @override
@@ -83,16 +72,16 @@ class ExploreState extends BaseStateModel {
     String? errorMessage,
     List<ReelModel>? signDocument,
     List<CommunityPostModel>? posts,
+    List<FilterStatus>? postTags,
     int? totalPages,
     int? postsTotalPages,
     int? currentPage,
-    int? postsCurrentPage,
     int? pageSize,
     ExploreViewType? viewType,
     bool? reelsLoading,
-    bool? postsLoading,
     String? selectedTag,
-    List<String>? tags,
+    int? selectedTagId,
+    bool clearSelectedTagId = false,
   }) {
     return ExploreState(
       loading: loading ?? this.loading,
@@ -102,13 +91,12 @@ class ExploreState extends BaseStateModel {
       reelsTotalPages: totalPages ?? reelsTotalPages,
       postsTotalPages: postsTotalPages ?? this.postsTotalPages,
       reelsCurrentPage: currentPage ?? reelsCurrentPage,
-      postsCurrentPage: postsCurrentPage ?? this.postsCurrentPage,
       pageSize: pageSize ?? this.pageSize,
       viewType: viewType ?? this.viewType,
       reelsLoading: reelsLoading ?? this.reelsLoading,
-      postsLoading: postsLoading ?? this.postsLoading,
       selectedTag: selectedTag ?? this.selectedTag,
-      tags: tags ?? this.tags,
+      selectedTagId: clearSelectedTagId ? null : (selectedTagId ?? this.selectedTagId),
+      postTags: postTags ?? this.postTags,
     );
   }
 
@@ -121,76 +109,99 @@ class ExploreState extends BaseStateModel {
       reelsTotalPages: reelsTotalPages,
       postsTotalPages: postsTotalPages,
       reelsCurrentPage: reelsCurrentPage,
-      postsCurrentPage: postsCurrentPage,
       pageSize: pageSize,
       viewType: viewType,
       reelsLoading: reelsLoading,
-      postsLoading: postsLoading,
       selectedTag: selectedTag,
-      tags: tags,
+      selectedTagId: selectedTagId,
+      postTags: postTags,
     );
   }
 }
 
 class ExploreViewModel extends BaseViewModel<ExploreState> {
   final ExploreRepository _repository;
-  ExploreViewModel({required this._repository})
-    : super(initialState: const ExploreState());
+  ExploreViewModel({required ExploreRepository repository})
+      : _repository = repository,
+        super(initialState: const ExploreState());
 
- Future<void> fetchReels({int page = 1}) async {
-  state = state.copyWith(reelsLoading: true);
+  // Posts pagination, driven by infinite_scroll_pagination.
+  late final PagingController<int, CommunityPostModel> postsPagingController =
+      PagingController<int, CommunityPostModel>(
+    getNextPageKey: (pagingState) {
+      final lastPageKey = pagingState.keys?.last ?? 0;
+      final totalPages = state.postsTotalPages == 0 ? 1 : state.postsTotalPages;
+      return lastPageKey < totalPages ? lastPageKey + 1 : null;
+    },
+    fetchPage: (pageKey) async {
+      return await _fetchPostsPage(pageKey) ?? [];
+    },
+  );
 
-  await runSafely(() async {
-    final response = await _repository.fetchReels(
-      page: page,
-      limit: state.pageSize,
-    );
+  Future<List<CommunityPostModel>?> _fetchPostsPage(int pageKey) async {
+    return runSafely(() async {
+      final response = await _repository.fetchPosts(
+        page: pageKey,
+        limit: state.pageSize,
+        filter: state.selectedTagId,
+      );
 
-    final List<ReelModel> newReels = page == 1
-        ? (response.data ?? <ReelModel>[])
-        : <ReelModel>[...state.reels, ...(response.data ?? <ReelModel>[])];
+      if (!ref.mounted) return null;
 
-    state = state.copyWith(
-      signDocument: newReels,
-      totalPages: response.totalPages,
-      currentPage: response.page,
-      reelsLoading: false,
-    );
-  });
+      state = state.copyWith(postsTotalPages: response.totalPages ?? 1);
 
-  if (state.reelsLoading) {
-    state = state.copyWith(reelsLoading: false);
+      return response.data ?? [];
+    });
   }
-}
 
-Future<void> fetchPosts({int page = 1}) async {
-  state = state.copyWith(postsLoading: true);
+  Future<void> fetchReels({int page = 1}) async {
+    state = state.copyWith(reelsLoading: true);
 
-  await runSafely(() async {
-    final response = await _repository.fetchPosts(
-      page: page,
-      limit: state.pageSize,
-    );
+    await runSafely(() async {
+      final response = await _repository.fetchReels(
+        page: page,
+        limit: state.pageSize,
+      );
 
-    final List<CommunityPostModel> newPosts = page == 1
-        ? (response.data ?? <CommunityPostModel>[])
-        : <CommunityPostModel>[
-            ...state.posts,
-            ...(response.data ?? <CommunityPostModel>[]),
-          ];
+      final List<ReelModel> newReels = page == 1
+          ? (response.data ?? <ReelModel>[])
+          : <ReelModel>[...state.reels, ...(response.data ?? <ReelModel>[])];
 
-    state = state.copyWith(
-      posts: newPosts,
-      postsTotalPages: response.totalPages,
-      postsCurrentPage: response.page,
-      postsLoading: false,
-    );
-  });
+      state = state.copyWith(
+        signDocument: newReels,
+        totalPages: response.totalPages,
+        currentPage: response.page,
+        reelsLoading: false,
+      );
+    });
 
-  if (state.postsLoading) {
-    state = state.copyWith(postsLoading: false);
+    if (state.reelsLoading) {
+      state = state.copyWith(reelsLoading: false);
+    }
   }
-}
+
+  Future<void> fetchPostTags() async {
+    state = state.copyWith(reelsLoading: true);
+
+    await runSafely(() async {
+      final response = await _repository.fetchPostTags();
+
+      final tags = <FilterStatus>[
+        FilterStatus(id: 0, name: 'All'),
+        ...response.data,
+      ];
+
+      state = state.copyWith(
+        postTags: tags,
+        reelsLoading: false,
+      );
+    });
+
+    if (state.reelsLoading) {
+      state = state.copyWith(reelsLoading: false);
+    }
+  }
+
   void setViewType(ExploreViewType type) {
     state = state.copyWith(viewType: type);
   }
@@ -203,7 +214,21 @@ Future<void> fetchPosts({int page = 1}) async {
     );
   }
 
-  void selectTag(String tag) {
-    state = state.copyWith(selectedTag: tag);
+  void selectTag(FilterStatus tag) {
+    final isAll = tag.name == 'All';
+
+    state = state.copyWith(
+      selectedTag: tag.name,
+      selectedTagId: isAll ? null : tag.id,
+      clearSelectedTagId: isAll,
+    );
+
+    postsPagingController.refresh(); // resets to page 1 with new filter
+  }
+
+  @override
+  void dispose() {
+    postsPagingController.dispose();
+    super.dispose();
   }
 }

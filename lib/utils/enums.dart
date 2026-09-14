@@ -77,6 +77,7 @@ enum EndPoints {
   patientUsages('v1/patient-usages'),
   medicalHistory('v1/medical-history'),
   sharedRequest('v1/shared-request'),
+  postTags('v1/community-post/tags'),
   qrScan('v1/qrscan'),
   clinic('v1/clinic'),
   chats('v1/chats'),
