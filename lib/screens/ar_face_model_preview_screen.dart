@@ -95,6 +95,16 @@ class _ArFaceModelPreviewScreenState
         },
       );
 
+  void _onScrollShowcaseListener() {
+    if (_showcaseContext != null && mounted) {
+      final activeWidgetId =
+          ShowCaseWidget.of(_showcaseContext!).activeWidgetId;
+      if (activeWidgetId != null) {
+        setState(() {});
+      }
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Lifecycle Methods
   // ---------------------------------------------------------------------------
@@ -104,6 +114,7 @@ class _ArFaceModelPreviewScreenState
     super.initState();
 
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScrollShowcaseListener);
 
     _pulseController = AnimationController(
       vsync: this,
@@ -206,6 +217,7 @@ class _ArFaceModelPreviewScreenState
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScrollShowcaseListener);
     _scrollController.dispose();
     _pagingController.dispose();
     _pulseController.dispose();
@@ -276,28 +288,19 @@ class _ArFaceModelPreviewScreenState
     return ShowCaseWidget(
       onStart: (index, key) async {
         if (key == _keyTreatmentSelection) {
-          // 1. Select treatment 0 and fetch areas first
-          await _selectFirstTreatmentOnly();
-          // 2. Allow layout to settle after areas insertion into widget tree
-          await Future.delayed(const Duration(milliseconds: 200));
-          // 3. Scroll to treatment item
-          await _scrollToKey(_keyTreatmentSelection, alignment: 0.3);
-          // 4. Short delay so spotlight measures exact settled coordinates
-          await Future.delayed(const Duration(milliseconds: 100));
+          await _prepareAndScrollToTreatmentShowcase();
         } else if (key == _keyAreaSelection) {
-          await _selectFirstAreaOnly();
-          await Future.delayed(const Duration(milliseconds: 150));
-          await _scrollToKey(_keyAreaSelection, alignment: 0.3);
-          await Future.delayed(const Duration(milliseconds: 100));
+          await _prepareAndScrollToAreaShowcase();
         } else if (key == _keyGenerateAiButton || key == _keySaveOptionButton) {
           await _scrollToKey(_keyGenerateAiButton, alignment: 0.8);
-          await Future.delayed(const Duration(milliseconds: 100));
+          await Future.delayed(const Duration(milliseconds: 400));
         } else if (_scrollController.hasClients) {
           await _scrollController.animateTo(
             0,
             duration: const Duration(milliseconds: 350),
             curve: Curves.easeInOut,
           );
+          await Future.delayed(const Duration(milliseconds: 400));
         }
       },
       builder: (showcaseContext) {
@@ -906,6 +909,73 @@ class _ArFaceModelPreviewScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _prepareAndScrollToTreatmentShowcase() async {
+    try {
+      await _selectFirstTreatmentOnly();
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      int attempts = 0;
+      while (_keyTreatmentSelection.currentContext == null && attempts < 5) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+
+      await _scrollToKey(_keyTreatmentSelection, alignment: 0.3);
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        setState(() {});
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      debugPrint('Error preparing treatment showcase: $e');
+    }
+  }
+
+  Future<void> _prepareAndScrollToAreaShowcase() async {
+    try {
+      final checkoutState = ref.read(checkoutViewModel);
+      var selectedTreatment = checkoutState.selectedTreatments;
+
+      if (selectedTreatment == null) {
+        final treatments = _pagingController.value.items;
+        if (treatments != null && treatments.isNotEmpty) {
+          selectedTreatment = treatments.first;
+          ref
+              .read(checkoutViewModel.notifier)
+              .addSelectedTreatment(selectedTreatment);
+          await ref.read(treatmentViewModel.notifier).onTapTreatment(
+                treatmentModel: selectedTreatment,
+                isCallPredictAPI: false,
+              );
+        }
+      }
+
+      if (selectedTreatment != null) {
+        final areaNotifier = ref.read(treatmentAreaProvider.notifier);
+        await areaNotifier.fetchAreasByTreatment(selectedTreatment.id ?? 0);
+      }
+
+      await _selectFirstAreaOnly();
+
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      int attempts = 0;
+      while (_keyAreaSelection.currentContext == null && attempts < 5) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        attempts++;
+      }
+
+      await _scrollToKey(_keyAreaSelection, alignment: 0.3);
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        setState(() {});
+      }
+      await Future.delayed(const Duration(milliseconds: 100));
+    } catch (e) {
+      debugPrint('Error preparing area showcase: $e');
+    }
   }
 
   Future<void> _selectFirstTreatmentOnly() async {
