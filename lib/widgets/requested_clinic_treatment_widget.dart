@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../models/responses/auth_response.dart';
@@ -175,17 +176,37 @@ class RequestClinicTreatmentCard extends StatelessWidget {
                   else
                     Consumer(
                       builder: (_, ref, _) {
-                        return IconButton(
-                          onPressed: () {
+                        return GestureDetector(
+                          onTap: () {
                             ref
                                 .read(chatProvider.notifier)
                                 .selectChat(Chat(id: chatId));
                             Navigator.pushNamed(context, ChatScreen.routeName);
                           },
-                          icon: Icon(
-                            Iconsax.message,
-                            size: 18,
-                            color: Colors.grey.shade400,
+                          child: Container(
+                            padding: EdgeInsets.all(context.r(10)),
+                            decoration: BoxDecoration(
+                              gradient: CustomColors.purpleBlueGradient,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.25),
+                                  blurRadius: 12,
+                                  spreadRadius: 1,
+                                  offset: const Offset(0, 4),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  blurRadius: 16,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Iconsax.message_text_1,
+                              color: CustomColors.blackColor,
+                              size: context.sp(18),
+                            ),
                           ),
                         );
                       },
