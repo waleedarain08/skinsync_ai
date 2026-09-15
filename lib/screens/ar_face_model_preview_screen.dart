@@ -147,7 +147,11 @@ class _ArFaceModelPreviewScreenState
             .fetchAreasByTreatment(selectedTreatment.id ?? 0);
       }
 
-      _startShowcaseGuide();
+      final hasSeenShowcase = await SecureStorage().getArShowcaseSeen();
+      if (!hasSeenShowcase) {
+        await SecureStorage().saveArShowcaseSeen();
+        _startShowcaseGuide();
+      }
     });
   }
 
@@ -325,11 +329,6 @@ class _ArFaceModelPreviewScreenState
                 onBackTap: handleBackNavigation,
                 actions: [
                   IconButton(
-                    onPressed: _startShowcaseGuide,
-                    icon: const Icon(Icons.help_outline_rounded),
-                    tooltip: 'Show Feature Guide',
-                  ),
-                  IconButton(
                     onPressed: () => Navigator.pushNamed(
                       context,
                       TreatmentJourneyScreen.routeName,
@@ -339,54 +338,90 @@ class _ArFaceModelPreviewScreenState
                 ],
               ),
               body: SafeArea(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Stack(
                   children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: context.h(20)),
-                            _buildPoseSelector(),
-                            SizedBox(height: context.h(12)),
-                            _buildFacePreview(),
-                            const MedicalDisclaimerBanner(),
-                            SelectedTreatmentAndAreasWidget(
-                              margin: EdgeInsets.only(top: context.h(8)),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.w(20),
-                              ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(height: context.h(20)),
+                                _buildPoseSelector(),
+                                SizedBox(height: context.h(12)),
+                                _buildFacePreview(),
+                                const MedicalDisclaimerBanner(),
+                                SelectedTreatmentAndAreasWidget(
+                                  margin: EdgeInsets.only(top: context.h(8)),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: context.w(20),
+                                  ),
+                                ),
+                                SizedBox(height: context.h(20)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: context.w(20),
+                                  ),
+                                  child: _buildTreatmentHeader(),
+                                ),
+                                SizedBox(height: context.h(8)),
+                                _buildTreatmentsList(),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: context.w(20),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: context.h(30)),
+                                      _buildAreaSelectionSection(),
+                                      SizedBox(height: context.h(20)),
+                                      _buildSummarySection(),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            SizedBox(height: context.h(20)),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.w(20),
+                          ),
+                        ),
+                        _buildBottomActions(),
+                      ],
+                    ),
+                    Positioned(
+                      right: context.w(20),
+                      bottom: context.h(100),
+                      child: GestureDetector(
+                        onTap: _startShowcaseGuide,
+                        child: Container(
+                          padding: EdgeInsets.all(context.r(14)),
+                          decoration: BoxDecoration(
+                            gradient: CustomColors.purpleBlueGradient,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.25),
+                                blurRadius: 16,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 6),
                               ),
-                              child: _buildTreatmentHeader(),
-                            ),
-                            SizedBox(height: context.h(8)),
-                            _buildTreatmentsList(),
-                            Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.w(20),
+                              BoxShadow(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                blurRadius: 20,
+                                spreadRadius: 4,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: context.h(30)),
-                                  _buildAreaSelectionSection(),
-                                  SizedBox(height: context.h(20)),
-                                  _buildSummarySection(),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.help_outline_rounded,
+                            color: CustomColors.blackColor,
+                            size: context.sp(22),
+                          ),
                         ),
                       ),
                     ),
-                    _buildBottomActions(),
                   ],
                 ),
               ),
