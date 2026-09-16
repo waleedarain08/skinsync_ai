@@ -44,10 +44,10 @@ class LocationService {
   // }
 
   Future<AddressData?> fetchAddress() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      throw const AppException('Location service denied!');
-    }
+    // final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    // if (!serviceEnabled) {
+    //   throw const AppException('Location service denied!');
+    // }
 
     // Check/request permission
     var permission = await Geolocator.checkPermission();

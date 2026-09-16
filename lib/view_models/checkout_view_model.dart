@@ -631,8 +631,8 @@ class CheckoutViewModel extends BaseViewModel<CheckoutState> {
 
 class CheckoutState extends BaseStateModel {
   final List<SelectedTreatmentAndAreasModel> selectedTreatmentsAndAreas;
-  final List<FlatSelectionModel> checkoutTreatmentsList;
-  final List<TreatmentCategoryModel>? selectedCategories;
+final List<FlatSelectionModel> checkoutTreatmentsList;
+final List<TreatmentCategoryModel>? selectedCategories;
   final TreatmentData? selectedTreatments;
   final TreatmentAreaModel? selectedAreas;
   final AppointmentData? appointment;

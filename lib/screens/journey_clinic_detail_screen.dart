@@ -401,6 +401,9 @@ class _JourneyClinicDetailScreenState
                                 ref
                                     .read(clinicProvider.notifier)
                                     .setClinic(widget.clinic);
+                                     ref
+                                      .read(checkoutViewModel.notifier)
+                                      .setSelectedClinic(widget.clinic!);
                                 Navigator.pushNamed(
                                   context,
                                   TreatmentJourneyScreen.routeName,
