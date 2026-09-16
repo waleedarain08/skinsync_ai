@@ -28,7 +28,7 @@ class SimulationHistoryResponse extends BaseResponseModel {
 class SimulationData {
   final int? id;
   final int? userId;
-
+  final int? refId;
   final int? groupId;
   final String? name;
   final String? frontImageBefore;
@@ -47,6 +47,7 @@ class SimulationData {
     this.id,
     this.userId,
     this.groupId,
+    this.refId,
     this.name,
     this.frontImageBefore,
     this.frontImageAfter,
@@ -65,6 +66,7 @@ class SimulationData {
     id: json["id"],
     userId: json["user_id"],
     groupId: json["group_id"],
+    refId: json['reference_id'],
     name: json["name"],
     frontImageBefore: json["front_image_before"],
     frontImageAfter: json["front_image_after"],
@@ -92,6 +94,7 @@ class SimulationData {
   Map<String, dynamic> toJson() => {
     "id": id,
     "user_id": userId,
+    "reference_id":refId,
     "group_id": groupId,
     "name": name,
     "front_image_before": frontImageBefore,

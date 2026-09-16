@@ -93,7 +93,7 @@ class _PatientTreatmentRequestsScreenState
     PatientTreatmentRequest request,
   ) {
     final treatments = request.treatments ?? [];
-    final title = request.name ?? "Shared Treatment Request";
+    final title = request.refId ?? "Shared Treatment Request";
     final subtitle = request.createdAt != null
         ? "Created at: ${request.createdAt!.formattedDateTime}"
         : "";
@@ -128,15 +128,22 @@ class _PatientTreatmentRequestsScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          style: CustomFonts.black18w600,
+                        RichText(
+                          text: TextSpan(
+                            text: 'Ref: ',
+                            style: CustomFonts.black17w600,
+                            children: [
+                              TextSpan(
+                                text: title.toString(),
+                                style: CustomFonts.black16w600.copyWith(
+                                  color: CustomColors.purpleColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         if (subtitle.isNotEmpty)
-                          Text(
-                            subtitle,
-                            style: CustomFonts.grey14w400,
-                          ),
+                          Text(subtitle, style: CustomFonts.grey14w400),
                       ],
                     ),
                   ),
@@ -157,7 +164,9 @@ class _PatientTreatmentRequestsScreenState
                     final t = treatments[index];
                     final isLast = index == treatments.length - 1;
                     return Padding(
-                      padding: EdgeInsets.only(bottom: isLast ? 0 : context.h(12)),
+                      padding: EdgeInsets.only(
+                        bottom: isLast ? 0 : context.h(12),
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -179,7 +188,8 @@ class _PatientTreatmentRequestsScreenState
                             Padding(
                               padding: EdgeInsets.only(
                                 left: context.w(4),
-                                bottom: context.h(8)),
+                                bottom: context.h(8),
+                              ),
                               child: Text(
                                 "Selected Areas",
                                 style: CustomFonts.black16w600,
@@ -194,8 +204,7 @@ class _PatientTreatmentRequestsScreenState
                                   icon: area.icon,
                                   isTreatment: false,
                                   imageUrl: area.image,
-                                  materials: area.materials
-                                     ,
+                                  materials: area.materials,
                                 );
                               }).toList(),
                             ),
