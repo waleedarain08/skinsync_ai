@@ -19,7 +19,7 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_clinic_grid_view_title.dart';
 import '../widgets/custom_search_field.dart';
 import '../widgets/selected_treatment_and_areas_widget.dart';
-import 'clinics_detail_screen.dart';
+import 'journey_clinic_detail_screen.dart';
 
 class ExploreClinicsScreen extends ConsumerStatefulWidget {
   const ExploreClinicsScreen({super.key});
@@ -250,7 +250,7 @@ class _ExploreClinicsScreenState extends ConsumerState<ExploreClinicsScreen> {
                     .setClinic(clinics[index]);
                 Navigator.pushNamed(
                   context,
-                  ClinicsDetailScreen.routeName,
+                  JourneyClinicDetailScreen.routeName,
                   arguments: clinics[index],
                 );
               },
@@ -372,7 +372,7 @@ class _ExploreClinicsScreenState extends ConsumerState<ExploreClinicsScreen> {
                   ref.read(clinicProvider.notifier).setClinic(clinic);
                   Navigator.pushNamed(
                     context,
-                    ClinicsDetailScreen.routeName,
+                    JourneyClinicDetailScreen.routeName,
                     arguments: clinic,
                   );
                 },

@@ -15,6 +15,7 @@ import '../models/responses/availability_response.dart';
 import '../models/responses/get_clinic_response.dart';
 import '../models/responses/payment_options_response.dart';
 import '../models/responses/practitioner_list_response.dart';
+import '../models/responses/simulation_history_response.dart';
 import '../models/responses/treatment_area_list_response.dart';
 import '../models/responses/treatment_category_list_response.dart';
 import '../models/responses/treatment_list_response.dart';
@@ -545,6 +546,46 @@ class CheckoutViewModel extends BaseViewModel<CheckoutState> {
   // ---------------------------------------------------------------------------
   // Private Helpers
   // ---------------------------------------------------------------------------
+  void setSelectedTreatmentAndAreasModel(SimulationData simulation) {
+    final selectedTreatments = (simulation.treatments ?? []).map((treatment) {
+      final selectedAreas = (treatment.areas ?? []).map((area) {
+        final simulationMaterial = (area.materials ?? []).isNotEmpty
+            ? area.materials!.first
+            : null;
+
+        return SelectedAreaModel(
+          target: TreatmentAreaModel(
+            id: area.id,
+            name: area.name,
+            icon: area.icon,
+            image: area.image,
+          ),
+          material: simulationMaterial?.id == null
+              ? null
+              : SelectedMaterialModel(
+                  id: simulationMaterial!.id!,
+                  name: simulationMaterial.name ?? '',
+                  selectedQuantity: simulationMaterial.selectedQuantity ?? 1,
+                  minQty: 1,
+                  maxQty: simulationMaterial.selectedQuantity ?? 1,
+                ),
+        );
+      }).toList();
+
+      return SelectedTreatmentAndAreasModel(
+        treatment: TreatmentData(
+          id: treatment.id,
+          name: treatment.name,
+          icon: treatment.icon,
+          image: treatment.image,
+        ),
+        selectedAreas: selectedAreas,
+      );
+    }).toList();
+
+    state = state.copyWith(selectedTreatmentsAndAreas: selectedTreatments);
+    flatSelections();
+  }
 
   void _updateTreatmentAreaSelection({
     required TreatmentData treatment,

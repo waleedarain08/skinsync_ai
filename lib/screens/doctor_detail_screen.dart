@@ -4,16 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
+import '../models/requests/preferred_slot.dart';
 import '../models/responses/get_clinic_response.dart';
 import '../models/responses/practitioner_list_response.dart';
+import '../utils/date_time_utils.dart';
 import '../utils/string_utils.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../view_models/checkout_view_model.dart';
+import '../view_models/treatment_journey_view_model.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
-import 'review_screen.dart';
 import 'select_date_time_screen.dart';
+import 'treatment_review_screen.dart';
 
 class DoctorDetailScreen extends ConsumerWidget {
   static const routeName = '/doctor_detail_screen';
@@ -195,7 +198,7 @@ class DoctorDetailScreen extends ConsumerWidget {
                   vertical: context.h(20),
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(context.r(24)),
                   ),
@@ -220,10 +223,27 @@ class DoctorDetailScreen extends ConsumerWidget {
                         );
 
                     if (hasDateTime) {
+                      final checkoutState = ref.read(checkoutViewModel);
+                      final simulations = ref
+                          .read(treatmentJourneyProvider)
+                          .simulations;
+                      final preferredSlots = [
+                        PreferredSlot(
+                          date: checkoutState.selectedDate!.secondsSinceEpoch,
+                          time: checkoutState
+                              .selectedSlotObject!
+                              .startTime
+                              .secondsSinceEpoch,
+                        ),
+                      ];
                       Navigator.pushNamed(
                         context,
-                        ReviewScreen.routeName,
-                        arguments: targetClinic,
+                        TreatmentReviewScreen.routeName,
+                        arguments: {
+                          'simulationData': simulations,
+                          'preferredSlots': preferredSlots,
+                          'clinic': targetClinic,
+                        },
                       );
                     } else {
                       Navigator.pushNamed(

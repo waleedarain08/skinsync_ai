@@ -57,12 +57,12 @@ class DoctorViewModel extends BaseViewModel<DoctorState> {
       final clinicId = checkoutState.selectedClinic?.id;
 
       // Extract treatments from checkout state if any
-      final treatments = checkoutState.checkoutTreatmentsList.map((t) {
-        return PractitionerTreatmentRequest(
-          treatmentId: t.treatmentId,
-          areaIds: [t.areaId],
-        );
-      }).toList();
+      // final treatments = checkoutState.checkoutTreatmentsList.map((t) {
+      //   return PractitionerTreatmentRequest(
+      //     treatmentId: t.treatmentId,
+      //     areaIds: [t.areaId],
+      //   );
+      // }).toList();
 
       final request = GetPractitionersRequest(
         page: page,
@@ -73,7 +73,8 @@ class DoctorViewModel extends BaseViewModel<DoctorState> {
         date: checkoutState.selectedDate == null
             ? null
             : checkoutState.selectedDate!.millisecondsSinceEpoch ~/ 1000,
-        treatments: treatments.isEmpty ? null : treatments,
+        treatments: [],
+      //  treatments.isEmpty ? null : treatments,
       );
 
       final response = await doctorRepository.getPractitioners(

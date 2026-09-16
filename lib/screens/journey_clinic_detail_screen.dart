@@ -5,20 +5,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../models/requests/preferred_slot.dart';
 import '../models/responses/clinic_detail_response.dart';
 import '../models/responses/get_clinic_response.dart';
 import '../utils/app_lunach_utils.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
+import '../view_models/checkout_view_model.dart';
 import '../view_models/clinic_view_model.dart';
 import '../view_models/treatment_journey_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/bottom_sheets/preferred_slots_bottom_sheet.dart';
 import 'patient_treatment_requests_screen.dart';
-import 'treatment_review_screen.dart';
+import 'select_appointment_type_screen.dart';
 import 'treatment_journey_screen.dart';
 
 class JourneyClinicDetailScreen extends ConsumerStatefulWidget {
@@ -409,30 +408,41 @@ class _JourneyClinicDetailScreenState
                                 return;
                               }
 
-                              void processShare(List<PreferredSlot> slots) {
-                                if (widget.clinic != null) {
-                                  Navigator.pushNamed(
-                                    context,
-                                    TreatmentReviewScreen.routeName,
-                                    arguments: {
-                                      'simulationData': tjState.simulations,
-                                      'preferredSlots': slots,
-                                      'clinic': widget.clinic!,
-                                    },
-                                  );
-                                }
-                              }
+                              // void processShare(List<PreferredSlot> slots) {
+                              //   if (widget.clinic != null) {
+                              //     Navigator.pushNamed(
+                              //       context,
+                              //       TreatmentReviewScreen.routeName,
+                              //       arguments: {
+                              //         'simulationData': tjState.simulations,
+                              //         'preferredSlots': slots,
+                              //         'clinic': widget.clinic!,
+                              //       },
+                              //     );
+                              //   }
+                              // }
 
                               // final bool docResult = await ref
                               //     .read(formsViewModel.notifier)
                               //     .checkAndOpenDocumentBySku("SHRE-TRET-CONS");
                               //
                               // if (docResult) {
+                               if (widget.clinic != null) {
+                                  ref
+                                      .read(checkoutViewModel.notifier)
+                                      .setSelectedClinic(widget.clinic!);
+                                }
                               if (context.mounted) {
-                                PreferredSlotsBottomSheet.show(
-                                  context: context,
-                                  onConfirm: (slots) => processShare(slots),
+                                Navigator.pushNamed(
+                                  context,
+                                  SelectAppointmentTypeScreen.routeName,
+                                  arguments: widget.clinic,
                                 );
+
+                                // PreferredSlotsBottomSheet.show(
+                                //   context: context,
+                                //   onConfirm: (slots) => processShare(slots),
+                                // );
                                 // }
                               }
                             },

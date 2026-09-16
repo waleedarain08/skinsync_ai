@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
+import '../models/requests/preferred_slot.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../view_models/checkout_view_model.dart';
+import '../view_models/treatment_journey_view_model.dart';
 import '../widgets/bottom_sheets/before_you_book_bottomsheet.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
-import 'review_screen.dart';
+import 'treatment_review_screen.dart';
 
 class SelectDateTimeScreen extends ConsumerStatefulWidget {
   static const routeName = '/select_date_time_screen';
@@ -30,6 +32,32 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
     "01:00 PM - 03:00 PM",
     "03:00 PM - 05:00 PM",
   ];
+
+  List<PreferredSlot> _buildPreferredSlots() {
+    final slotStart = _selectedSlot!.split(' - ').first;
+    final timeParts = slotStart.split(' ');
+    final hourAndMinute = timeParts.first.split(':');
+    var hour = int.parse(hourAndMinute[0]);
+    final minute = int.parse(hourAndMinute[1]);
+
+    if (timeParts.last == 'PM' && hour < 12) hour += 12;
+    if (timeParts.last == 'AM' && hour == 12) hour = 0;
+
+    final selectedDateTime = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day,
+      hour,
+      minute,
+    );
+
+    return [
+      PreferredSlot(
+        date: _selectedDate!.secondsSinceEpoch,
+        time: selectedDateTime.secondsSinceEpoch,
+      ),
+    ];
+  }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -262,7 +290,7 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
                 vertical: context.h(20),
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.transparent,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(context.r(24)),
                 ),
@@ -275,9 +303,8 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
                 ],
               ),
               child: CustomButton(
-                text: "Continue to Review",
+                text: "Continue",
                 borderRadius: context.r(26),
-                textColor: Colors.white,
                 onPressed: canContinue
                     ? () {
                         // Save Selected parameters to checkout ViewModel
@@ -287,16 +314,36 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
                         ref
                             .read(checkoutViewModel.notifier)
                             .setSelectedSlot(_selectedSlot!);
+                        final clinic = ref
+                            .read(checkoutViewModel)
+                            .selectedClinic;
+                        final simulations = ref
+                            .read(treatmentJourneyProvider)
+                            .simulations;
+                        final slots = _buildPreferredSlots();
 
                         if (!ref.read(checkoutViewModel).isInviteClinic) {
-                          Navigator.pushNamed(context, ReviewScreen.routeName);
+                          Navigator.pushNamed(
+                            context,
+                            TreatmentReviewScreen.routeName,
+                            arguments: {
+                              'simulationData': simulations,
+                              'preferredSlots': slots,
+                              'clinic': clinic,
+                            },
+                          );
                         } else {
                           BeforeYouBookBottomSheet.show(
                             context,
                             onConfirm: () {
                               Navigator.pushNamed(
                                 context,
-                                ReviewScreen.routeName,
+                                TreatmentReviewScreen.routeName,
+                                arguments: {
+                                  'simulationData': simulations,
+                                  'preferredSlots': slots,
+                                  'clinic': clinic,
+                                },
                               );
                             },
                           );

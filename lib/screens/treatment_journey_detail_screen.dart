@@ -22,8 +22,8 @@ import '../widgets/simulation_card.dart';
 import 'ar_face_model_preview_screen.dart';
 import 'bottom_nav_page.dart';
 import 'consent_forms/face_consent_screen.dart';
+import 'explore_clinics_screen.dart';
 import 'face_pose_capture_screen.dart';
-import 'journey_clinics_screen.dart';
 import 'treatment_review_screen.dart';
 
 class TreatmentJourneyDetailScreen extends ConsumerStatefulWidget {
@@ -446,9 +446,14 @@ class _TreatmentJourneyDetailScreenState
                             },
                           );
                         } else {
+                          ref
+                              .read(checkoutViewModel.notifier)
+                              .setSelectedTreatmentAndAreasModel(
+                                state.simulations!,
+                              );
                           Navigator.pushNamed(
                             context,
-                            JourneyClinicsScreen.routeName,
+                            ExploreClinicsScreen.routeName,
                           );
                         }
                       }
@@ -459,9 +464,14 @@ class _TreatmentJourneyDetailScreenState
                           onConfirm: (slots) => processShare(slots),
                         );
                       } else {
+                        ref
+                            .read(checkoutViewModel.notifier)
+                            .setSelectedTreatmentAndAreasModel(
+                              state.simulations!,
+                            );
                         Navigator.pushNamed(
                           context,
-                          JourneyClinicsScreen.routeName,
+                          ExploreClinicsScreen.routeName,
                         );
                       }
                     },
@@ -562,6 +572,4 @@ class _TreatmentJourneyDetailScreenState
       ),
     );
   }
-
-  
 }
