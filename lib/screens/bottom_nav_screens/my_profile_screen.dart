@@ -367,7 +367,9 @@ class MyProfileScreen extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+                            if(!isDeploymentMode)
                             SizedBox(height: context.h(2)),
+                            if(!isDeploymentMode)
                             Text(
                               currentPlan?.name ?? "Free Plan",
                               style: CustomFonts.darkPurple12w600,
