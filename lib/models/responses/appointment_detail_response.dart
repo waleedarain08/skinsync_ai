@@ -2,6 +2,9 @@ import 'base_response_model.dart';
 import 'appointments_list_response.dart';
 import 'appointment_type_list_response.dart';
 
+typedef Doctor = AppointmentDoctor;
+typedef TreatmentDetail = DetailedAppointmentTreatment;
+
 class AppointmentDetailResponse extends BaseResponseModel {
   AppointmentDetailData? data;
 
@@ -24,11 +27,38 @@ class AppointmentDetailResponse extends BaseResponseModel {
   }
 }
 
+class AppointmentPatient {
+  int? id;
+  String? name;
+  String? email;
+  String? phoneNumber;
+
+  AppointmentPatient({this.id, this.name, this.email, this.phoneNumber});
+
+  AppointmentPatient.fromJson(Map<String, dynamic> json) {
+    id = json['id'] ?? json['patient_id'];
+    name = json['name'] ?? json['patient_name'];
+    email = json['email'] ?? json['patient_email'];
+    phoneNumber =
+        json['phone_number'] ?? json['phone'] ?? json['patient_phone'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['email'] = email;
+    data['phone_number'] = phoneNumber;
+    return data;
+  }
+}
+
 class AppointmentDetailData {
   int? id;
   String? appointmentKey;
   AppointmentClinic? clinic;
   AppointmentDoctor? doctor;
+  AppointmentPatient? patient;
   AppointmentTypeData? appointmentType;
   int? date;
   int? startTime;
@@ -49,6 +79,7 @@ class AppointmentDetailData {
     this.appointmentKey,
     this.clinic,
     this.doctor,
+    this.patient,
     this.appointmentType,
     this.date,
     this.startTime,
@@ -70,6 +101,7 @@ class AppointmentDetailData {
     appointmentKey = json['appointment_key'];
     clinic = json['clinic'] != null ? AppointmentClinic.fromJson(json['clinic']) : null;
     doctor = json['doctor'] != null ? AppointmentDoctor.fromJson(json['doctor']) : null;
+    patient = json['patient'] != null ? AppointmentPatient.fromJson(json['patient']) : null;
     appointmentType = json['appointment_type'] != null
         ? AppointmentTypeData.fromJson(json['appointment_type'])
         : null;
@@ -99,6 +131,7 @@ class AppointmentDetailData {
     data['appointment_key'] = appointmentKey;
     if (clinic != null) data['clinic'] = clinic!.toJson();
     if (doctor != null) data['doctor'] = doctor!.toJson();
+    if (patient != null) data['patient'] = patient!.toJson();
     if (appointmentType != null) data['appointment_type'] = appointmentType!.toJson();
     data['date'] = date;
     data['start_time'] = startTime;
@@ -187,6 +220,7 @@ class DetailedAppointmentTreatment {
   String? areaName;
   double? treatmentCost;
   String? treatmentStatus;
+  String? sessionName;
   AppointmentMaterial? material;
 
   DetailedAppointmentTreatment({
@@ -197,6 +231,7 @@ class DetailedAppointmentTreatment {
     this.areaName,
     this.treatmentCost,
     this.treatmentStatus,
+    this.sessionName,
     this.material,
   });
 
@@ -208,6 +243,7 @@ class DetailedAppointmentTreatment {
     areaName = json['area_name'];
     treatmentCost = (json['treatment_cost'] as num?)?.toDouble();
     treatmentStatus = json['treatment_status'];
+    sessionName = json['session_name'];
     material = json['material'] != null ? AppointmentMaterial.fromJson(json['material']) : null;
   }
 
@@ -220,6 +256,7 @@ class DetailedAppointmentTreatment {
     data['area_name'] = areaName;
     data['treatment_cost'] = treatmentCost;
     data['treatment_status'] = treatmentStatus;
+    data['session_name'] = sessionName;
     if (material != null) {
       data['material'] = material!.toJson();
     }

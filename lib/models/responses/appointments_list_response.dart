@@ -208,13 +208,14 @@ class AppointmentMaterial {
     name = json['name'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['selected_quantity'] = selectedQuantity;
-    data['name'] = name;
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'selected_quantity': selectedQuantity,
+    'name': name,
+  };
+
+  String? get materialName => name;
+  String? get unitType => name;
 }
 
 class AppointmentDoctor {
@@ -266,6 +267,7 @@ class AppointmentDoctor {
   int? get doctorId => id;
   String? get doctorName => name;
   String? get doctorImage => image;
+  String? get specialization => title;
 }
 
 class AppointmentClinic {
