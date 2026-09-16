@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../models/responses/patient_treatment_request_response.dart';
+import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../widgets/custom_app_bar.dart';
@@ -29,7 +30,7 @@ class _PatientTreatmentRequestDetailScreenState
     final request = widget.request;
     final sim = request;
 
-    final title = request.name ?? "Shared Treatment Request";
+    final title = request.refId;
     final subtitle = request.createdAt?.formattedDateTime ?? "";
 
     return Scaffold(
@@ -72,9 +73,19 @@ class _PatientTreatmentRequestDetailScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          style: CustomFonts.black20w600,
+                        RichText(
+                          text: TextSpan(
+                            text: 'Ref: ',
+                            style: CustomFonts.black17w600,
+                            children: [
+                              TextSpan(
+                                text: title.toString(),
+                                style: CustomFonts.black16w600.copyWith(
+                                  color: CustomColors.purpleColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         if (subtitle.isNotEmpty) ...[
                           SizedBox(height: context.h(4)),
