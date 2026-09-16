@@ -1,10 +1,14 @@
 import '../models/requests/get_practitioners_request.dart';
+import '../models/requests/practitioner_availability_request.dart';
 import '../models/responses/availability_response.dart';
 import '../models/responses/practitioner_list_response.dart';
 
 abstract class DoctorRepository {
   Future<PractitionerListResponse> getPractitioners({
     required GetPractitionersRequest request,
+  });
+  Future<AvailabilityResponse> getPractitionerAvailability ({
+    required PractitionerAvailabilityRequest  request,
   });
 
   Future<PractitionerListResponse> getDoctors({

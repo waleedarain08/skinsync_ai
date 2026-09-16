@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/base_state_model.dart';
 import '../models/requests/get_practitioners_request.dart';
+import '../models/requests/practitioner_availability_request.dart';
 import '../models/responses/availability_response.dart';
 import '../models/responses/payment_options_response.dart';
 import '../models/responses/practitioner_list_response.dart';
@@ -51,18 +52,18 @@ class DoctorViewModel extends BaseViewModel<DoctorState> {
       if (showEasyLoading) {
         EasyLoading.show(status: 'Loading...');
       }
+
       state = state.copyWith(doctorLoading: true);
 
       final checkoutState = ref.read(checkoutViewModel);
       final clinicId = checkoutState.selectedClinic?.id;
 
-      // Extract treatments from checkout state if any
-      final treatments = checkoutState.checkoutTreatmentsList.map((t) {
-        return PractitionerTreatmentRequest(
-          treatmentId: t.treatmentId,
-          areaIds: [t.areaId],
-        );
-      }).toList();
+      // Extract only treatment IDs from checkout state
+      // final treatmentIds = checkoutState.checkoutTreatmentsList
+      //     .map((t) => t.treatmentId)
+      //     .whereType<int>()
+      //     .toSet()
+      //     .toList();
 
       final request = GetPractitionersRequest(
         page: page,
@@ -73,19 +74,62 @@ class DoctorViewModel extends BaseViewModel<DoctorState> {
         date: checkoutState.selectedDate == null
             ? null
             : checkoutState.selectedDate!.millisecondsSinceEpoch ~/ 1000,
-        treatments: treatments.isEmpty ? null : treatments,
+        //   treatmentIds: treatmentIds.isEmpty ? null : treatmentIds,
       );
 
       final response = await doctorRepository.getPractitioners(
         request: request,
       );
+
       if (!ref.mounted) return;
+
       EasyLoading.dismiss();
+
       state = state.copyWith(doctorLoading: false, doctorResponse: response);
     });
   }
 
-  Future<bool?> getDoctors({
+Future<void> getPractitionerAvailability({required DateTime date}) async {
+  await runSafely(() async {
+    EasyLoading.show(status: 'Loading...');
+
+    final checkoutState = ref.read(checkoutViewModel);
+    final clinicId = checkoutState.selectedClinic?.id;
+
+    final treatments = checkoutState.checkoutTreatmentsList
+        .map(
+          (t) => PractitionerAvailabilityTreatmentRequest(
+            treatmentId: t.treatmentId!,
+            areaIds: [t.areaId!],
+          ),
+        )
+        .toList();
+    final docID = checkoutState.selectedDoctorObject?.id;
+
+    if (docID == null || clinicId == null) {
+      EasyLoading.dismiss();
+      return;
+    }
+
+    final request = PractitionerAvailabilityRequest(
+      doctorId: docID,
+      date: date.millisecondsSinceEpoch ~/ 1000,
+      clinicId: clinicId,
+      treatments: treatments,
+    );
+
+    final availabilityResponse = await doctorRepository
+        .getPractitionerAvailability(request: request);
+
+    if (!ref.mounted) return;
+
+    EasyLoading.dismiss();
+
+    state = state.copyWith(availabilityResponse: availabilityResponse);
+  });
+}
+ 
+ Future<bool?> getDoctors({
     required int treatmentId,
     required List<int> sideAreaIds,
     required int? clinicId,
@@ -186,6 +230,7 @@ class DoctorViewModel extends BaseViewModel<DoctorState> {
   }
 }
 
+
 @immutable
 class DoctorState extends BaseStateModel {
   final PractitionerListResponse? doctorResponse;
@@ -193,6 +238,7 @@ class DoctorState extends BaseStateModel {
   final PractitionerDoctor? selectedDoctor;
   final List<Slot> slots;
   final List<PaymentOption> paymentOptions;
+  final AvailabilityResponse? availabilityResponse;
 
   const DoctorState({
     super.loading = false,
@@ -202,6 +248,7 @@ class DoctorState extends BaseStateModel {
     this.selectedDoctor,
     this.slots = const [],
     this.paymentOptions = const [],
+    this.availabilityResponse,
   });
 
   @override
@@ -213,6 +260,7 @@ class DoctorState extends BaseStateModel {
     PractitionerDoctor? selectedDoctor,
     List<Slot>? slots,
     List<PaymentOption>? paymentOptions,
+    AvailabilityResponse? availabilityResponse,
   }) {
     return DoctorState(
       loading: loading ?? this.loading,
@@ -222,6 +270,7 @@ class DoctorState extends BaseStateModel {
       selectedDoctor: selectedDoctor ?? this.selectedDoctor,
       slots: slots ?? this.slots,
       paymentOptions: paymentOptions ?? this.paymentOptions,
+      availabilityResponse: availabilityResponse ?? this.availabilityResponse,
     );
   }
 }
