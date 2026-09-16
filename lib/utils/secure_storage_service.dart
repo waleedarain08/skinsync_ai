@@ -16,6 +16,7 @@ class SecureStorage {
   static const String _captureModeKey = 'capture-mode';
   static const String _biometricConsentKey = 'biometric-consent';
   static const String _aiPolicyAcceptedKey = 'ai-policy-accepted';
+  static const String _arShowcaseSeenKey = 'ar-showcase-seen';
 
   SecureStorage._();
 
@@ -158,5 +159,14 @@ class SecureStorage {
   Future<bool> getAiPolicyAccepted() async {
     final accepted = await _storage?.read(key: _aiPolicyAcceptedKey);
     return accepted == 'true';
+  }
+
+  Future<void> saveArShowcaseSeen() async {
+    await _storage?.write(key: _arShowcaseSeenKey, value: 'true');
+  }
+
+  Future<bool> getArShowcaseSeen() async {
+    final seen = await _storage?.read(key: _arShowcaseSeenKey);
+    return seen == 'true';
   }
 }

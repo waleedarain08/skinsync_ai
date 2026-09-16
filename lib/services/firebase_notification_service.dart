@@ -112,6 +112,7 @@ class FirebaseNotificationService {
     }
 
     final notification = message.notification;
+    log('NOTIFICATION RECEIVED: ${notification?.title}');
     if (notification == null) {
       return;
     }
