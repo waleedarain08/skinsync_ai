@@ -10,6 +10,7 @@ import '../allergy_and_medical_history.dart';
 import '../compliance_form_screen.dart';
 import '../consent_forms_screen.dart';
 import '../get_started_screen.dart';
+import '../treatment_progress/my_treatment_progress_screen.dart';
 import '../personal_detail_screen.dart';
 import '../personal_document_screen.dart';
 import '../saved_treatment_screen.dart';
@@ -439,16 +440,16 @@ class MyProfileScreen extends StatelessWidget {
                       icon: SvgAssets.medical,
                       title: "My Clinics",
                     ),
-                    // buildCardOption(
-                    //   callBack: () {
-                    //     Navigator.pushNamed(
-                    //       context,
-                    //       TreatmentJourneyScreen.routeName,
-                    //     );
-                    //   },
-                    //   icon: SvgAssets.progress,
-                    //   title: "Treatment Journey",
-                    // ),
+                    buildCardOption(
+                      callBack: () {
+                        Navigator.pushNamed(
+                          context,
+                          MyTreatmentProgressScreen.routeName,
+                        );
+                      },
+                      icon: SvgAssets.progress,
+                      title: "Treatment Progress",
+                    ),
                     buildCardOption(
                       callBack: () {
                         Navigator.pushNamed(

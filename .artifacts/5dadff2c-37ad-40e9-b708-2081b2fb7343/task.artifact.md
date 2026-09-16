@@ -1,0 +1,7 @@
+- [x] Create Data Models (`JourneyEvent`, `TreatmentJourney`)
+- [x] Create ViewModel with Dummy Data (`JourneyViewModel`)
+- [x] Create UI Widgets (`JourneyCard`, `JourneyTimelineWidget`)
+- [x] Create Screens (`MyJourneyScreen`, `JourneyDetailScreen`)
+- [x] Add "My Journey" to `MyProfileScreen`
+- [x] Register routes in `RouteGenerator`
+- [x] Verify implementation with dummy data scenarios
