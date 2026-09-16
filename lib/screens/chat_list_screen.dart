@@ -63,9 +63,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
               hintText: "Search clinics or messages...",
               onChanged: (query) {
                 _timer?.cancel();
-                _timer = Timer.periodic(const Duration(milliseconds: 300), (
-                  timer,
-                ) {
+                _timer = Timer(const Duration(milliseconds: 300), () {
                   ref.read(chatProvider.notifier).loadChats(query: query);
                 });
               },

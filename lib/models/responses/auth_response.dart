@@ -85,12 +85,21 @@ class AuthData {
       serverBuildNumber = ios?.build;
       versionNumber = ios?.version;
     }
-    if (versionNumber != null) {
-      final serverVersion = Version.parse(versionNumber);
-      final currentVersion = Version.parse(packageInfo.version);
-      if (serverVersion > currentVersion) {
-        return true;
-      }
+    if (versionNumber != null && versionNumber.isNotEmpty) {
+      try {
+        final serverVersion = Version.parse(versionNumber);
+        final currentVersion = Version.parse(packageInfo.version);
+        if (serverVersion > currentVersion) {
+          return true;
+        } else if (serverVersion < currentVersion) {
+          return false;
+        } else {
+          if (serverBuildNumber != null && serverBuildNumber > currentBuildNumber) {
+            return true;
+          }
+          return false;
+        }
+      } catch (_) {}
     }
     if (serverBuildNumber != null && serverBuildNumber > currentBuildNumber) {
       return true;
