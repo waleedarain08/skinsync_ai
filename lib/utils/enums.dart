@@ -47,6 +47,7 @@ enum EndPoints {
   getClinic("clinics/filter"),
   getDoctor("doctors/by-side-area?"),
   practitionersList("practitioners/list"),
+  practitionersAvailability('practitioners/availability'),
   getMe("v1/me"),
   refreshToken('v1/auth/refresh'),
   getAvailability('v1/appointments/availability'),

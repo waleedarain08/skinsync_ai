@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import '../exceptions/app_exception.dart';
 import '../models/requests/get_practitioners_request.dart';
+import '../models/requests/practitioner_availability_request.dart';
 import '../models/responses/availability_response.dart';
+import '../models/responses/base_response_model.dart';
 import '../models/responses/practitioner_list_response.dart';
 import '../repositories/doctor_repository.dart';
 import '../utils/date_time_utils.dart';
@@ -35,6 +37,29 @@ class DoctorService implements DoctorRepository {
       );
     }
   }
+
+ @override
+  Future<AvailabilityResponse> getPractitionerAvailability({
+    required PractitionerAvailabilityRequest request,
+  }) async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.practitionersAvailability,
+      requestType: .post,
+      requestBody: request.toJson(),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final parsed = json.decode(response.body);
+      return AvailabilityResponse.fromJson(parsed);
+    } else {
+      final parsed = json.decode(response.body);
+      throw AppException(
+        BaseResponseModel.fromJson(parsed).message ??
+            'Error fetching practitioners',
+      );
+    }
+  }
+
 
   @override
   Future<PractitionerListResponse> getDoctors({
