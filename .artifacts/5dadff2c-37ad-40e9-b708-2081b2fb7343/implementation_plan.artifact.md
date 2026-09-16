@@ -1,45 +1,43 @@
-# Implementation Plan - "My Journey" Feature
+# Implementation Plan - Appointment Journey Feature
 
-Add a new "My Journey" feature to the Patient App to track treatment progress at the Treatment + Area level.
+Add a new "Appointment Journey" feature to the Patient App to track the end-to-end flow from request to completion.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> The "My Journey" feature will be added to the `MyProfileScreen` as a new tile.
-> A new screen `MyJourneyScreen` will be created to list active journeys.
-> A detail screen `JourneyDetailScreen` will be created to show the timeline of a specific journey.
-> Dummy data will be used for now, following the specific scenarios provided (Botox Cheeks/Lips sharing appointments).
+> - The "Journey" option will be added to the `MyProfileScreen` as a new tile.
+> - A new screen `AppointmentJourneyScreen` will be created.
+> - The UI will feature a vertical timeline showing: Patient Request, Doctor Finalized, Branching Treatment Appointments, and Journey Completion.
+> - Dummy data will represent a Botox journey for Cheeks and Lips.
 
 ## Proposed Changes
 
 ### Data Models
-- [NEW] [treatment_journey.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/models/journey/treatment_journey.dart): Model for a treatment journey.
-- [NEW] [journey_event.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/models/journey/journey_event.dart): Model for individual events within a journey.
+- [NEW] [appointment_journey_model.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/models/appointment_journey/appointment_journey_model.dart): Model representing the entire journey, including requests and appointments.
 
-### View Models & State Management
-- [NEW] [journey_view_model.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/view_models/journey_view_model.dart): Riverpod provider and notifier for journey data.
+### View Models
+- [NEW] [appointment_journey_view_model.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/view_models/appointment_journey/appointment_journey_view_model.dart): Riverpod notifier providing dummy journey data.
 
 ### Screens
-- [MODIFY] [my_profile_screen.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/screens/bottom_nav_screens/my_profile_screen.dart): Add "My Journey" tile.
-- [NEW] [my_journey_screen.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/screens/journey/my_journey_screen.dart): List of active journeys.
-- [NEW] [journey_detail_screen.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/screens/journey/journey_detail_screen.dart): Detailed timeline for a journey.
+- [MODIFY] [my_profile_screen.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/screens/bottom_nav_screens/my_profile_screen.dart): Add "Journey" tile.
+- [NEW] [appointment_journey_screen.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/screens/appointment_journey/appointment_journey_screen.dart): The main journey visualization screen.
 
 ### Widgets
-- [NEW] [journey_card.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/widgets/journey/journey_card.dart): Card widget for journey list.
-- [NEW] [journey_timeline_widget.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/widgets/journey/journey_timeline_widget.dart): Timeline/Stepper widget for journey details.
+- [NEW] [journey_timeline_node.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/widgets/appointment_journey/journey_timeline_node.dart): A reusable component for timeline nodes.
+- [NEW] [request_journey_card.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/widgets/appointment_journey/request_journey_card.dart): Specialized card for the Patient Request step.
+- [NEW] [finalized_journey_card.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/widgets/appointment_journey/finalized_journey_card.dart): Specialized card for the Doctor Finalized step.
 
 ### Routing
-- [MODIFY] [route_generator.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/route_generator.dart): Add routes for `MyJourneyScreen` and `JourneyDetailScreen`.
+- [MODIFY] [route_generator.dart](file:///Users/appstirr/Documents/Flutter/skin_sync_mobile_app/skinsync_ai/lib/route_generator.dart): Add route for `AppointmentJourneyScreen`.
 
 ## Verification Plan
 
 ### Automated Tests
-- Unit tests for `TreatmentJourney` model logic (progress calculation).
-- Widget tests for `JourneyCard` to ensure it displays treatment and area correctly.
+- Unit tests for `AppointmentJourney` model to ensure progress calculation logic is correct.
+- Widget tests for the timeline branching logic.
 
 ### Manual Verification
-- Navigate to `My Profile` -> `My Journey`.
-- Verify the list shows the dummy journeys (Botox Cheeks, Botox Lips, Dermal Filler).
-- Tap a journey to see the detail screen.
-- Verify the timeline shows correct status (Completed/Upcoming) and dates.
-- Verify that Botox Cheeks and Botox Lips show the same date for Session 1 but different dates for Follow-ups.
+- Navigate to `My Profile` -> `Journey`.
+- Verify the timeline displays the correct sequence: Request -> Finalized -> Branching Appointments -> Completion.
+- Ensure the branching for "Botox Cheeks" and "Botox Lips" is visually distinct.
+- Check responsive behavior on different screen sizes using Android Studio emulator.
