@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../models/requests/preferred_slot.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
@@ -13,7 +12,6 @@ import '../view_models/clinic_view_model.dart';
 import '../view_models/treatment_journey_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 import '../widgets/app_loader.dart';
-import '../widgets/bottom_sheets/preferred_slots_bottom_sheet.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/delete_confirmation_dialog.dart';
@@ -22,9 +20,9 @@ import '../widgets/simulation_card.dart';
 import 'ar_face_model_preview_screen.dart';
 import 'bottom_nav_page.dart';
 import 'consent_forms/face_consent_screen.dart';
+import 'doctors_screen.dart';
 import 'explore_clinics_screen.dart';
 import 'face_pose_capture_screen.dart';
-import 'treatment_review_screen.dart';
 
 class TreatmentJourneyDetailScreen extends ConsumerStatefulWidget {
   final int groupId;
@@ -434,34 +432,38 @@ class _TreatmentJourneyDetailScreenState
                       }
                       final clinic = ref.read(clinicProvider).clinic;
 
-                      void processShare(List<PreferredSlot> slots) {
-                        if (clinic != null) {
-                          Navigator.pushNamed(
-                            context,
-                            TreatmentReviewScreen.routeName,
-                            arguments: {
-                              'simulationData': state.simulations,
-                              'preferredSlots': slots,
-                              'clinic': clinic,
-                            },
-                          );
-                        } else {
-                          ref
-                              .read(checkoutViewModel.notifier)
-                              .setSelectedTreatmentAndAreasModel(
-                                state.simulations!,
-                              );
-                          Navigator.pushNamed(
-                            context,
-                            ExploreClinicsScreen.routeName,
-                          );
-                        }
-                      }
+                      // void processShare(List<PreferredSlot> slots) {
+                      //   if (clinic != null) {
+                      //     Navigator.pushNamed(
+                      //       context,
+                      //       TreatmentReviewScreen.routeName,
+                      //       arguments: {
+                      //         'simulationData': state.simulations,
+                      //         'preferredSlots': slots,
+                      //         'clinic': clinic,
+                      //       },
+                      //     );
+                      //   } else {
+                      //     ref
+                      //         .read(checkoutViewModel.notifier)
+                      //         .setSelectedTreatmentAndAreasModel(
+                      //           state.simulations!,
+                      //         );
+                      //     Navigator.pushNamed(
+                      //       context,
+                      //       ExploreClinicsScreen.routeName,
+                      //     );
+                      //   }
+                      // }
 
                       if (clinic != null) {
-                        PreferredSlotsBottomSheet.show(
-                          context: context,
-                          onConfirm: (slots) => processShare(slots),
+                        // PreferredSlotsBottomSheet.show(
+                        //   context: context,
+                        //   onConfirm: (slots) => processShare(slots),
+                        // );
+                         Navigator.pushNamed(
+                          context,
+                          DoctorsScreen.routeName,
                         );
                       } else {
                         ref
