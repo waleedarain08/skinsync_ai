@@ -21,8 +21,8 @@ import 'ar_face_model_preview_screen.dart';
 import 'bottom_nav_page.dart';
 import 'consent_forms/face_consent_screen.dart';
 import 'doctors_screen.dart';
-import 'explore_clinics_screen.dart';
 import 'face_pose_capture_screen.dart';
+import 'journey_clinics_screen.dart';
 
 class TreatmentJourneyDetailScreen extends ConsumerStatefulWidget {
   final int groupId;
@@ -473,7 +473,7 @@ class _TreatmentJourneyDetailScreenState
                             );
                         Navigator.pushNamed(
                           context,
-                          ExploreClinicsScreen.routeName,
+                          JourneyClinicsScreen.routeName,
                         );
                       }
                     },
