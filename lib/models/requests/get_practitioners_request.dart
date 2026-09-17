@@ -8,7 +8,7 @@ class GetPractitionersRequest {
   final bool? isVirtual;
   final String? practitionerType;
   final String? search;
-  final List<PractitionerTreatmentRequest>? treatments;
+  final List<int>? treatmentIds;
 
   GetPractitionersRequest({
     this.page = 1,
@@ -20,7 +20,7 @@ class GetPractitionersRequest {
     this.isVirtual,
     this.practitionerType = "doctor",
     this.search,
-    this.treatments,
+    this.treatmentIds,
   });
 
   Map<String, dynamic> toJson() {
@@ -34,21 +34,7 @@ class GetPractitionersRequest {
       "is_virtual": isVirtual,
       "practitioner_type": practitionerType,
       "search": search,
-      "treatments": treatments?.map((x) => x.toJson()).toList(),
-    };
-  }
-}
-
-class PractitionerTreatmentRequest {
-  final int? treatmentId;
-  final List<int>? areaIds;
-
-  PractitionerTreatmentRequest({this.treatmentId, this.areaIds});
-
-  Map<String, dynamic> toJson() {
-    return {
-      "treatment_id": treatmentId,
-      "area_ids": areaIds,
+      "treatment_ids": treatmentIds,
     };
   }
 }

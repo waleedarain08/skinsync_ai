@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../models/requests/preferred_slot.dart';
+import '../models/responses/availability_response.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../view_models/checkout_view_model.dart';
+import '../view_models/doctor_view_model.dart';
 import '../view_models/treatment_journey_view_model.dart';
 import '../widgets/bottom_sheets/before_you_book_bottomsheet.dart';
 import '../widgets/custom_app_bar.dart';
@@ -24,37 +26,23 @@ class SelectDateTimeScreen extends ConsumerStatefulWidget {
 
 class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
   DateTime? _selectedDate;
-  String? _selectedSlot;
+  Slot? _selectedSlot;
 
-  final List<String> _slots = [
-    "09:00 AM - 11:00 AM",
-    "11:00 AM - 01:00 PM",
-    "01:00 PM - 03:00 PM",
-    "03:00 PM - 05:00 PM",
-  ];
+  String _formatTime(DateTime dt) {
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final period = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $period';
+  }
+
+  String _slotLabel(Slot slot) =>
+      '${_formatTime(slot.startTime)} - ${_formatTime(slot.endTime)}';
 
   List<PreferredSlot> _buildPreferredSlots() {
-    final slotStart = _selectedSlot!.split(' - ').first;
-    final timeParts = slotStart.split(' ');
-    final hourAndMinute = timeParts.first.split(':');
-    var hour = int.parse(hourAndMinute[0]);
-    final minute = int.parse(hourAndMinute[1]);
-
-    if (timeParts.last == 'PM' && hour < 12) hour += 12;
-    if (timeParts.last == 'AM' && hour == 12) hour = 0;
-
-    final selectedDateTime = DateTime(
-      _selectedDate!.year,
-      _selectedDate!.month,
-      _selectedDate!.day,
-      hour,
-      minute,
-    );
-
     return [
       PreferredSlot(
         date: _selectedDate!.secondsSinceEpoch,
-        time: selectedDateTime.secondsSinceEpoch,
+        time: _selectedSlot!.startTime.secondsSinceEpoch,
       ),
     ];
   }
@@ -83,15 +71,22 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
         );
       },
     );
+
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
+        _selectedSlot = null; // clear stale selection from a previous date
       });
+
+      await ref
+          .read(doctorProvider.notifier)
+          .getPractitionerAvailability(date: picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final slots = ref.watch(doctorProvider).availabilityResponse?.slots ?? [];
     final bool canContinue = _selectedDate != null && _selectedSlot != null;
 
     return Scaffold(
@@ -182,102 +177,128 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
                     ),
                     SizedBox(height: context.h(16)),
 
-                    // Grid or list of 2-hour slots
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _slots.length,
-                      itemBuilder: (context, index) {
-                        final slot = _slots[index];
-                        final isSelected = _selectedSlot == slot;
+                    if (_selectedDate == null)
+                      Text(
+                        "Pick a date to see available slots.",
+                        style: CustomFonts.grey12w400,
+                      )
+                    else if (slots.isEmpty)
+                      Text(
+                        "No slots available for this date.",
+                        style: CustomFonts.grey12w400,
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: slots.length,
+                        itemBuilder: (context, index) {
+                          final slot = slots[index];
+                          final isSelected = _selectedSlot == slot;
+                          final isBooked = slot.isBooked;
 
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedSlot = slot;
-                            });
-                          },
-                          child: Container(
-                            margin: EdgeInsets.only(bottom: context.h(12)),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: context.w(18),
-                              vertical: context.h(16),
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? CustomColors.purpleColor.withValues(
-                                      alpha: 0.08,
-                                    )
-                                  : Colors.white,
-                              borderRadius: BorderRadius.circular(
-                                context.r(16),
-                              ),
-                              border: Border.all(
-                                color: isSelected
-                                    ? CustomColors.purpleColor
-                                    : Colors.grey.shade100,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.02),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
+                          return GestureDetector(
+                            onTap: isBooked
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _selectedSlot = slot;
+                                    });
+                                  },
+                            child: Opacity(
+                              opacity: isBooked ? 0.4 : 1,
+                              child: Container(
+                                margin: EdgeInsets.only(bottom: context.h(12)),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: context.w(18),
+                                  vertical: context.h(16),
                                 ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.access_time_filled_rounded,
+                                decoration: BoxDecoration(
                                   color: isSelected
-                                      ? CustomColors.purpleColor
-                                      : Colors.grey.shade400,
-                                  size: context.sp(18),
-                                ),
-                                SizedBox(width: context.w(14)),
-                                Text(
-                                  slot,
-                                  style: isSelected
-                                      ? CustomFonts.darkPurple12w600.copyWith(
-                                          fontSize: context.sp(14),
+                                      ? CustomColors.purpleColor.withValues(
+                                          alpha: 0.08,
                                         )
-                                      : CustomFonts.black14w600.copyWith(
-                                          color: Colors.grey.shade800,
-                                        ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  height: context.w(20),
-                                  width: context.w(20),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? CustomColors.purpleColor
-                                          : Colors.grey.shade300,
-                                      width: 2,
-                                    ),
+                                      : Colors.white,
+                                  borderRadius: BorderRadius.circular(
+                                    context.r(16),
+                                  ),
+                                  border: Border.all(
                                     color: isSelected
                                         ? CustomColors.purpleColor
-                                        : Colors.transparent,
+                                        : Colors.grey.shade100,
+                                    width: 1.5,
                                   ),
-                                  child: isSelected
-                                      ? Center(
-                                          child: Icon(
-                                            Icons.check,
-                                            size: context.sp(12),
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : null,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.02,
+                                      ),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.access_time_filled_rounded,
+                                      color: isSelected
+                                          ? CustomColors.purpleColor
+                                          : Colors.grey.shade400,
+                                      size: context.sp(18),
+                                    ),
+                                    SizedBox(width: context.w(14)),
+                                    Text(
+                                      _slotLabel(slot),
+                                      style: isSelected
+                                          ? CustomFonts.darkPurple12w600
+                                              .copyWith(
+                                                fontSize: context.sp(14),
+                                              )
+                                          : CustomFonts.black14w600.copyWith(
+                                              color: Colors.grey.shade800,
+                                            ),
+                                    ),
+                                    if (isBooked) ...[
+                                      SizedBox(width: context.w(8)),
+                                      Text(
+                                        '(Booked)',
+                                        style: CustomFonts.grey12w400,
+                                      ),
+                                    ],
+                                    const Spacer(),
+                                    Container(
+                                      height: context.w(20),
+                                      width: context.w(20),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? CustomColors.purpleColor
+                                              : Colors.grey.shade300,
+                                          width: 2,
+                                        ),
+                                        color: isSelected
+                                            ? CustomColors.purpleColor
+                                            : Colors.transparent,
+                                      ),
+                                      child: isSelected
+                                          ? Center(
+                                              child: Icon(
+                                                Icons.check,
+                                                size: context.sp(12),
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
                   ],
                 ),
               ),
@@ -313,7 +334,7 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
                             .setSelectedDate(_selectedDate!);
                         ref
                             .read(checkoutViewModel.notifier)
-                            .setSelectedSlot(_selectedSlot!);
+                            .setSelectedSlot(_slotLabel(_selectedSlot!));
                         final clinic = ref
                             .read(checkoutViewModel)
                             .selectedClinic;
