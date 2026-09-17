@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
+import 'models/treatment_progress/treatment_progress.dart';
 import 'models/requests/preferred_slot.dart';
 import 'models/responses/appointments_list_response.dart';
 import 'models/responses/get_clinic_response.dart';
@@ -10,6 +11,7 @@ import 'models/responses/simulation_history_response.dart';
 import 'models/responses/treatment_area_list_response.dart';
 import 'models/responses/treatment_category_list_response.dart';
 import 'models/responses/treatment_list_response.dart';
+import 'screens/appointment_journey/appointment_journey_screen.dart';
 import 'screens/additional_info_screen.dart';
 import 'screens/allergy_and_medical_history.dart';
 import 'screens/appointment_detail_screen.dart';
@@ -32,6 +34,8 @@ import 'screens/consent_forms_screen.dart';
 import 'screens/consent_forms/ai_transparency_policy_screen.dart';
 import 'screens/consent_forms/face_consent_screen.dart';
 import 'screens/doctor_detail_screen.dart';
+import 'screens/treatment_progress/treatment_progress_detail_screen.dart';
+import 'screens/treatment_progress/my_treatment_progress_screen.dart';
 import 'screens/legal_document_screen.dart';
 import 'screens/doctors_screen.dart';
 import 'screens/explore_clinics_screen.dart';
@@ -432,6 +436,21 @@ class RouteGenerator {
         return MaterialPageRoute(
           settings: const RouteSettings(name: BiometricScreen.routeName),
           builder: (_) => const BiometricScreen(),
+        );
+      case AppointmentJourneyScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(name: AppointmentJourneyScreen.routeName),
+          builder: (_) => const AppointmentJourneyScreen(),
+        );
+      case MyTreatmentProgressScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(name: MyTreatmentProgressScreen.routeName),
+          builder: (_) => const MyTreatmentProgressScreen(),
+        );
+      case TreatmentProgressDetailScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(name: TreatmentProgressDetailScreen.routeName),
+          builder: (_) => TreatmentProgressDetailScreen(treatmentProgress: args as TreatmentProgress),
         );
       case SimulationHistoryScreen.routeName:
         return MaterialPageRoute(
