@@ -62,94 +62,91 @@ class _PreferredSlotsBottomSheetState extends State<PreferredSlotsBottomSheet> {
     }
   }
 
-  Future<void> _selectTime(int index) async {
-    TimeOfDay selectedTime = _selectedTimes[index] ?? TimeOfDay.now();
+Future<void> _selectTime(int index) async {
+  DateTime selectedDateTime = _selectedTimes[index] != null
+      ? DateTime(0, 0, 0, _selectedTimes[index]!.hour, _selectedTimes[index]!.minute)
+      : DateTime.now();
 
-    Duration selectedDuration = Duration(
-      hours: selectedTime.hour,
-      minutes: selectedTime.minute,
-    );
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          contentPadding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.r(20)),
-          ),
-          content: SizedBox(
-            width: context.w(320),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    context.w(20),
-                    context.h(20),
-                    context.w(20),
-                    context.h(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Select Time", style: CustomFonts.black18w600),
-                      GestureDetector(
-                        onTap: () => Navigator.pop(dialogContext),
-                        child: const Icon(
-                          Iconsax.close_circle,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        contentPadding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.r(20)),
+        ),
+        content: SizedBox(
+          width: context.w(320),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.w(20),
+                  context.h(20),
+                  context.w(20),
+                  context.h(8),
                 ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Select Time", style: CustomFonts.black18w600),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(dialogContext),
+                      child: const Icon(
+                        Iconsax.close_circle,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
-                SizedBox(
-                  height: 216,
-                  child: CupertinoTimerPicker(
-                    mode: CupertinoTimerPickerMode.hm,
-                    initialTimerDuration: selectedDuration,
-                    onTimerDurationChanged: (Duration newDuration) {
-                      selectedDuration = newDuration;
+              SizedBox(
+                height: 216,
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.time,
+                  use24hFormat: false,
+                  initialDateTime: selectedDateTime,
+                  onDateTimeChanged: (DateTime newDateTime) {
+                    selectedDateTime = newDateTime;
+                  },
+                ),
+              ),
+
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  context.w(20),
+                  context.h(8),
+                  context.w(20),
+                  context.h(20),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: "Done",
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
                     },
                   ),
                 ),
-
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    context.w(20),
-                    context.h(8),
-                    context.w(20),
-                    context.h(20),
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: "Done",
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
-
-    setState(() {
-      _selectedTimes[index] = TimeOfDay(
-        hour: selectedDuration.inHours % 24,
-        minute: selectedDuration.inMinutes.remainder(60),
+        ),
       );
-    });
-  }
+    },
+  );
 
+  setState(() {
+    _selectedTimes[index] = TimeOfDay(
+      hour: selectedDateTime.hour,
+      minute: selectedDateTime.minute,
+    );
+  });
+}
   bool get _canConfirm {
     for (int i = 0; i < 3; i++) {
       if ((_selectedDates[i] != null && _selectedTimes[i] == null) ||
@@ -169,11 +166,11 @@ class _PreferredSlotsBottomSheetState extends State<PreferredSlotsBottomSheet> {
     return false;
   }
 
-  String? _formattedTime(int index) {
-    final TimeOfDay? time = _selectedTimes[index];
-    if (time == null) return null;
-    return DateTime(0, 0, 0, time.hour, time.minute).formattedTime24;
-  }
+String? _formattedTime(int index) {
+  final TimeOfDay? time = _selectedTimes[index];
+  if (time == null) return null;
+  return DateTime(0, 0, 0, time.hour, time.minute).formattedTime;
+}
 
   @override
   Widget build(BuildContext context) {

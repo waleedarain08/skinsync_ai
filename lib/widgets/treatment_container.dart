@@ -83,7 +83,7 @@ class TreatmentContainer extends StatelessWidget {
             treatments?.imageUrl ??
             "";
         final iconKey = customIcon ?? treatments?.icon;
-        final iconWidget = iconKey != null ? _buildLeftIcon(context, iconKey) : null;
+        final iconWidget = iconKey != null && iconKey != '' ? _buildLeftIcon(context, iconKey) : null;
         final globalSku = treatmentData?.globalSku ?? "";
         final useInAiSimulator = treatmentData?.useInAiSimulator ?? false;
 

@@ -130,7 +130,7 @@ class ServiceTypeButton extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (icon != null && icon!.isNotEmpty) ...[
+                    if (icon != null && icon!.isNotEmpty &&  icon != "") ...[
                       _buildLeftIcon(context, icon!, selected),
                       SizedBox(width: context.w(8)),
                     ],
