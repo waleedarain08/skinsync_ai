@@ -31,6 +31,18 @@ class _ReelContentOverlayState extends State<ReelContentOverlay> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Container(
+          padding: .symmetric(horizontal: 8.w, vertical: 6.w),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30.r),
+            color: Colors.white,
+          ),
+          child: Text(
+            'Verified Provider',
+            style: CustomFonts.blue10w700.copyWith(fontSize: 14.sp),
+          ),
+        ),
+        SizedBox(height: context.w(10)),
         Row(
           children: [
             CircleAvatar(
@@ -81,10 +93,7 @@ class _ReelContentOverlayState extends State<ReelContentOverlay> {
     final captionText = widget.caption!.trim();
 
     if (_isExpanded) {
-      return Text(
-        captionText,
-        style: CustomFonts.white14w400,
-      );
+      return Text(captionText, style: CustomFonts.white14w400);
     }
 
     return LayoutBuilder(
