@@ -13,7 +13,7 @@ import '../screens/journey_clinic_detail_screen.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 import 'doctor_card.dart';
 
@@ -522,7 +522,7 @@ class DashboardSimulationCard extends ConsumerWidget {
   Future<void> _onModifyTap(WidgetRef ref) async {
     EasyLoading.show(status: 'Loading...');
     final sim = await ref
-        .read(treatmentJourneyProvider.notifier)
+        .read(treatmentRequestsProvider.notifier)
         .fetchOptionsDetail(simulation.id);
     if (sim != null) {
       await ref.read(treatmentViewModel.notifier).initializeSimulation(sim);
@@ -577,7 +577,7 @@ class DashboardSimulationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // final _ = ref.watch(treatmentJourneyProvider.select((s) => s.loading));
+    // final _ = ref.watch(treatmentRequestsProvider.select((s) => s.loading));
     return Container(
       width: context.w(380),
       margin: EdgeInsets.only(

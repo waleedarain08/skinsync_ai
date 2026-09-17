@@ -9,7 +9,7 @@ import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../view_models/checkout_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 
 class ScanFaceButton extends ConsumerWidget {
@@ -30,7 +30,7 @@ class ScanFaceButton extends ConsumerWidget {
             ref.read(checkoutViewModel.notifier).clearState();
             ref.read(treatmentViewModel.notifier).clearAllSelectedTreatments();
             ref.read(treatmentViewModel.notifier).clearAiImage();
-            ref.read(treatmentJourneyProvider.notifier).clearSelectedGroup();
+            ref.read(treatmentRequestsProvider.notifier).clearSelectedGroup();
             Navigator.of(context).pushNamed(FacePoseCaptureScreen.routeName);
           },
         );

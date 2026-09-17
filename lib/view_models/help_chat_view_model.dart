@@ -8,7 +8,7 @@ import '../screens/treatments_screen.dart';
 import '../screens/bottom_nav_screens/appointments_screen.dart';
 import '../screens/bottom_nav_screens/my_profile_screen.dart';
 import '../view_models/checkout_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import 'auth_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 import 'package:flutter/material.dart';
@@ -97,7 +97,7 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
                   ref.read(checkoutViewModel.notifier).clearState();
                   ref.read(treatmentViewModel.notifier).clearAllSelectedTreatments();
                   ref.read(treatmentViewModel.notifier).clearAiImage();
-                  ref.read(treatmentJourneyProvider.notifier).clearSelectedGroup();
+                  ref.read(treatmentRequestsProvider.notifier).clearSelectedGroup();
                   Navigator.of(context).pushNamed(FacePoseCaptureScreen.routeName);
                 },
               );

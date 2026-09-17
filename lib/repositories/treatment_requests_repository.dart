@@ -8,7 +8,7 @@ import '../models/responses/groups_list_response.dart';
 import '../models/responses/tj_option_simulations_response.dart';
 import '../models/responses/tj_options_list_response.dart';
 
-abstract class TreatmentJourneyRepository {
+abstract class TreatmentRequestsRepository {
   Future<GroupsListResponse> getGroups({required int page,required String search,required bool isShared});
   Future<BaseResponseModel> createGroup(CreateGroupRequest request);
   Future<TJOptionsListResponse> getOptions(int groupId);

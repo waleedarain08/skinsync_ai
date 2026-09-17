@@ -3,32 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
-import '../../models/appointment_journey/appointment_journey_model.dart';
+import '../../models/clinical_journey/clinical_journey_model.dart';
 import '../../models/responses/appointments_list_response.dart';
-import '../../view_models/appointment_journey/appointment_journey_view_model.dart';
+import '../../view_models/clinical_journey/clinical_journey_view_model.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/appointment_card.dart';
-import '../../widgets/appointment_journey/journey_timeline_node.dart';
-import '../../widgets/appointment_journey/request_journey_card.dart';
-import '../../widgets/appointment_journey/finalized_journey_card.dart';
+import '../../widgets/clinical_journey/journey_timeline_node.dart';
+import '../../widgets/clinical_journey/request_journey_card.dart';
+import '../../widgets/clinical_journey/finalized_journey_card.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
 import '../../utils/string_utils.dart';
 
-class AppointmentJourneyScreen extends ConsumerWidget {
-  const AppointmentJourneyScreen({super.key});
+class ClinicalJourneyScreen extends ConsumerWidget {
+  const ClinicalJourneyScreen({super.key});
 
-  static const String routeName = "/AppointmentJourneyScreen";
+  static const String routeName = "/ClinicalJourneyScreen";
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(appointmentJourneyProvider);
+    final state = ref.watch(clinicalJourneyProvider);
     final journey = state.journey;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(title: "Appointment Journey"),
+      appBar: const CustomAppBar(title: "Clinical Journey"),
       body: journey == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -209,7 +209,7 @@ class AppointmentJourneyScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCompletionCard(BuildContext context, AppointmentJourney journey) {
+  Widget _buildCompletionCard(BuildContext context, ClinicalJourney journey) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(

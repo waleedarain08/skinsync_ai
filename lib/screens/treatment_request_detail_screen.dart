@@ -10,7 +10,7 @@ import '../utils/custom_fonts.dart';
 import '../utils/string_utils.dart';
 import '../view_models/checkout_view_model.dart';
 import '../view_models/clinic_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/bottom_sheets/preferred_slots_bottom_sheet.dart';
@@ -26,27 +26,27 @@ import 'face_pose_capture_screen.dart';
 import 'journey_clinics_screen.dart';
 import 'treatment_review_screen.dart';
 
-class TreatmentJourneyDetailScreen extends ConsumerStatefulWidget {
+class TreatmentRequestDetailScreen extends ConsumerStatefulWidget {
   final int groupId;
   final String groupName;
 
-  const TreatmentJourneyDetailScreen({
+  const TreatmentRequestDetailScreen({
     super.key,
     required this.groupId,
     required this.groupName,
   });
 
-  static const String routeName = '/TreatmentJourneyDetailScreen';
+  static const String routeName = '/TreatmentRequestDetailScreen';
 
   @override
-  ConsumerState<TreatmentJourneyDetailScreen> createState() =>
-      _TreatmentJourneyDetailScreenState();
+  ConsumerState<TreatmentRequestDetailScreen> createState() =>
+      _TreatmentRequestDetailScreenState();
 }
 
 enum _JourneyFilter { all, shared, unshared }
 
-class _TreatmentJourneyDetailScreenState
-    extends ConsumerState<TreatmentJourneyDetailScreen>
+class _TreatmentRequestDetailScreenState
+    extends ConsumerState<TreatmentRequestDetailScreen>
     with TickerProviderStateMixin {
   TabController? _tabController;
   _JourneyFilter _currentFilter = _JourneyFilter.all;
@@ -66,7 +66,7 @@ class _TreatmentJourneyDetailScreenState
         if (!_tabController!.indexIsChanging &&
             _tabController!.index < filteredOptions.length) {
           ref
-              .read(treatmentJourneyProvider.notifier)
+              .read(treatmentRequestsProvider.notifier)
               .fetchOptionsDetail(filteredOptions[_tabController!.index].id!);
         }
       });
@@ -75,7 +75,7 @@ class _TreatmentJourneyDetailScreenState
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted && _tabController!.index < filteredOptions.length) {
             ref
-                .read(treatmentJourneyProvider.notifier)
+                .read(treatmentRequestsProvider.notifier)
                 .fetchOptionsDetail(filteredOptions[_tabController!.index].id!);
           }
         });
@@ -85,7 +85,7 @@ class _TreatmentJourneyDetailScreenState
 
   void _showEditGroupDialog() {
     final TextEditingController nameController = TextEditingController(
-      text: ref.read(treatmentJourneyProvider).selectedGroup?.name ?? '',
+      text: ref.read(treatmentRequestsProvider).selectedGroup?.name ?? '',
     );
 
     showDialog(
@@ -129,7 +129,7 @@ class _TreatmentJourneyDetailScreenState
                 final updatedName = nameController.text.trim();
                 if (updatedName.isNotEmpty) {
                   ref
-                      .read(treatmentJourneyProvider.notifier)
+                      .read(treatmentRequestsProvider.notifier)
                       .callUpdateGroupName(widget.groupId, updatedName);
                 }
                 Navigator.pop(dialogContext);
@@ -147,7 +147,7 @@ class _TreatmentJourneyDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(treatmentJourneyProvider);
+    final state = ref.watch(treatmentRequestsProvider);
 
     final filteredOptions = state.options.where((opt) {
       switch (_currentFilter) {
@@ -166,7 +166,7 @@ class _TreatmentJourneyDetailScreenState
 
     return PopScope(
       onPopInvokedWithResult: (_, _) {
-        ref.read(treatmentJourneyProvider.notifier).clearSelectedGroup();
+        ref.read(treatmentRequestsProvider.notifier).clearSelectedGroup();
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -353,7 +353,7 @@ class _TreatmentJourneyDetailScreenState
 
   Widget? _buildBottomBar(
     BuildContext context,
-    TreatmentJourneyState state,
+    TreatmentRequestsState state,
     List<dynamic> filteredOptions,
   ) {
     if (state.loading || filteredOptions.isEmpty || state.simulations == null) {
@@ -429,7 +429,7 @@ class _TreatmentJourneyDetailScreenState
                           filteredOptions[_tabController?.index ?? 0].id;
                       if (currentOptionId != null) {
                         ref
-                            .read(treatmentJourneyProvider.notifier)
+                            .read(treatmentRequestsProvider.notifier)
                             .setOptionId(currentOptionId);
                       }
                       final clinic = ref.read(clinicProvider).clinic;
@@ -494,7 +494,7 @@ class _TreatmentJourneyDetailScreenState
 
   Widget _buildSimulationsList(
     BuildContext context,
-    TreatmentJourneyState state,
+    TreatmentRequestsState state,
   ) {
     final sim = state.simulations;
     if (sim == null) {
@@ -551,7 +551,7 @@ class _TreatmentJourneyDetailScreenState
                       "Are you sure you want to delete '${currentOption.name?.capitalize}'? This action cannot be undone.",
                   onDelete: () {
                     ref
-                        .read(treatmentJourneyProvider.notifier)
+                        .read(treatmentRequestsProvider.notifier)
                         .callDeleteOption(currentOption.id!);
                   },
                 );

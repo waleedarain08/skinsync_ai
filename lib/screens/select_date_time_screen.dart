@@ -9,7 +9,7 @@ import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../view_models/checkout_view_model.dart';
 import '../view_models/doctor_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../widgets/bottom_sheets/before_you_book_bottomsheet.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -339,7 +339,7 @@ class _SelectDateTimeScreenState extends ConsumerState<SelectDateTimeScreen> {
                             .read(checkoutViewModel)
                             .selectedClinic;
                         final simulations = ref
-                            .read(treatmentJourneyProvider)
+                            .read(treatmentRequestsProvider)
                             .simulations;
                         final slots = _buildPreferredSlots();
 

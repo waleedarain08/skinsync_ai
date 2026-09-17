@@ -11,43 +11,43 @@ import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../utils/string_utils.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_search_field.dart';
 import '../widgets/dialogs/delete_confirmation_dialog.dart';
-import 'treatment_journey_detail_screen.dart';
+import 'treatment_request_detail_screen.dart';
 
-class TreatmentJourneyScreen extends ConsumerStatefulWidget {
-  final bool isTreatmentJourney;
+class TreatmentRequestsScreen extends ConsumerStatefulWidget {
+  final bool isTreatmentRequest;
   final bool isFromBottomNav;
-  const TreatmentJourneyScreen({
+  const TreatmentRequestsScreen({
     super.key,
     this.isFromBottomNav = false,
-    this.isTreatmentJourney = true,
+    this.isTreatmentRequest = true,
   });
-  static const String routeName = '/TreatmentJourneyScreen';
+  static const String routeName = '/TreatmentRequestsScreen';
 
   @override
-  ConsumerState<TreatmentJourneyScreen> createState() =>
-      _TreatmentJourneyScreenState();
+  ConsumerState<TreatmentRequestsScreen> createState() =>
+      _TreatmentRequestsScreenState();
 }
 
-class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
+class _TreatmentRequestsScreenState extends ConsumerState<TreatmentRequestsScreen>
     with SingleTickerProviderStateMixin {
   final TextEditingController _groupNameController = TextEditingController();
-  late bool isTreatmentJourney;
-  late final PagingController<int, TreatmentJourneyGroup> _pagingController;
+  late bool isTreatmentRequest;
+  late final PagingController<int, TreatmentRequestGroup> _pagingController;
   late TabController _tabController;
   bool _hasCheckedEmptyState = false;
 
   @override
   void initState() {
     super.initState();
-    isTreatmentJourney = widget.isTreatmentJourney;
+    isTreatmentRequest = widget.isTreatmentRequest;
     _pagingController = ref
-        .read(treatmentJourneyProvider.notifier)
+        .read(treatmentRequestsProvider.notifier)
         .pagingController;
     _pagingController.addListener(_maybeShowCreateDialogOnEmpty);
 
@@ -59,7 +59,7 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
     if (_tabController.indexIsChanging) return;
     // index 0 -> Unshared (isShared = false), index 1 -> Shared (isShared = true)
     final isShared = _tabController.index == 1;
-    ref.read(treatmentJourneyProvider.notifier).setSharedFilter(isShared);
+    ref.read(treatmentRequestsProvider.notifier).setSharedFilter(isShared);
   }
 
   @override
@@ -152,7 +152,7 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
                 onPressed: () async {
                   if (_groupNameController.text.trim().isNotEmpty) {
                     final success = await ref
-                        .read(treatmentJourneyProvider.notifier)
+                        .read(treatmentRequestsProvider.notifier)
                         .createGroup(_groupNameController.text.trim());
                     if (!mounted) return;
                     if (success ?? false) {
@@ -198,14 +198,14 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(treatmentJourneyProvider);
+    ref.watch(treatmentRequestsProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(
         showTitle: true,
         showBackButton: !widget.isFromBottomNav,
-        title: 'Treatment Journey',
+        title: 'Treatment Requests',
         actions: [
           IconButton(
             onPressed: _showCreateGroupDialog,
@@ -251,7 +251,7 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
 
             // Main Content Area with PagingListener
             Expanded(
-              child: PagingListener<int, TreatmentJourneyGroup>(
+              child: PagingListener<int, TreatmentRequestGroup>(
                 controller: _pagingController,
                 builder: (context, state, fetchNextPage) {
                   final items = state.items ?? const [];
@@ -264,7 +264,7 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
                           Padding(
                             padding: EdgeInsets.only(bottom: context.w(16)),
                             child: Text(
-                              "Create a new journey group or select an existing one to manage your simulations and share them with clinics.",
+                              "Create a new request group or select an existing one to manage your simulations and share them with clinics.",
                               style: CustomFonts.grey14w400.copyWith(
                                 height: 1.4,
                               ),
@@ -272,12 +272,12 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
                           ),
                         CustomSearchField(
                           controller: ref
-                              .read(treatmentJourneyProvider.notifier)
+                              .read(treatmentRequestsProvider.notifier)
                               .searchController,
                           hintText: "Search Groups...",
                           onChanged: (query) {
                             ref
-                                .read(treatmentJourneyProvider.notifier)
+                                .read(treatmentRequestsProvider.notifier)
                                 .searchGroups(query);
                           },
                         ),
@@ -285,14 +285,14 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
                         SizedBox(height: context.h(16)),
                         Expanded(
                           child: SlidableAutoCloseBehavior(
-                            child: PagedListView<int, TreatmentJourneyGroup>(
+                            child: PagedListView<int, TreatmentRequestGroup>(
                               state: state,
                               fetchNextPage: fetchNextPage,
                               physics: const BouncingScrollPhysics(),
                               padding: EdgeInsets.only(bottom: context.h(20)),
                               builderDelegate:
                                   PagedChildBuilderDelegate<
-                                    TreatmentJourneyGroup
+                                    TreatmentRequestGroup
                                   >(
                                     itemBuilder: (context, group, index) =>
                                         _buildGroupCard(context, group, index),
@@ -331,7 +331,7 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
   Center _buildEmptyGroupsView() {
     return Center(
       child: Text(
-        ref.read(treatmentJourneyProvider).errorMessage ?? "No journeys found",
+        ref.read(treatmentRequestsProvider).errorMessage ?? "No journeys found",
         style: CustomFonts.grey16w400,
       ),
     );
@@ -339,12 +339,12 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
 
   Widget _buildGroupCard(
     BuildContext context,
-    TreatmentJourneyGroup group,
+    TreatmentRequestGroup group,
     int index,
   ) {
     return Slidable(
       key: ValueKey(group.id ?? 'group_$index'),
-      groupTag: 'treatment_journey_groups',
+      groupTag: 'treatment_request_groups',
       endActionPane: ActionPane(
         motion: const DrawerMotion(),
         extentRatio: 0.22,
@@ -360,7 +360,7 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
                       "Are you sure you want to delete '${group.name}'? This action cannot be undone.",
                   onDelete: () {
                     ref
-                        .read(treatmentJourneyProvider.notifier)
+                        .read(treatmentRequestsProvider.notifier)
                         .callDeleteGroup(group.id!);
                   },
                 );
@@ -398,28 +398,28 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
         child: InkWell(
           onTap: () async {
             if (group.id != null) {
-              ref.read(treatmentJourneyProvider.notifier).setGroup(group);
+              ref.read(treatmentRequestsProvider.notifier).setGroup(group);
             }
-            if (!isTreatmentJourney) {
+            if (!isTreatmentRequest) {
               final success = await ref
-                  .read(treatmentJourneyProvider.notifier)
+                  .read(treatmentRequestsProvider.notifier)
                   .fetchOptions(group.id!);
               if (!mounted) return;
               if (success ?? false) {
                 final result = await ref
-                    .read(treatmentJourneyProvider.notifier)
+                    .read(treatmentRequestsProvider.notifier)
                     .createTjOptions();
                 if (!mounted) return;
                 if (result == true) {
-                  isTreatmentJourney = true;
+                  isTreatmentRequest = true;
                   final refetchSuccess = await ref
-                      .read(treatmentJourneyProvider.notifier)
+                      .read(treatmentRequestsProvider.notifier)
                       .fetchOptions(group.id!);
                   if (!mounted) return;
                   if (refetchSuccess ?? false) {
                     Navigator.pushNamed(
                       context,
-                      TreatmentJourneyDetailScreen.routeName,
+                      TreatmentRequestDetailScreen.routeName,
                       arguments: {'groupId': group.id, 'groupName': group.name},
                     );
                   }
@@ -427,13 +427,13 @@ class _TreatmentJourneyScreenState extends ConsumerState<TreatmentJourneyScreen>
               }
             } else {
               final success = await ref
-                  .read(treatmentJourneyProvider.notifier)
+                  .read(treatmentRequestsProvider.notifier)
                   .fetchOptions(group.id!);
               if (!mounted) return;
               if (success ?? false) {
                 Navigator.pushNamed(
                   context,
-                  TreatmentJourneyDetailScreen.routeName,
+                  TreatmentRequestDetailScreen.routeName,
                   arguments: {'groupId': group.id, 'groupName': group.name},
                 );
               }

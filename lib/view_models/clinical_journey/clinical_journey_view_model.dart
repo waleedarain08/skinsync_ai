@@ -1,20 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/appointment_journey/appointment_journey_model.dart';
+import '../../models/clinical_journey/clinical_journey_model.dart';
 import '../../models/responses/appointments_list_response.dart';
 import '../../models/base_state_model.dart';
 import 'package:flutter/foundation.dart';
 
-final appointmentJourneyProvider = NotifierProvider<AppointmentJourneyViewModel, AppointmentJourneyState>(() {
-  return AppointmentJourneyViewModel();
+final clinicalJourneyProvider = NotifierProvider<ClinicalJourneyViewModel, ClinicalJourneyState>(() {
+  return ClinicalJourneyViewModel();
 });
 
-class AppointmentJourneyViewModel extends Notifier<AppointmentJourneyState> {
+class ClinicalJourneyViewModel extends Notifier<ClinicalJourneyState> {
   @override
-  AppointmentJourneyState build() {
-    return AppointmentJourneyState(journey: _getDummyJourney());
+  ClinicalJourneyState build() {
+    return ClinicalJourneyState(journey: _getDummyJourney());
   }
 
-  AppointmentJourney _getDummyJourney() {
+  ClinicalJourney _getDummyJourney() {
     // Dates
     final requestDate = DateTime(2026, 8, 20, 10, 30);
     final finalizedDate = DateTime(2026, 8, 21, 14, 0);
@@ -121,7 +121,7 @@ class AppointmentJourneyViewModel extends Notifier<AppointmentJourneyState> {
       ],
     );
 
-    return AppointmentJourney(
+    return ClinicalJourney(
       id: "journey_001",
       status: JourneyStepStatus.completed,
       requestedAt: requestDate,
@@ -158,22 +158,22 @@ class AppointmentJourneyViewModel extends Notifier<AppointmentJourneyState> {
 }
 
 @immutable
-class AppointmentJourneyState extends BaseStateModel {
-  final AppointmentJourney? journey;
+class ClinicalJourneyState extends BaseStateModel {
+  final ClinicalJourney? journey;
 
-  const AppointmentJourneyState({
+  const ClinicalJourneyState({
     super.loading = false,
     super.errorMessage,
     this.journey,
   });
 
   @override
-  AppointmentJourneyState copyWith({
+  ClinicalJourneyState copyWith({
     bool? loading,
     String? errorMessage,
-    AppointmentJourney? journey,
+    ClinicalJourney? journey,
   }) {
-    return AppointmentJourneyState(
+    return ClinicalJourneyState(
       loading: loading ?? this.loading,
       errorMessage: errorMessage ?? this.errorMessage,
       journey: journey ?? this.journey,

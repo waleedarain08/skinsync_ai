@@ -13,7 +13,7 @@ import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../view_models/auth_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/success_dialogs.dart';
@@ -578,7 +578,7 @@ class _TreatmentReviewScreenState extends ConsumerState<TreatmentReviewScreen> {
                 bool? success;
                 if (widget.clinic.place != null) {
                   success = await ref
-                      .read(treatmentJourneyProvider.notifier)
+                      .read(treatmentRequestsProvider.notifier)
                       .callShareMapTreatmentRequest(
                         widget.clinic,
                         widget.preferredSlots,
@@ -586,7 +586,7 @@ class _TreatmentReviewScreenState extends ConsumerState<TreatmentReviewScreen> {
                       );
                 } else {
                   success = await ref
-                      .read(treatmentJourneyProvider.notifier)
+                      .read(treatmentRequestsProvider.notifier)
                       .callShareTreatmentRequest(
                         widget.preferredSlots,
                         shareMedicalHistory: _shareMedicalHistory,

@@ -22,7 +22,7 @@ import 'bottom_nav_screens/explore_screen.dart';
 import 'bottom_nav_screens/home_screen.dart';
 import 'bottom_nav_screens/my_profile_screen.dart';
 import 'bottom_nav_screens/treatment_explore_screen.dart';
-import 'treatment_journey_screen.dart';
+import 'treatment_requests_screen.dart';
 
 class BottomNavPage extends ConsumerStatefulWidget {
   const BottomNavPage({super.key});
@@ -108,7 +108,7 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
                 0 => const HomeScreen(),
                 1 => const TreatmentExploreScreen(),
                 2 => const ExploreScreen(),
-                3 => const TreatmentJourneyScreen(isFromBottomNav: true),
+                3 => const TreatmentRequestsScreen(isFromBottomNav: true),
                 4 => const MyProfileScreen(),
                 int() => throw UnimplementedError(),
               },

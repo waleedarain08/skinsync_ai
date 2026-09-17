@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../models/appointment_journey/appointment_journey_model.dart';
+import '../../models/clinical_journey/clinical_journey_model.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';

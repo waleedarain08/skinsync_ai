@@ -11,7 +11,7 @@ enum JourneyStepStatus {
   cancelled,
 }
 
-class AppointmentJourney {
+class ClinicalJourney {
   final String id;
   final JourneyStepStatus status;
   final DateTime requestedAt;
@@ -20,7 +20,7 @@ class AppointmentJourney {
   final DoctorFinalizedStep? doctorFinalized;
   final List<TreatmentBranch> treatmentBranches;
 
-  AppointmentJourney({
+  ClinicalJourney({
     required this.id,
     required this.status,
     required this.requestedAt,

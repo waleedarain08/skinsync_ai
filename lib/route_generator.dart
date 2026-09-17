@@ -11,7 +11,7 @@ import 'models/responses/simulation_history_response.dart';
 import 'models/responses/treatment_area_list_response.dart';
 import 'models/responses/treatment_category_list_response.dart';
 import 'models/responses/treatment_list_response.dart';
-import 'screens/appointment_journey/appointment_journey_screen.dart';
+import 'screens/clinical_journey/clinical_journey_screen.dart';
 import 'screens/additional_info_screen.dart';
 import 'screens/allergy_and_medical_history.dart';
 import 'screens/appointment_detail_screen.dart';
@@ -77,8 +77,8 @@ import 'screens/terms_of_service_screen.dart';
 import 'screens/treatment_area_screen.dart';
 import 'screens/treatment_category_screen.dart';
 import 'screens/treatment_detail_screen.dart';
-import 'screens/treatment_journey_detail_screen.dart';
-import 'screens/treatment_journey_screen.dart';
+import 'screens/treatment_request_detail_screen.dart';
+import 'screens/treatment_requests_screen.dart';
 import 'screens/treatment_payment_screen.dart';
 import 'screens/treatment_review_screen.dart';
 import 'screens/treatments_screen.dart';
@@ -437,10 +437,10 @@ class RouteGenerator {
           settings: const RouteSettings(name: BiometricScreen.routeName),
           builder: (_) => const BiometricScreen(),
         );
-      case AppointmentJourneyScreen.routeName:
+      case ClinicalJourneyScreen.routeName:
         return MaterialPageRoute(
-          settings: const RouteSettings(name: AppointmentJourneyScreen.routeName),
-          builder: (_) => const AppointmentJourneyScreen(),
+          settings: const RouteSettings(name: ClinicalJourneyScreen.routeName),
+          builder: (_) => const ClinicalJourneyScreen(),
         );
       case MyTreatmentProgressScreen.routeName:
         return MaterialPageRoute(
@@ -459,11 +459,11 @@ class RouteGenerator {
           ),
           builder: (_) => const SimulationHistoryScreen(),
         );
-      case TreatmentJourneyScreen.routeName:
+      case TreatmentRequestsScreen.routeName:
         final arg = args as bool? ?? true;
         return MaterialPageRoute(
-          settings: const RouteSettings(name: TreatmentJourneyScreen.routeName),
-          builder: (_) => TreatmentJourneyScreen(isTreatmentJourney: arg),
+          settings: const RouteSettings(name: TreatmentRequestsScreen.routeName),
+          builder: (_) => TreatmentRequestsScreen(isTreatmentRequest: arg),
         );
       case SharedTreatmentRequestsScreen.routeName:
         return MaterialPageRoute(
@@ -489,13 +489,13 @@ class RouteGenerator {
             request: args as PatientTreatmentRequest,
           ),
         );
-      case TreatmentJourneyDetailScreen.routeName:
+      case TreatmentRequestDetailScreen.routeName:
         final argsMap = args as Map<String, dynamic>;
         return MaterialPageRoute(
           settings: const RouteSettings(
-            name: TreatmentJourneyDetailScreen.routeName,
+            name: TreatmentRequestDetailScreen.routeName,
           ),
-          builder: (_) => TreatmentJourneyDetailScreen(
+          builder: (_) => TreatmentRequestDetailScreen(
             groupId: argsMap['groupId'] as int,
             groupName: argsMap['groupName'] as String,
           ),

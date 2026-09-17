@@ -1,7 +1,7 @@
 import 'base_response_model.dart';
 
 class GroupsListResponse extends BaseResponseModel {
-  final List<TreatmentJourneyGroup>? data;
+  final List<TreatmentRequestGroup>? data;
   final int? page;
   final int? total;
   final int? totalPages;
@@ -21,9 +21,9 @@ class GroupsListResponse extends BaseResponseModel {
       message: json["message"],
       data: json["data"] == null
           ? []
-          : List<TreatmentJourneyGroup>.from(
+          : List<TreatmentRequestGroup>.from(
               json["data"].map(
-                (x) => TreatmentJourneyGroup.fromJson(x),
+                (x) => TreatmentRequestGroup.fromJson(x),
               ),
             ),
       page: json["page"],
@@ -33,21 +33,21 @@ class GroupsListResponse extends BaseResponseModel {
   }
 }
 
-class TreatmentJourneyGroup {
+class TreatmentRequestGroup {
   final int? id;
   final String? name;
   final DateTime? createdAt;
   final int? totalOptions;
 
-  const TreatmentJourneyGroup({
+  const TreatmentRequestGroup({
     this.id,
     this.name,
     this.createdAt,
     this.totalOptions,
   });
 
-  factory TreatmentJourneyGroup.fromJson(Map<String, dynamic> json) {
-    return TreatmentJourneyGroup(
+  factory TreatmentRequestGroup.fromJson(Map<String, dynamic> json) {
+    return TreatmentRequestGroup(
       id: json["id"],
       name: json["name"],
       createdAt: json["created_at"] == null
@@ -57,13 +57,13 @@ class TreatmentJourneyGroup {
     );
   }
 
-  TreatmentJourneyGroup copyWith({
+  TreatmentRequestGroup copyWith({
     int? id,
     String? name,
     DateTime? createdAt,
     int? totalOptions,
   }) {
-    return TreatmentJourneyGroup(
+    return TreatmentRequestGroup(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,

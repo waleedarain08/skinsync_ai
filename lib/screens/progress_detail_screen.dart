@@ -9,7 +9,7 @@ import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/treatment_journey_stepper.dart';
+import '../widgets/treatment_request_stepper.dart';
 import 'bottom_nav_page.dart';
 
 final selectedFilterProvider = StateProvider<int?>((ref) => 0);
@@ -175,7 +175,7 @@ class ProgressDetailScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: context.h(20)),
 
-                  TreatmentJourneyStepper(steps: _getTreatmentSteps()),
+                  TreatmentRequestStepper(steps: _getTreatmentSteps()),
                 ],
               ),
             ),

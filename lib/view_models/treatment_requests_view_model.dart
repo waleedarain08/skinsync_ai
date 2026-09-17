@@ -16,9 +16,9 @@ import '../models/responses/get_clinic_response.dart';
 import '../models/responses/groups_list_response.dart';
 import '../models/responses/simulation_history_response.dart';
 import '../models/responses/tj_options_list_response.dart';
-import '../repositories/treatment_journey_repository.dart';
+import '../repositories/treatment_requests_repository.dart';
 import '../services/api_base_helper.dart';
-import '../services/treatment_journey_service.dart';
+import '../services/treatment_requests_service.dart';
 import '../utils/simulation_utils.dart';
 import 'auth_view_model.dart';
 import 'base_view_model.dart';
@@ -26,25 +26,25 @@ import 'checkout_view_model.dart';
 import 'clinic_view_model.dart';
 import 'treatment_view_model.dart';
 
-final treatmentJourneyProvider =
+final treatmentRequestsProvider =
     NotifierProvider.autoDispose<
-      TreatmentJourneyViewModel,
-      TreatmentJourneyState
-    >(() => TreatmentJourneyViewModel());
+      TreatmentRequestsViewModel,
+      TreatmentRequestsState
+    >(() => TreatmentRequestsViewModel());
 
-class TreatmentJourneyViewModel extends BaseViewModel<TreatmentJourneyState> {
-  final TreatmentJourneyRepository _repo;
+class TreatmentRequestsViewModel extends BaseViewModel<TreatmentRequestsState> {
+  final TreatmentRequestsRepository _repo;
 
-  TreatmentJourneyViewModel({TreatmentJourneyRepository? repo})
-    : _repo = repo ?? TreatmentJourneyService(apiClient: ApiBaseHelper()),
-      super(initialState: const TreatmentJourneyState());
+  TreatmentRequestsViewModel({TreatmentRequestsRepository? repo})
+    : _repo = repo ?? TreatmentRequestsService(apiClient: ApiBaseHelper()),
+      super(initialState: const TreatmentRequestsState());
 
   final TextEditingController searchController = TextEditingController();
 
   Timer? _searchTimer;
 
-  late final PagingController<int, TreatmentJourneyGroup> pagingController =
-      PagingController<int, TreatmentJourneyGroup>(
+  late final PagingController<int, TreatmentRequestGroup> pagingController =
+      PagingController<int, TreatmentRequestGroup>(
         getNextPageKey: (pagingState) {
           final lastPageKey = pagingState.keys?.last ?? 0;
           final totalPages = state.totalPages ?? 1;
@@ -69,7 +69,7 @@ void setSharedFilter(bool isShared) {
   }
 
 
-  Future<List<TreatmentJourneyGroup>?> fetchGroupsPage(int pageKey) async {
+  Future<List<TreatmentRequestGroup>?> fetchGroupsPage(int pageKey) async {
     return runSafely(() async {
       debugPrint(
         'Fetching groups => page: $pageKey, search: ${searchController.text}',
@@ -254,7 +254,7 @@ void searchGroups(String value) {
     });
   }
 
-  void setGroup(TreatmentJourneyGroup group) {
+  void setGroup(TreatmentRequestGroup group) {
     state = state.copyWith(selectedGroup: group);
   }
 
@@ -372,17 +372,17 @@ void searchGroups(String value) {
 }
 
 @immutable
-class TreatmentJourneyState extends BaseStateModel {
-  final List<TreatmentJourneyGroup> groups;
+class TreatmentRequestsState extends BaseStateModel {
+  final List<TreatmentRequestGroup> groups;
   final List<TJOption> options;
   final SimulationData? simulations;
   final bool isSimulationsLoading;
   final int? selectedOptionId;
-  final TreatmentJourneyGroup? selectedGroup;
+  final TreatmentRequestGroup? selectedGroup;
   final String? price;
   final int? totalPages;
   final bool isShared;
-  const TreatmentJourneyState({
+  const TreatmentRequestsState({
     super.loading = false,
     super.errorMessage,
     this.selectedGroup,
@@ -397,13 +397,13 @@ class TreatmentJourneyState extends BaseStateModel {
   });
 
   @override
-  TreatmentJourneyState copyWith({
+  TreatmentRequestsState copyWith({
     bool? loading,
     String? errorMessage,
-    TreatmentJourneyGroup? selectedGroup,
+    TreatmentRequestGroup? selectedGroup,
     bool clearSelectedGroup = false,
     bool clearSelectedOption = false,
-    List<TreatmentJourneyGroup>? groups,
+    List<TreatmentRequestGroup>? groups,
     List<TJOption>? options,
     SimulationData? simulations,
     bool? isSimulationsLoading,
@@ -412,7 +412,7 @@ class TreatmentJourneyState extends BaseStateModel {
     int? totalPages,
     bool? isShared,
   }) {
-    return TreatmentJourneyState(
+    return TreatmentRequestsState(
       loading: loading ?? this.loading,
       errorMessage: errorMessage ?? this.errorMessage,
       groups: groups ?? this.groups,

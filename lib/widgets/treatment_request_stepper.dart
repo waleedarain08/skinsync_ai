@@ -21,10 +21,10 @@ class TreatmentStep {
 }
 
 // Stepper Widget
-class TreatmentJourneyStepper extends StatelessWidget {
+class TreatmentRequestStepper extends StatelessWidget {
   final List<TreatmentStep> steps;
 
-  const TreatmentJourneyStepper({super.key, required this.steps});
+  const TreatmentRequestStepper({super.key, required this.steps});
 
   @override
   Widget build(BuildContext context) {

@@ -11,18 +11,18 @@ import '../models/responses/clinic_detail_response.dart';
 import '../models/responses/groups_list_response.dart';
 import '../models/responses/tj_option_simulations_response.dart';
 import '../models/responses/tj_options_list_response.dart';
-import '../repositories/treatment_journey_repository.dart';
+import '../repositories/treatment_requests_repository.dart';
 import '../utils/enums.dart';
 import 'api_base_helper.dart';
 
-class TreatmentJourneyService implements TreatmentJourneyRepository {
+class TreatmentRequestsService implements TreatmentRequestsRepository {
   final ApiBaseHelper _apiClient;
-  TreatmentJourneyService({required this._apiClient});
+  TreatmentRequestsService({required this._apiClient});
 
   @override
   Future<GroupsListResponse> getGroups({required int page,required String search,required bool isShared}) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.treatmentJourneyGroups,
+      endPoint: EndPoints.treatmentRequestGroups,
       requestType: RequestType.get,
       params: '?page=$page&limit=10&search=$search&is_shared=$isShared'
     );
@@ -41,7 +41,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
   @override
   Future<BaseResponseModel> createGroup(CreateGroupRequest request) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.treatmentJourneyGroups,
+      endPoint: EndPoints.treatmentRequestGroups,
       requestType: RequestType.post,
       requestBody: request.toJson(),
     );
@@ -60,7 +60,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
   @override
   Future<TJOptionsListResponse> getOptions(int groupId) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.treatmentJourneyOptions,
+      endPoint: EndPoints.treatmentRequestOptions,
       requestType: RequestType.get,
       params: "?group_id=$groupId",
     );
@@ -79,7 +79,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
   @override
   Future<BaseResponseModel> createTjOptions(TjOptionsRequest request) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.treatmentJourneyOptions,
+      endPoint: EndPoints.treatmentRequestOptions,
       requestType: RequestType.post,
       requestBody: request.toJson(),
     );
@@ -98,7 +98,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
   @override
   Future<TJOptionSimulationsResponse> getOptionsDetail(int optionId) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.treatmentJourneyOptions,
+      endPoint: EndPoints.treatmentRequestOptions,
       requestType: RequestType.get,
       params: "/$optionId",
     );
@@ -179,7 +179,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
    @override
   Future<BaseResponseModel> deleteGroup(int groupID) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.updateTreatmentJourneyGroups,
+      endPoint: EndPoints.updateTreatmentRequestGroups,
       requestType: RequestType.delete,
       params: "/$groupID",
     );
@@ -198,7 +198,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
   @override
   Future<BaseResponseModel> deleteOption(int optionId) async {
     final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.deleteTreatmentJourneyOptions,
+      endPoint: EndPoints.deleteTreatmentRequestOptions,
       requestType: RequestType.delete,
       params: "/$optionId",
     );
@@ -217,7 +217,7 @@ class TreatmentJourneyService implements TreatmentJourneyRepository {
     @override
   Future<BaseResponseModel> updateTreatmantGroupName(int groupId , String name) async {
       final response = await _apiClient.httpRequest(
-      endPoint: EndPoints.updateTreatmentJourneyGroups,
+      endPoint: EndPoints.updateTreatmentRequestGroups,
       requestType: RequestType.patch,
         params: "/$groupId",
       requestBody: {

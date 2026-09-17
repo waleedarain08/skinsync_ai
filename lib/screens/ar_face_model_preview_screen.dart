@@ -24,7 +24,7 @@ import '../utils/secure_storage_service.dart';
 import '../view_models/checkout_view_model.dart';
 import '../view_models/subscription_view_model.dart';
 import '../view_models/treatment_area_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/bottom_sheets/material_level_sheet.dart';
@@ -39,8 +39,8 @@ import '../widgets/selected_treatments_summary_card.dart';
 import '../widgets/service_type_button.dart';
 import 'bottom_nav_screens/face_detection_screen.dart';
 import 'consent_forms/ai_transparency_policy_screen.dart';
-import 'treatment_journey_detail_screen.dart';
-import 'treatment_journey_screen.dart';
+import 'treatment_request_detail_screen.dart';
+import 'treatment_requests_screen.dart';
 
 class ArFaceModelPreviewScreen extends ConsumerStatefulWidget {
   const ArFaceModelPreviewScreen({super.key});
@@ -156,13 +156,13 @@ class _ArFaceModelPreviewScreenState
   }
 
   Future<void> _onSaveOptionPressed() async {
-    final journeyState = ref.read(treatmentJourneyProvider);
+    final journeyState = ref.read(treatmentRequestsProvider);
     final selectedGroup = journeyState.selectedGroup;
 
     if (selectedGroup == null) {
       Navigator.pushNamed(
         context,
-        TreatmentJourneyScreen.routeName,
+        TreatmentRequestsScreen.routeName,
         arguments: false,
       );
     } else {
@@ -171,16 +171,16 @@ class _ArFaceModelPreviewScreenState
         groupName: selectedGroup.name ?? 'Unknown Group',
         onConfirm: () async {
           final result = await ref
-              .read(treatmentJourneyProvider.notifier)
+              .read(treatmentRequestsProvider.notifier)
               .createTjOptions();
           if (result == true) {
             final result2 = await ref
-                .read(treatmentJourneyProvider.notifier)
+                .read(treatmentRequestsProvider.notifier)
                 .fetchOptions(selectedGroup.id ?? 0);
             if (result2 == true) {
               Navigator.popUntil(
                 context,
-                ModalRoute.withName(TreatmentJourneyDetailScreen.routeName),
+                ModalRoute.withName(TreatmentRequestDetailScreen.routeName),
               );
             }
             // rootScaffoldMessengerKey.currentState?.showSnackBar(
@@ -206,12 +206,12 @@ class _ArFaceModelPreviewScreenState
             //         ),
             //       );
             final groupId = ref
-                .read(treatmentJourneyProvider)
+                .read(treatmentRequestsProvider)
                 .selectedGroup
                 ?.id;
             if (groupId != null) {
               await ref
-                  .read(treatmentJourneyProvider.notifier)
+                  .read(treatmentRequestsProvider.notifier)
                   .fetchOptions(groupId, showloading: false);
             }
           }
@@ -331,7 +331,7 @@ class _ArFaceModelPreviewScreenState
                   IconButton(
                     onPressed: () => Navigator.pushNamed(
                       context,
-                      TreatmentJourneyScreen.routeName,
+                      TreatmentRequestsScreen.routeName,
                     ),
                     icon: const FaIcon(FontAwesomeIcons.route),
                   ),

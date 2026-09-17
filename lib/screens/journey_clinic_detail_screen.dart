@@ -13,13 +13,13 @@ import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../view_models/clinic_view_model.dart';
-import '../view_models/treatment_journey_view_model.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/bottom_sheets/preferred_slots_bottom_sheet.dart';
 import 'patient_treatment_requests_screen.dart';
 import 'treatment_review_screen.dart';
-import 'treatment_journey_screen.dart';
+import 'treatment_requests_screen.dart';
 
 class JourneyClinicDetailScreen extends ConsumerStatefulWidget {
   final Clinic? clinic;
@@ -377,7 +377,7 @@ class _JourneyClinicDetailScreenState
                   ),
                   child: Consumer(
                     builder: (_, ref, _) {
-                      final tjState = ref.watch(treatmentJourneyProvider);
+                      final tjState = ref.watch(treatmentRequestsProvider);
                       final optionId = tjState.selectedOptionId;
                       return Column(
                         children: [
@@ -404,7 +404,7 @@ class _JourneyClinicDetailScreenState
                                     .setClinic(widget.clinic);
                                 Navigator.pushNamed(
                                   context,
-                                  TreatmentJourneyScreen.routeName,
+                                  TreatmentRequestsScreen.routeName,
                                 );
                                 return;
                               }
