@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import '../models/responses/treatment_area_list_response.dart';
-import 'explore_clinics_screen.dart';
-import 'select_appointment_type_screen.dart';
+import '../view_models/treatment_view_model.dart';
+import '../widgets/material_bottom_sheet.dart';
+import '../widgets/scan_face_dialog.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../view_models/checkout_view_model.dart';
@@ -76,60 +78,56 @@ class _TreatmentAreaScreenState extends ConsumerState<TreatmentAreaScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Professional MedSpa Header
-            CustomAppBar(
-              title: widget.title,
-            ),
+            CustomAppBar(title: widget.title),
             // Premium Breadcrumb Selection Path Container
             Padding(
               padding: EdgeInsets.symmetric(horizontal: context.w(30)),
               child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: context.w(16),
-                      vertical: context.h(12),
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(context.r(15)),
-                      border: Border.all(
-                        color: CustomColors.lightPurpleColor.withValues(
-                          alpha: 0.3,
-                        ),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.02),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.radar_rounded,
-                          size: context.sp(14),
-                          color: CustomColors.purpleColor,
-                        ),
-                        SizedBox(width: context.w(8)),
-                        Expanded(
-                          child: Text(
-                            widget.selectionPath,
-                            style: TextStyle(
-                              fontSize: context.sp(12),
-                              fontWeight: FontWeight.w500,
-                              color: CustomColors.textGreyColor,
-                              fontFamily: 'Degular',
-                              letterSpacing: 0.3,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.w(16),
+                  vertical: context.h(12),
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(context.r(15)),
+                  border: Border.all(
+                    color: CustomColors.lightPurpleColor.withValues(alpha: 0.3),
+                    width: 1,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.radar_rounded,
+                      size: context.sp(14),
+                      color: CustomColors.purpleColor,
+                    ),
+                    SizedBox(width: context.w(8)),
+                    Expanded(
+                      child: Text(
+                        widget.selectionPath,
+                        style: TextStyle(
+                          fontSize: context.sp(12),
+                          fontWeight: FontWeight.w500,
+                          color: CustomColors.textGreyColor,
+                          fontFamily: 'Degular',
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
             // Focus Area Listing using Reusable Adaptive TreatmentContainer
@@ -142,7 +140,9 @@ class _TreatmentAreaScreenState extends ConsumerState<TreatmentAreaScreen> {
                       key: ValueKey('area_list_${widget.title}'),
                       child: ListView.builder(
                         scrollDirection: Axis.vertical,
-                        padding: EdgeInsets.symmetric(horizontal: context.w(30)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: context.w(30),
+                        ),
                         physics: const BouncingScrollPhysics(),
                         itemCount: displayedAreas.length + 1,
                         itemBuilder: (context, index) {
@@ -161,7 +161,9 @@ class _TreatmentAreaScreenState extends ConsumerState<TreatmentAreaScreen> {
                               verticalOffset: 50.0,
                               child: FadeInAnimation(
                                 child: Padding(
-                                  padding: EdgeInsets.only(bottom: context.h(16)),
+                                  padding: EdgeInsets.only(
+                                    bottom: context.h(16),
+                                  ),
                                   child: TreatmentContainer(
                                     customTitle: area.name,
                                     customSubtitle: area.globalSku ?? "",
@@ -184,32 +186,74 @@ class _TreatmentAreaScreenState extends ConsumerState<TreatmentAreaScreen> {
                                           ),
                                         );
                                       } else {
-                                        ref
-                                            .read(checkoutViewModel.notifier)
-                                            .addSelectedArea(area);
+                                        final treatment = ref
+                                            .read(checkoutViewModel)
+                                            .selectedTreatments;
 
-                                        final checkoutState = ref.read(
-                                          checkoutViewModel,
-                                        );
-
-                                        if (checkoutState.selectedClinic !=
-                                                null &&
-                                            checkoutState
-                                                    .selectedAppointmentType ==
-                                                null) {
-                                          Navigator.pushNamed(
-                                            context,
-                                            SelectAppointmentTypeScreen
-                                                .routeName,
-                                            arguments:
-                                                checkoutState.selectedClinic,
-                                          );
-                                        } else {
-                                          Navigator.pushNamed(
-                                            context,
-                                            ExploreClinicsScreen.routeName,
-                                          );
+                                        if (treatment == null) {
+                                          // No treatment context available — fall back straight to the dialog
+                                          ref
+                                              .read(checkoutViewModel.notifier)
+                                              .addSelectedArea(area);
+                                          if (context.mounted)
+                                            showMScanFaceDialog(context);
+                                          return;
                                         }
+
+                                        final treatmentSku =
+                                            treatment.globalSku ?? '';
+                                        final areaSku = area.globalSku ?? '';
+
+                                        EasyLoading.show(
+                                          status: 'Fetching materials...',
+                                        );
+                                        ref
+                                            .read(treatmentViewModel.notifier)
+                                            .getMaterials(
+                                              treatmentSku: treatmentSku,
+                                              areaSku: areaSku,
+                                            )
+                                            .then((res) async {
+                                              EasyLoading.dismiss();
+                                              ref
+                                                  .read(
+                                                    checkoutViewModel.notifier,
+                                                  )
+                                                  .addSelectedArea(area);
+
+                                             
+
+                                              if (res != null &&
+                                                  res.isSuccess == true &&
+                                                  res.data != null) {
+                                                if (!context.mounted) return;
+                                                await MaterialBottomSheet.show(
+                                                  context: context,
+                                                  area: area,
+                                                  material: res.data!,
+                                                  treatment: treatment,
+                                                );
+                                                if (context.mounted) {
+                                                  showMScanFaceDialog(context);
+                                                }
+                                              } else {
+                                                if (context.mounted) {
+                                                  showMScanFaceDialog(context);
+                                                }
+                                              }
+                                              
+                                            })
+                                            .catchError((e) {
+                                              EasyLoading.dismiss();
+                                              ref
+                                                  .read(
+                                                    checkoutViewModel.notifier,
+                                                  )
+                                                  .addSelectedArea(area);
+                                              if (context.mounted) {
+                                                showMScanFaceDialog(context);
+                                              }
+                                            });
                                       }
                                     },
                                   ),

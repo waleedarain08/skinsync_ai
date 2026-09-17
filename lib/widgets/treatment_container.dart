@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
-import '../screens/face_pose_capture_screen.dart';
-import '../screens/consent_forms/face_consent_screen.dart';
 import '../screens/treatment_detail_screen.dart';
 import '../screens/treatment_area_screen.dart';
 import '../utils/color_constant.dart';
@@ -103,19 +101,28 @@ class TreatmentContainer extends StatelessWidget {
                         treatmentModel: treatments!,
                         isCallPredictAPI: false,
                       );
-                }
-                if (useInAiSimulator) {
-                  // showMScanFaceDialog(context);
-                  FaceConsentScreen.checkAndProceed(
-                    context: context,
-                    ref: ref,
-                    onProceed: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed(FacePoseCaptureScreen.routeName);
+                      Navigator.pushNamed(
+                    context,
+                    TreatmentAreaScreen.routeName,
+                    arguments: {
+                      'title': treatments!.name ?? 'Focus Areas',
+                      'treatmentId': treatments!.id,
                     },
                   );
-                } else {
+                }
+                // if (useInAiSimulator) {
+                // showMScanFaceDialog(context);
+                //   FaceConsentScreen.checkAndProceed(
+                //     context: context,
+                //     ref: ref,
+                //     onProceed: () {
+                //       Navigator.of(
+                //         context,
+                //       ).pushNamed(FacePoseCaptureScreen.routeName);
+                //     },
+                //   );
+                // } 
+                else {
                   Navigator.pushNamed(
                     context,
                     TreatmentAreaScreen.routeName,
