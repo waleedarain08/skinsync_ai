@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 import '../../models/appointment_journey/appointment_journey_model.dart';
 import '../../models/responses/appointments_list_response.dart';
 import '../../view_models/appointment_journey/appointment_journey_view_model.dart';
@@ -12,6 +14,7 @@ import '../../widgets/appointment_journey/finalized_journey_card.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
+import '../../utils/string_utils.dart';
 
 class AppointmentJourneyScreen extends ConsumerWidget {
   const AppointmentJourneyScreen({super.key});
@@ -29,13 +32,15 @@ class AppointmentJourneyScreen extends ConsumerWidget {
       body: journey == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: context.w(24), vertical: context.h(20)),
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: context.w(24), vertical: context.h(10)),
               child: Column(
                 children: [
                   // 1. Patient Request
                   JourneyTimelineNode(
                     isFirst: true,
                     isCompleted: true,
+                    indicator: _buildHeroIndicator(context, Iconsax.document_text),
                     child: RequestJourneyCard(request: journey.patientRequest),
                   ),
 
@@ -43,6 +48,7 @@ class AppointmentJourneyScreen extends ConsumerWidget {
                   if (journey.doctorFinalized != null)
                     JourneyTimelineNode(
                       isCompleted: true,
+                      indicator: _buildHeroIndicator(context, Iconsax.user_tick),
                       child: FinalizedJourneyCard(finalized: journey.doctorFinalized!),
                     ),
 
@@ -54,16 +60,45 @@ class AppointmentJourneyScreen extends ConsumerWidget {
                     JourneyTimelineNode(
                       isLast: true,
                       isCompleted: true,
+                      indicator: _buildHeroIndicator(context, Iconsax.crown, isGold: true),
                       child: _buildCompletionCard(context, journey),
                     ),
+                  
+                  SizedBox(height: context.h(40)),
                 ],
               ),
             ),
     );
   }
 
+  Widget _buildHeroIndicator(BuildContext context, IconData icon, {bool isGold = false}) {
+    return Container(
+      width: context.w(32),
+      height: context.w(32),
+      decoration: BoxDecoration(
+        gradient: isGold 
+            ? const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)])
+            : CustomColors.purpleBlueGradient,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: (isGold ? Colors.orange : CustomColors.purpleColor).withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          size: context.sp(16),
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
   Widget _buildChronologicalTimeline(BuildContext context, List<TreatmentBranch> branches) {
-    // 1. Flatten all appointments from all branches
     final allEvents = <_JourneyEventWrapper>[];
     for (var branch in branches) {
       allEvents.add(_JourneyEventWrapper(
@@ -80,10 +115,8 @@ class AppointmentJourneyScreen extends ConsumerWidget {
       }
     }
 
-    // 2. Sort by timestamp
     allEvents.sort((a, b) => (a.appointment.date ?? 0).compareTo(b.appointment.date ?? 0));
 
-    // 3. Group by Date
     final Map<DateTime, List<_JourneyEventWrapper>> dateGroups = {};
     for (var event in allEvents) {
       if (event.appointment.date == null) continue;
@@ -95,115 +128,183 @@ class AppointmentJourneyScreen extends ConsumerWidget {
     final sortedDates = dateGroups.keys.toList()..sort();
 
     return Column(
-      children: [
-        // Visual Branching Header (The split point)
-        IntrinsicHeight(
-          child: Row(
+      children: sortedDates.map((date) {
+        final group = dateGroups[date]!;
+        final isCompleted = group.every((e) => e.appointment.status?.toLowerCase() == 'completed');
+        
+        return JourneyTimelineNode(
+          isCompleted: isCompleted,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                children: [
-                  Container(
-                    width: 2,
-                    height: context.h(30),
-                    color: CustomColors.darkPurple,
-                  ),
-                ],
-              ),
-              const Expanded(child: SizedBox()),
+              // Styled Date Header
+              _buildDateHeader(context, date),
+              SizedBox(height: context.h(16)),
+              
+              ...group.map((e) => Padding(
+                padding: EdgeInsets.only(bottom: context.h(16)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: context.w(4),
+                          height: context.h(16),
+                          decoration: BoxDecoration(
+                            color: CustomColors.darkPurple,
+                            borderRadius: BorderRadius.circular(context.r(2)),
+                          ),
+                        ),
+                        SizedBox(width: context.w(8)),
+                        Text(
+                          "${e.treatmentName} – ${e.area}",
+                          style: CustomFonts.black16w600.copyWith(fontSize: context.sp(14)),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: context.h(10)),
+                    AppointmentCard(
+                      appointment: e.appointment,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              )),
             ],
           ),
-        ),
-        
-        // Chronological Visits
-        ...sortedDates.map((date) {
-          final group = dateGroups[date]!;
-          final isCompleted = group.every((e) => e.appointment.status?.toLowerCase() == 'completed');
-          
-          return JourneyTimelineNode(
-            isCompleted: isCompleted,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: context.w(12), vertical: context.h(4)),
-                  decoration: BoxDecoration(
-                    color: CustomColors.darkPurple.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(context.r(8)),
-                  ),
-                  child: Text(
-                    date.formattedDayDate,
-                    style: CustomFonts.darkPurple12w600,
-                  ),
-                ),
-                SizedBox(height: context.h(16)),
-                ...group.map((e) => Padding(
-                  padding: EdgeInsets.only(bottom: context.h(16)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: context.w(4), bottom: context.h(6)),
-                        child: Text(
-                          "${e.treatmentName} – ${e.area}",
-                          style: CustomFonts.black14w600.copyWith(fontSize: context.sp(13)),
-                        ),
-                      ),
-                      AppointmentCard(
-                        appointment: e.appointment,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                )),
-              ],
-            ),
-          );
-        }),
-      ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildDateHeader(BuildContext context, DateTime date) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: context.w(16), vertical: context.h(10)),
+      decoration: BoxDecoration(
+        color: CustomColors.greyColor.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(context.r(16)),
+        border: Border.all(color: CustomColors.greyColor, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Iconsax.calendar_1, size: context.sp(18), color: CustomColors.darkPurple),
+          SizedBox(width: context.w(10)),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                DateFormat('EEEE').format(date),
+                style: CustomFonts.black12w600.copyWith(color: Colors.black54),
+              ),
+              Text(
+                date.formattedFullDate,
+                style: CustomFonts.black14w600,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildCompletionCard(BuildContext context, AppointmentJourney journey) {
     return Container(
-      padding: EdgeInsets.all(context.w(20)),
+      width: double.infinity,
       decoration: BoxDecoration(
-        gradient: CustomColors.purpleBlueGradient,
         borderRadius: BorderRadius.circular(context.r(24)),
         boxShadow: CustomColors.cardShadow,
       ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.stars_rounded, color: Colors.white, size: context.sp(24)),
-              SizedBox(width: context.w(10)),
-              Text("Journey Completed", style: CustomFonts.white18w600.copyWith(color: Colors.black)),
-            ],
-          ),
-          SizedBox(height: context.h(16)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(context, "Started", journey.requestedAt.formattedDayDate),
-              if (journey.completedAt != null)
-                _buildStatItem(context, "Completed", journey.completedAt!.formattedDayDate),
-            ],
-          ),
-          SizedBox(height: context.h(16)),
-          const Divider(color: Colors.white30),
-          SizedBox(height: context.h(16)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildSmallStat("Treatments", "${journey.treatmentBranches.length}"),
-              _buildSmallStat("Appointments", "${journey.treatmentBranches.length}"),
-              _buildSmallStat("Follow-ups", "${journey.treatmentBranches.fold(0, (sum, b) => sum + b.followUps.length)}"),
-            ],
-          ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(context.r(24)),
+        child: Stack(
+          children: [
+            // Background Gradient
+            Container(
+              padding: EdgeInsets.all(context.w(24)),
+              decoration: BoxDecoration(
+                gradient: CustomColors.purpleBlueGradient,
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(context.w(12)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Iconsax.verify, color: Colors.black, size: context.sp(32)),
+                  ),
+                  SizedBox(height: context.h(16)),
+                  Text(
+                    "Journey Successfully Completed",
+                    textAlign: TextAlign.center,
+                    style: CustomFonts.black20w600,
+                  ),
+                  SizedBox(height: context.h(8)),
+                  Text(
+                    "All treatments and follow-ups have been finished.",
+                    textAlign: TextAlign.center,
+                    style: CustomFonts.black14w400.copyWith(color: Colors.black87),
+                  ),
+                  SizedBox(height: context.h(24)),
+                  
+                  // Summary Stats
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: context.h(16)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(context.r(20)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSmallStat(context, "Treatments", "${journey.treatmentBranches.length}"),
+                        _buildSmallStat(context, "Visits", "${journey.treatmentBranches.length}"),
+                        _buildSmallStat(context, "Completed", "100%"),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: context.h(20)),
+                  
+                  // Dates Info
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMiniStat(context, "Started", journey.requestedAt.formattedDayDate),
+                      if (journey.completedAt != null)
+                        _buildMiniStat(context, "Finished", journey.completedAt!.formattedDayDate),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildSmallStat(BuildContext context, String label, String value) {
+    return Column(
+      children: [
+        Text(value, style: CustomFonts.black20w600),
+        SizedBox(height: context.h(2)),
+        Text(label, style: CustomFonts.black10w600.copyWith(color: Colors.black54)),
+      ],
+    );
+  }
+
+  Widget _buildMiniStat(BuildContext context, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: CustomFonts.black10w600.copyWith(color: Colors.black54)),
+        Text(value, style: CustomFonts.black12w600),
+      ],
     );
   }
 
@@ -213,15 +314,6 @@ class AppointmentJourneyScreen extends ConsumerWidget {
         Text(label, style: CustomFonts.black12w600.copyWith(color: Colors.black54)),
         SizedBox(height: context.h(4)),
         Text(value, style: CustomFonts.black14w600),
-      ],
-    );
-  }
-
-  Widget _buildSmallStat(String label, String value) {
-    return Column(
-      children: [
-        Text(value, style: CustomFonts.black18w600),
-        Text(label, style: CustomFonts.black10w600.copyWith(color: Colors.black54)),
       ],
     );
   }

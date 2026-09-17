@@ -7,7 +7,8 @@ class JourneyTimelineNode extends StatelessWidget {
   final bool isFirst;
   final bool isLast;
   final bool isCompleted;
-  final double? lineLength;
+  final Widget? indicator;
+  final double? customPadding;
 
   const JourneyTimelineNode({
     super.key,
@@ -15,7 +16,8 @@ class JourneyTimelineNode extends StatelessWidget {
     this.isFirst = false,
     this.isLast = false,
     this.isCompleted = true,
-    this.lineLength,
+    this.indicator,
+    this.customPadding,
   });
 
   @override
@@ -24,45 +26,72 @@ class JourneyTimelineNode extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              Container(
-                width: context.w(16),
-                height: context.w(16),
-                decoration: BoxDecoration(
-                  color: isCompleted ? CustomColors.darkPurple : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isCompleted ? CustomColors.darkPurple : Colors.grey.shade300,
-                    width: 2,
+          SizedBox(
+            width: context.w(32),
+            child: Column(
+              children: [
+                if (isFirst) SizedBox(height: context.h(10)),
+                indicator ?? _buildDefaultIndicator(context),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            isCompleted ? CustomColors.darkPurple : Colors.grey.shade200,
+                            isCompleted ? CustomColors.purpleColor : Colors.grey.shade200,
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: isCompleted
-                    ? Icon(
-                        Icons.check,
-                        size: context.sp(10),
-                        color: Colors.white,
-                      )
-                    : null,
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: isCompleted ? CustomColors.darkPurple : Colors.grey.shade200,
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
-          SizedBox(width: context.w(16)),
+          SizedBox(width: context.w(12)),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: context.h(24)),
+              padding: EdgeInsets.only(
+                top: isFirst ? context.h(0) : context.h(0),
+                bottom: customPadding ?? context.h(32),
+              ),
               child: child,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDefaultIndicator(BuildContext context) {
+    return Container(
+      width: context.w(20),
+      height: context.w(20),
+      decoration: BoxDecoration(
+        color: isCompleted ? CustomColors.darkPurple : Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isCompleted ? CustomColors.darkPurple : Colors.grey.shade300,
+          width: 2,
+        ),
+        boxShadow: isCompleted ? [
+          BoxShadow(
+            color: CustomColors.darkPurple.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          )
+        ] : null,
+      ),
+      child: isCompleted
+          ? Icon(
+              Icons.check,
+              size: context.sp(12),
+              color: Colors.white,
+            )
+          : null,
     );
   }
 }
