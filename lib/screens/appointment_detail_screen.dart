@@ -416,8 +416,8 @@ class _AppointmentDetailScreenState
           children: [
             Positioned.fill(
               child: Container(
-                decoration: const BoxDecoration(
-                  gradient: CustomColors.purpleBlueGradient,
+                decoration: BoxDecoration(
+                  gradient: CustomColors.checkInGradient,
                 ),
               ),
             ),

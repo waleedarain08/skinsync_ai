@@ -4,7 +4,7 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../screens/face_pose_capture_screen.dart';
 import '../screens/consent_forms/face_consent_screen.dart';
-import '../screens/treatment_journey_screen.dart';
+import '../screens/clinical_journey/clinical_journey_screen.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import 'custom_button.dart';
@@ -101,7 +101,7 @@ void showMScanFaceDialog(BuildContext context) {
                             //     .selectedTreatments;
                             Navigator.pushNamed(
                               context,
-                              TreatmentJourneyScreen.routeName,
+                              ClinicalJourneyScreen.routeName,
                               // arguments: {
                               //   'title': treatment?.name ?? 'Focus Areas',
                               //   'treatmentId': treatment?.id,

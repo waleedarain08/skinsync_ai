@@ -129,4 +129,13 @@ abstract final class CustomColors {
       Colors.cyan.withValues(alpha: 0.6),
     ],
   );
+
+  static LinearGradient checkInGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      const Color(0xff88E3FB).withValues(alpha: 0.85),
+      const Color(0xff7D69EB).withValues(alpha: 0.65),
+    ],
+  );
 }
