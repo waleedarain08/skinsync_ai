@@ -1,13 +1,14 @@
 import '../models/responses/simulation_history_response.dart';
 import '../models/treatment_price_model.dart';
 
-
 class PriceUtils {
   static List<TreatmentPriceResult> calculateTreatmentPrices(
     List<SimulationTreatment> treatments,
   ) {
     return treatments.map((treatment) {
       num treatmentTotal = 0;
+
+      final areaPrices = <TreatmentAreaPriceResult>[];
 
       for (final area in treatment.areas ?? <SimulationArea>[]) {
         final num areaPrice = area.price ?? 0;
@@ -19,28 +20,38 @@ class PriceUtils {
           totalQuantity += material.selectedQuantity ?? 0;
         }
 
-        if (totalQuantity == 0) {
-          treatmentTotal += areaPrice;
-        } else {
-          treatmentTotal += areaPrice * totalQuantity;
-        }
+        final num calculatedAreaPrice = totalQuantity == 0
+            ? areaPrice
+            : areaPrice * totalQuantity;
+
+        treatmentTotal += calculatedAreaPrice;
+
+        areaPrices.add(
+          TreatmentAreaPriceResult(
+            name: area.name,
+            price: areaPrice,
+            quantity: totalQuantity,
+            totalPrice: calculatedAreaPrice,
+          ),
+        );
       }
 
       return TreatmentPriceResult(
         name: treatment.name,
         totalPrice: treatmentTotal,
+        areas: areaPrices,
       );
     }).toList();
   }
 
   static num calculateGrandTotal(
-  List<SimulationTreatment> treatments,
-) {
-  final treatmentPrices = calculateTreatmentPrices(treatments);
+    List<SimulationTreatment> treatments,
+  ) {
+    final treatmentPrices = calculateTreatmentPrices(treatments);
 
-  return treatmentPrices.fold<num>(
-    0,
-    (total, treatment) => total + treatment.totalPrice,
-  );
-}
+    return treatmentPrices.fold<num>(
+      0,
+      (total, treatment) => total + treatment.totalPrice,
+    );
+  }
 }

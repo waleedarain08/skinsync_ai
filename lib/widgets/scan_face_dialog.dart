@@ -4,6 +4,7 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../screens/face_pose_capture_screen.dart';
 import '../screens/consent_forms/face_consent_screen.dart';
+import '../screens/treatment_journey_screen.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import 'custom_button.dart';
@@ -75,42 +76,42 @@ void showMScanFaceDialog(BuildContext context) {
                       );
                     },
                   ),
-                 // SizedBox(height: context.h(12)),
+                 SizedBox(height: context.h(12)),
 
                   // Button 2: Select Treatment Areas (Secondary Button)
-                  // Consumer(
-                  //   builder: (consumerContext, ref, _) {
-                  //     return Container(
-                  //       decoration: BoxDecoration(
-                  //         borderRadius: BorderRadius.circular(context.r(25)),
-                  //         border: Border.all(
-                  //           color: CustomColors.darkPurple,
-                  //           width: 1.5,
-                  //         ),
-                  //       ),
-                  //       child: CustomButton(
-                  //         text: "Select Treatment Areas",
-                  //         textColor: Colors.white,
-                  //         borderRadius: context.r(26),
-                  //         onPressed: () {
-                  //           Navigator.pop(dialogContext); // close dialog
+                  Consumer(
+                    builder: (consumerContext, ref, _) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(context.r(25)),
+                          border: Border.all(
+                            color: CustomColors.darkPurple,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: CustomButton(
+                          text: "Save Option",
+                          textColor: Colors.white,
+                          borderRadius: context.r(26),
+                          onPressed: () {
+                            Navigator.pop(dialogContext); // close dialog
 
-                  //           final treatment = ref
-                  //               .read(checkoutViewModel)
-                  //               .selectedTreatments;
-                  //           Navigator.pushNamed(
-                  //             context,
-                  //             TreatmentAreaScreen.routeName,
-                  //             arguments: {
-                  //               'title': treatment?.name ?? 'Focus Areas',
-                  //               'treatmentId': treatment?.id,
-                  //             },
-                  //           );
-                  //         },
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
+                            // final treatment = ref
+                            //     .read(checkoutViewModel)
+                            //     .selectedTreatments;
+                            Navigator.pushNamed(
+                              context,
+                              TreatmentJourneyScreen.routeName,
+                              // arguments: {
+                              //   'title': treatment?.name ?? 'Focus Areas',
+                              //   'treatmentId': treatment?.id,
+                              // },
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
                
                 ],
               ),

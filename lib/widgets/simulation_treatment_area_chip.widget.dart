@@ -28,7 +28,7 @@ class SimulationTreatmentAreaChip extends StatelessWidget {
   Widget _buildIcon(BuildContext context) {
     final size = context.w(32);
 
-    final hasIcon = icon != null && icon!.isNotEmpty;
+    final hasIcon = icon != null && icon!.isNotEmpty && icon != "";
 
     if (!hasIcon) {
       return Image.asset(

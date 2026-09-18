@@ -520,12 +520,12 @@ class _TreatmentReviewScreenState extends ConsumerState<TreatmentReviewScreen> {
                   Expanded(
                     child: Text(
                       "${DateTimeUtils.fromTimestamp(slot.date).formattedDate} at "
-                      "${DateTimeUtils.fromTimestamp(slot.time).formattedTime24}",
+                      "${DateTimeUtils.fromTimestamp(slot.time).formattedTime}",
                       style: CustomFonts.black13w500,
                     ),
                   ),
                 ],
-              ),
+              )
             );
           }),
         ],

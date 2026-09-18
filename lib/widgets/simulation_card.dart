@@ -163,7 +163,7 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                                   Expanded(
                                     child: Text(
                                       "Prices may vary based on the final treatment plan and materials used.",
-                                      style: CustomFonts.grey13w400
+                                      style: CustomFonts.grey13w400,
                                     ),
                                   ),
                                 ],
@@ -203,9 +203,9 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                 ),
               ],
             ),
-             if (widget.sim.clinic != null) ...[
-              SizedBox(height: context.h(12)),
-              Text('Treatment Shared With',style:CustomFonts.black14w700 ,),
+          if (widget.sim.clinic != null) ...[
+            SizedBox(height: context.h(12)),
+            Text('Treatment Shared With', style: CustomFonts.black14w700),
             SizedBox(height: context.h(8)),
             _buildClinicCard(context, widget.sim.clinic!),
           ],
@@ -383,27 +383,62 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                         SizedBox(height: context.h(8)),
 
                         // Treatment prices
+                        // Treatment prices
                         ...treatmentPrices.map((treatment) {
                           return Padding(
-                            padding: EdgeInsets.only(bottom: context.h(6)),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            padding: EdgeInsets.only(bottom: context.h(12)),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    treatment.name ?? "Unnamed Treatment",
-                                    style: CustomFonts.grey14w400,
-                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        treatment.name ?? "Unnamed Treatment",
+                                        style: CustomFonts.black14w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      "\$${treatment.totalPrice.toStringAsFixed(0)}",
+                                      style: CustomFonts.black14w600,
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  "\$${treatment.totalPrice.toStringAsFixed(0)}",
-                                  style: CustomFonts.black14w600,
-                                ),
+
+                                if (treatment.areas.isNotEmpty) ...[
+                                  SizedBox(height: context.h(6)),
+
+                                  ...treatment.areas.map((area) {
+                                    return Padding(
+                                      padding: EdgeInsets.only(
+                                        left: context.w(12),
+                                        bottom: context.h(4),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              area.name ?? "Unnamed Area",
+                                              style: CustomFonts.grey13w400,
+                                            ),
+                                          ),
+                                          Text(
+                                            "\$${area.totalPrice.toStringAsFixed(0)}",
+                                            style: CustomFonts.grey13w400,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
                               ],
                             ),
                           );
                         }),
-
                         SizedBox(height: context.h(8)),
 
                         Divider(height: 1, color: Colors.grey.shade300),
@@ -530,7 +565,8 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
                       ),
                     ],
                   ),
-                ] ,if(clinic.email != null && clinic.email!.isNotEmpty) ...[
+                ],
+                if (clinic.email != null && clinic.email!.isNotEmpty) ...[
                   SizedBox(height: context.h(2)),
                   Row(
                     children: [
@@ -558,6 +594,7 @@ class _SimulationCardState extends ConsumerState<SimulationCard> {
       ),
     );
   }
+
   Widget _buildImagePair(
     BuildContext context,
     String label,
@@ -665,7 +702,8 @@ class ComparisonView extends StatefulWidget {
   final String? after;
   final double? height;
 
-  const ComparisonView({super.key, 
+  const ComparisonView({
+    super.key,
     required this.before,
     required this.after,
     this.height,

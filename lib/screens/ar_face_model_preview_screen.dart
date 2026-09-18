@@ -12,7 +12,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:showcaseview/showcaseview.dart';
 
-import '../models/responses/materials_response.dart';
 import '../models/responses/treatment_area_list_response.dart';
 import '../models/responses/treatment_list_response.dart';
 import '../models/selected_treatment_and_areas_model.dart';
@@ -27,11 +26,11 @@ import '../view_models/treatment_area_view_model.dart';
 import '../view_models/treatment_requests_view_model.dart';
 import '../view_models/treatment_view_model.dart';
 import '../widgets/app_loader.dart';
-import '../widgets/bottom_sheets/material_level_sheet.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/save_option_confirmation_dialog.dart';
 import '../widgets/dialogs/upgrade_plan_dialog.dart';
+import '../widgets/material_bottom_sheet.dart';
 import '../widgets/medical_disclaimer_banner.dart';
 import '../widgets/message_cycler.dart';
 import '../widgets/selected_treatment_and_areas_widget.dart';
@@ -98,8 +97,9 @@ class _ArFaceModelPreviewScreenState
 
   void _onScrollShowcaseListener() {
     if (_showcaseContext != null && mounted) {
-      final activeWidgetId =
-          ShowCaseWidget.of(_showcaseContext!).activeWidgetId;
+      final activeWidgetId = ShowCaseWidget.of(
+        _showcaseContext!,
+      ).activeWidgetId;
       if (activeWidgetId != null) {
         setState(() {});
       }
@@ -374,7 +374,8 @@ class _ArFaceModelPreviewScreenState
                                     horizontal: context.w(20),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(height: context.h(30)),
                                       _buildAreaSelectionSection(),
@@ -999,7 +1000,9 @@ class _ArFaceModelPreviewScreenState
           ref
               .read(checkoutViewModel.notifier)
               .addSelectedTreatment(selectedTreatment);
-          await ref.read(treatmentViewModel.notifier).onTapTreatment(
+          await ref
+              .read(treatmentViewModel.notifier)
+              .onTapTreatment(
                 treatmentModel: selectedTreatment,
                 isCallPredictAPI: false,
               );
@@ -1816,7 +1819,13 @@ class _ArFaceModelPreviewScreenState
                     );
               } else {
                 if (!context.mounted) return;
-                _showMaterialBottomSheet(context, area, res.data!);
+                //  _showMaterialBottomSheet(context, area, );
+                MaterialBottomSheet.show(
+                  context: context,
+                  area: area,
+                  material: res.data!,
+                  treatment: ref.read(checkoutViewModel).selectedTreatments!,
+                );
               }
             } else {
               ref.read(checkoutViewModel.notifier).addSelectedArea(area);
@@ -1829,31 +1838,31 @@ class _ArFaceModelPreviewScreenState
     }
   }
 
-  void _showMaterialBottomSheet(
-    BuildContext context,
-    TreatmentAreaModel area,
-    MaterialData material,
-  ) {
-    final treatment = ref.read(checkoutViewModel).selectedTreatments;
-    if (treatment == null) return;
+  // void _showMaterialBottomSheet(
+  //   BuildContext context,
+  //   TreatmentAreaModel area,
+  //   MaterialData material,
+  // ) {
+  //   final treatment = ref.read(checkoutViewModel).selectedTreatments;
+  //   if (treatment == null) return;
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      constraints: .new(minWidth: 1.sw),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(context.r(24)),
-        ),
-      ),
-      builder: (context) {
-        return MaterialLevelSheet(
-          area: area,
-          material: material,
-          treatment: treatment,
-        );
-      },
-    );
-  }
+  //   showModalBottomSheet(
+  //     context: context,
+  //     backgroundColor: Colors.white,
+  //     isScrollControlled: true,
+  //     constraints: .new(minWidth: 1.sw),
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(
+  //         top: Radius.circular(context.r(24)),
+  //       ),
+  //     ),
+  //     builder: (context) {
+  //       return MaterialLevelSheet(
+  //         area: area,
+  //         material: material,
+  //         treatment: treatment,
+  //       );
+  //     },
+  //   );
+  // }
 }
