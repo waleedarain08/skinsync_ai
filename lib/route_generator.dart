@@ -18,6 +18,7 @@ import 'screens/additional_info_screen.dart';
 import 'screens/allergy_and_medical_history.dart';
 import 'screens/appointment_detail_screen.dart';
 import 'screens/appointment_forms_screen.dart';
+import 'screens/pre_treatment_instructions_screen.dart';
 import 'screens/ar_face_model_preview_screen.dart';
 import 'screens/biometric_screen.dart';
 import 'screens/bottom_nav_page.dart';
@@ -252,6 +253,15 @@ class RouteGenerator {
           ),
           builder: (_) => AppointmentFormsScreen(
             detail: args as AppointmentDetailData?,
+          ),
+        );
+      case PreTreatmentInstructionsScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(
+            name: PreTreatmentInstructionsScreen.routeName,
+          ),
+          builder: (_) => PreTreatmentInstructionsScreen(
+            treatments: args as List<DetailedAppointmentTreatment>?,
           ),
         );
       case ExploreClinicsScreen.routeName:

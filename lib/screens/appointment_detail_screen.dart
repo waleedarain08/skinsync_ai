@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../models/responses/appointments_list_response.dart';
+import '../models/responses/appointment_detail_response.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
@@ -19,11 +20,11 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/appointment_journey/summary_tile.dart';
 import '../widgets/dialogs/appointment_details/financial_summary_dialog.dart';
-import '../widgets/dialogs/appointment_details/clinic_details_dialog.dart';
-import '../widgets/dialogs/appointment_details/doctor_details_dialog.dart';
+import '../widgets/dialogs/appointment_details/appointment_info_dialog.dart';
 import '../widgets/dialogs/appointment_details/treatment_details_dialog.dart';
 import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
 import 'appointment_forms_screen.dart';
+import 'pre_treatment_instructions_screen.dart';
 import 'treatment_progress/my_treatment_progress_screen.dart';
 import 'qr_scan_screen.dart';
 
@@ -235,7 +236,7 @@ class _AppointmentDetailScreenState
                   
                   // Financial Summary (Placed directly below Check-in card)
                   SummaryTile(
-                    title: "Financial",
+                    title: "Payment",
                     subtitle: "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
                     trailing: _buildStatusBadge(detail?.paymentType?.status ?? (isPaymentPending ? 'pending' : 'paid')),
                     icon: Iconsax.wallet_money,
@@ -251,10 +252,10 @@ class _AppointmentDetailScreenState
                     mainAxisSpacing: context.h(16),
                     crossAxisSpacing: context.w(16),
                     children: [
-                      // 1. Detailed Appointment Info Card (Replaces Tile)
+                      // 1. Detailed Appointment Info Card (Tap opens AppointmentInfoDialog)
                       StaggeredGridTile.count(
                         crossAxisCellCount: 2,
-                        mainAxisCellCount: 1.3,
+                        mainAxisCellCount: 1.5,
                         child: _buildDetailedInfoCard(
                           context,
                           type: type,
@@ -262,40 +263,13 @@ class _AppointmentDetailScreenState
                           timeString: timeString,
                           key: detail?.appointmentKey ?? widget.appointment.appointmentKey ?? "N/A",
                           status: detail?.status ?? widget.appointment.status ?? "Confirmed",
+                          clinicName: detail?.clinic?.name ?? widget.appointment.clinic?.clinicName ?? "N/A",
+                          doctorName: detail?.doctor?.name ?? widget.appointment.doctor?.doctorName ?? "N/A",
+                          onTap: () => _showAppointmentInfoDialog(context, detail, widget.appointment),
                         ),
                       ),
 
-                      // 2. Clinic Details
-                      StaggeredGridTile.count(
-                        crossAxisCellCount: 1,
-                        mainAxisCellCount: 1.3,
-                        child: SummaryTile(
-                          title: "Clinic",
-                          subtitle: detail?.clinic?.name ?? widget.appointment.clinic?.clinicName ?? "View Details",
-                          icon: Iconsax.hospital,
-                          color: CustomColors.blueColor,
-                          gradient: CustomColors.blueGradient,
-                          backgroundImage: PngAssets.mapIcon,
-                          onTap: () => _showClinicDialog(context, detail?.clinic ?? widget.appointment.clinic),
-                        ),
-                      ),
-
-                      // 3. Doctor Details
-                      StaggeredGridTile.count(
-                        crossAxisCellCount: 1,
-                        mainAxisCellCount: 1.3,
-                        child: SummaryTile(
-                          title: "Doctor",
-                          subtitle: detail?.doctor?.name ?? widget.appointment.doctor?.doctorName ?? "View Details",
-                          icon: Iconsax.user,
-                          color: CustomColors.pinkColor,
-                          gradient: CustomColors.pinkGradient,
-                          backgroundImage: PngAssets.face,
-                          onTap: () => _showDoctorDialog(context, detail?.doctor ?? widget.appointment.doctor),
-                        ),
-                      ),
-
-                      // 4. Treatment Details
+                      // 2. Treatment Details
                       StaggeredGridTile.count(
                         crossAxisCellCount: 1,
                         mainAxisCellCount: 1.3,
@@ -329,10 +303,29 @@ class _AppointmentDetailScreenState
                         ),
                       ),
 
-                      // 6. Treatment Progress
+                      // 6. Pre-Treatment Instructions
                       StaggeredGridTile.count(
-                        crossAxisCellCount: detail?.simulations != null ? 1 : 2,
-                        mainAxisCellCount: detail?.simulations != null ? 1.3 : 0.85,
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Pre-Treatment",
+                          subtitle: "Care Guidelines & Instructions",
+                          icon: Iconsax.clipboard_text,
+                          color: CustomColors.blueColor,
+                          gradient: CustomColors.blueGradient,
+                          backgroundImage: PngAssets.syringe,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            PreTreatmentInstructionsScreen.routeName,
+                            arguments: detail?.treatments,
+                          ),
+                        ),
+                      ),
+
+                      // 7. Treatment Progress
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
                         child: SummaryTile(
                           title: "Progress",
                           subtitle: "Track Recovery & Milestones",
@@ -347,17 +340,17 @@ class _AppointmentDetailScreenState
                         ),
                       ),
 
-                      // 7. Simulations
+                      // 8. Simulations
                       if (detail?.simulations != null)
                         StaggeredGridTile.count(
-                          crossAxisCellCount: 1,
-                          mainAxisCellCount: 1.3,
+                          crossAxisCellCount: 2,
+                          mainAxisCellCount: 0.85,
                           child: SummaryTile(
                             title: "Simulations",
                             subtitle: "View Before & After Results",
                             icon: Iconsax.magicpen,
                             color: Colors.teal,
-                            gradient: CustomColors.blueGradient,
+                            gradient: CustomColors.purpleBlueGradient,
                             backgroundImage: PngAssets.beforeAfter,
                             onTap: () => _showSimulationDialog(context, detail!.simulations!),
                           ),
@@ -378,6 +371,9 @@ class _AppointmentDetailScreenState
     required String timeString,
     required String key,
     required String status,
+    required String clinicName,
+    required String doctorName,
+    required VoidCallback onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -387,62 +383,91 @@ class _AppointmentDetailScreenState
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(context.r(28)),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -context.w(10),
-              bottom: -context.h(10),
-              child: Opacity(
-                opacity: 0.12,
-                child: Image.asset(
-                  PngAssets.laserTreatment,
-                  height: context.h(150),
-                  fit: BoxFit.contain,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(context.r(28)),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -context.w(10),
+                  bottom: -context.h(10),
+                  child: Opacity(
+                    opacity: 0.12,
+                    child: Image.asset(
+                      PngAssets.laserTreatment,
+                      height: context.h(150),
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(context.w(20)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Padding(
+                  padding: EdgeInsets.all(context.w(20)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(context.w(10)),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
-                        ),
-                        child: Icon(Iconsax.calendar_tick, color: Colors.black87, size: context.sp(22)),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(context.w(10)),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+                            ),
+                            child: Icon(Iconsax.calendar_tick, color: Colors.black87, size: context.sp(22)),
+                          ),
+                          _buildStatusBadge(status),
+                        ],
                       ),
-                      _buildStatusBadge(status),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              "Appointment Info", 
+                              style: CustomFonts.black18w600.copyWith(fontSize: context.sp(19)),
+                            ),
+                          ),
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: context.sp(18),
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: context.h(12)),
+                      Row(
+                        children: [
+                          Expanded(child: _buildInfoItem(context, Iconsax.key, key)),
+                          SizedBox(width: context.w(12)),
+                          Expanded(child: _buildInfoItem(context, Iconsax.tag, type.capitalize)),
+                        ],
+                      ),
+                      SizedBox(height: context.h(8)),
+                      Row(
+                        children: [
+                          Expanded(child: _buildInfoItem(context, Iconsax.calendar, dateStr)),
+                          SizedBox(width: context.w(12)),
+                          Expanded(child: _buildInfoItem(context, Iconsax.clock, timeString)),
+                        ],
+                      ),
+                      SizedBox(height: context.h(8)),
+                      Row(
+                        children: [
+                          Expanded(child: _buildInfoItem(context, Iconsax.hospital, clinicName)),
+                          SizedBox(width: context.w(12)),
+                          Expanded(child: _buildInfoItem(context, Iconsax.user, doctorName)),
+                        ],
+                      ),
                     ],
                   ),
-                  const Spacer(),
-                  Text("Appointment Info", style: CustomFonts.black18w600.copyWith(fontSize: context.sp(19))),
-                  SizedBox(height: context.h(12)),
-                  Row(
-                    children: [
-                      _buildInfoItem(context, Iconsax.key, key),
-                      SizedBox(width: context.w(16)),
-                      _buildInfoItem(context, Iconsax.tag, type.capitalize),
-                    ],
-                  ),
-                  SizedBox(height: context.h(8)),
-                  Row(
-                    children: [
-                      _buildInfoItem(context, Iconsax.calendar, dateStr),
-                      SizedBox(width: context.w(16)),
-                      _buildInfoItem(context, Iconsax.clock, timeString),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -450,12 +475,17 @@ class _AppointmentDetailScreenState
 
   Widget _buildInfoItem(BuildContext context, IconData icon, String value) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: context.sp(14), color: Colors.black54),
+        Icon(icon, size: context.sp(14), color: Colors.black87),
         SizedBox(width: context.w(6)),
-        Text(
-          value,
-          style: CustomFonts.black12w600.copyWith(color: Colors.black87),
+        Flexible(
+          child: Text(
+            value,
+            style: CustomFonts.black12w600.copyWith(color: Colors.black87),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
@@ -559,16 +589,19 @@ class _AppointmentDetailScreenState
   }
 
   // Dialog Handlers
+  void _showAppointmentInfoDialog(
+    BuildContext context, 
+    AppointmentDetailData? detail, 
+    AppointmentItem appointment,
+  ) {
+    showDialog(
+      context: context, 
+      builder: (_) => AppointmentInfoDialog(detail: detail, appointment: appointment),
+    );
+  }
+
   void _showFinancialDialog(BuildContext context, dynamic detail) {
     showDialog(context: context, builder: (_) => FinancialSummaryDialog(detail: detail));
-  }
-
-  void _showClinicDialog(BuildContext context, dynamic clinic) {
-    showDialog(context: context, builder: (_) => ClinicDetailsDialog(clinic: clinic));
-  }
-
-  void _showDoctorDialog(BuildContext context, dynamic doctor) {
-    showDialog(context: context, builder: (_) => DoctorDetailsDialog(doctor: doctor));
   }
 
   void _showTreatmentDialog(BuildContext context, dynamic treatments) {
