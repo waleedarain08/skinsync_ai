@@ -25,6 +25,7 @@ import '../widgets/dialogs/appointment_details/treatment_details_dialog.dart';
 import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
 import 'appointment_forms_screen.dart';
 import 'pre_treatment_instructions_screen.dart';
+import 'post_treatment_instructions_screen.dart';
 import 'treatment_progress/my_treatment_progress_screen.dart';
 import 'qr_scan_screen.dart';
 
@@ -317,6 +318,25 @@ class _AppointmentDetailScreenState
                           onTap: () => Navigator.pushNamed(
                             context,
                             PreTreatmentInstructionsScreen.routeName,
+                            arguments: detail?.treatments,
+                          ),
+                        ),
+                      ),
+
+                      // 7. Post-Treatment Instructions
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Post-Treatment",
+                          subtitle: "Care Guidelines & Recovery",
+                          icon: Iconsax.clipboard_tick,
+                          color: CustomColors.pinkColor,
+                          gradient: CustomColors.pinkGradient,
+                          backgroundImage: PngAssets.face,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            PostTreatmentInstructionsScreen.routeName,
                             arguments: detail?.treatments,
                           ),
                         ),
