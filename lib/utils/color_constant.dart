@@ -84,4 +84,49 @@ abstract final class CustomColors {
       const Color(0xffFFFFFF).withValues(alpha: 1.0),
     ],
   );
+
+  static LinearGradient blueGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      const Color(0xff88E3FB).withValues(alpha: 0.9),
+      const Color(0xff2480F9).withValues(alpha: 0.7),
+    ],
+  );
+
+  static LinearGradient pinkGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      const Color(0xffE7C6E8),
+      const Color(0xffD83F87).withValues(alpha: 0.5),
+    ],
+  );
+
+  static LinearGradient greenGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Colors.green.withValues(alpha: 0.8),
+      Colors.teal.withValues(alpha: 0.6),
+    ],
+  );
+
+  static LinearGradient orangeGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Colors.orange.withValues(alpha: 0.7),
+      Colors.deepOrange.withValues(alpha: 0.5),
+    ],
+  );
+
+  static LinearGradient tealGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Colors.teal.withValues(alpha: 0.8),
+      Colors.cyan.withValues(alpha: 0.6),
+    ],
+  );
 }

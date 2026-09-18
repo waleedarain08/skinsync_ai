@@ -44,7 +44,7 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
     final questions = [
       HelpChatQuestion(
         id: 'q_initial',
-        text: "Hi! 👋 I'm your SkinSync AI assistant.\nWhat can I help you with today?",
+        text: "Hi! 👋 I'm Stella, your SkinSync AI assistant.\nWhat can I help you with today?",
         options: [
           HelpChatOption(
             id: 'opt_scan',
@@ -208,7 +208,7 @@ class HelpChatViewModel extends BaseViewModel<HelpChatState> {
     if (questionId == 'q_initial') {
       final userName = ref.read(authViewModel).authData?.user?.name;
       if (userName != null && userName.isNotEmpty) {
-        questionText = "Hi $userName! 👋 I'm your SkinSync AI assistant.\nWhat can I help you with today?";
+        questionText = "Hi $userName! 👋 I'm Stella, your SkinSync AI assistant.\nWhat can I help you with today?";
       }
     }
 

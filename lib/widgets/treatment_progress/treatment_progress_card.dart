@@ -95,7 +95,7 @@ class TreatmentProgressCard extends StatelessWidget {
 
   Widget _buildStatusBadge(BuildContext context) {
     Color bgColor;
-    Color textColor = Colors.white;
+    // Color textColor = Colors.white;
 
     switch (treatmentProgress.status) {
       case TreatmentStatus.inProgress:

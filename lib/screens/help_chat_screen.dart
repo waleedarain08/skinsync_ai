@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../models/help_chat_model.dart';
+import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../view_models/help_chat_view_model.dart';
@@ -61,6 +62,38 @@ class _HelpChatScreenState extends ConsumerState<HelpChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            Container(
+              width: double.infinity,
+              margin: EdgeInsets.symmetric(
+                horizontal: context.w(16),
+                vertical: context.h(8),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: context.w(16),
+                vertical: context.h(12),
+              ),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    CustomColors.purpleColor.withValues(alpha: 0.12),
+                    CustomColors.lightBlueColor.withValues(alpha: 0.12),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(context.r(16)),
+                border: Border.all(
+                  color: CustomColors.purpleColor.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  "Meet Stella, Your SkinSync AI Assistant",
+                  style: CustomFonts.black14w600,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
@@ -92,8 +125,14 @@ class _HelpChatScreenState extends ConsumerState<HelpChatScreen> {
                   margin: EdgeInsets.only(right: context.w(8)),
                   child: CircleAvatar(
                     radius: context.r(16),
-                    backgroundColor: CustomColors.purpleColor,
-                    child: Icon(Icons.smart_toy, color: Colors.white, size: context.sp(18)),
+                    backgroundColor: CustomColors.purpleColor.withValues(alpha: 0.1),
+                    child: Padding(
+                      padding: EdgeInsets.all(context.r(4)),
+                      child: Image.asset(
+                        PngAssets.splashLogo,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
                 Flexible(

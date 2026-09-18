@@ -14,7 +14,6 @@ import '../../widgets/clinical_journey/finalized_journey_card.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
-import '../../utils/string_utils.dart';
 
 class ClinicalJourneyScreen extends ConsumerWidget {
   const ClinicalJourneyScreen({super.key});
@@ -223,7 +222,7 @@ class ClinicalJourneyScreen extends ConsumerWidget {
             // Background Gradient
             Container(
               padding: EdgeInsets.all(context.w(24)),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: CustomColors.purpleBlueGradient,
               ),
               child: Column(
@@ -308,15 +307,15 @@ class ClinicalJourneyScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String label, String value) {
-    return Column(
-      children: [
-        Text(label, style: CustomFonts.black12w600.copyWith(color: Colors.black54)),
-        SizedBox(height: context.h(4)),
-        Text(value, style: CustomFonts.black14w600),
-      ],
-    );
-  }
+  // Widget _buildStatItem(BuildContext context, String label, String value) {
+  //   return Column(
+  //     children: [
+  //       Text(label, style: CustomFonts.black12w600.copyWith(color: Colors.black54)),
+  //       SizedBox(height: context.h(4)),
+  //       Text(value, style: CustomFonts.black14w600),
+  //     ],
+  //   );
+  // }
 }
 
 class _JourneyEventWrapper {

@@ -1,4 +1,3 @@
-import '../../utils/enums.dart';
 
 enum TreatmentEventStatus {
   completed,

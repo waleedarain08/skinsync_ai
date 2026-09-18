@@ -15,28 +15,34 @@ class ChatButton extends StatelessWidget {
         Navigator.of(context).pushNamed(ChatListScreen.routeName);
       },
       child: Container(
-        padding: EdgeInsets.all(context.r(14)),
+        padding: EdgeInsets.all(context.r(10)),
         decoration: BoxDecoration(
           gradient: CustomColors.purpleBlueGradient,
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(context.r(26)),
+            topRight: Radius.circular(context.r(26)),
+            bottomLeft: Radius.circular(context.r(6)),
+            bottomRight: Radius.circular(context.r(26)),
+          ),
           boxShadow: [
+            // Outer glow
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: Colors.black.withValues(alpha: 0.35),
               blurRadius: 16,
-              spreadRadius: 2,
-              offset: const Offset(0, 6),
+              spreadRadius: 3,
             ),
+            // Soft white diffuse glow
             BoxShadow(
               color: Colors.white.withValues(alpha: 0.15),
               blurRadius: 20,
-              spreadRadius: 4,
+              spreadRadius: 6,
             ),
           ],
         ),
         child: Icon(
           Iconsax.message_text_1,
           color: CustomColors.blackColor,
-          size: context.sp(22),
+          size: context.sp(30),
         ),
       ),
     );

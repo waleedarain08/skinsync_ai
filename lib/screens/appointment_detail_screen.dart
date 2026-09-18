@@ -1,23 +1,27 @@
-import 'dart:developer';
-
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointments_list_response.dart';
-import '../utils/string_utils.dart';
+import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
+import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/appointment_journey/summary_tile.dart';
+import '../widgets/dialogs/appointment_details/financial_summary_dialog.dart';
+import '../widgets/dialogs/appointment_details/clinic_details_dialog.dart';
+import '../widgets/dialogs/appointment_details/doctor_details_dialog.dart';
+import '../widgets/dialogs/appointment_details/treatment_details_dialog.dart';
+import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
 import 'qr_scan_screen.dart';
 
 class AppointmentDetailScreen extends ConsumerStatefulWidget {
@@ -53,21 +57,16 @@ class _AppointmentDetailScreenState
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(context.r(32)),
         ),
         child: Padding(
-          padding: EdgeInsets.all(context.w(24)),
+          padding: EdgeInsets.symmetric(horizontal: context.w(24), vertical: context.h(32)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: .center,
             children: [
               Text("Check-in QR Code", style: CustomFonts.black18w600),
-              SizedBox(height: context.h(4)),
-              // Text(
-              //   "Appointment ID: #$appointmentId",
-              //   style: CustomFonts.grey700_12w400,
-              // ),
               SizedBox(height: context.h(24)),
               Container(
                 padding: EdgeInsets.all(context.w(16)),
@@ -86,19 +85,6 @@ class _AppointmentDetailScreenState
                   width: context.w(220),
                   height: context.w(220),
                   child: QrImageView(data: encryptedData, size: context.w(220)),
-                  // child: PrettyQrView.data(
-                  //   data: encryptedData,
-                  //   decoration: const PrettyQrDecoration(
-                  //     shape: PrettyQrSmoothSymbol(
-                  //       color: CustomColors.darkPurple,
-                  //       roundFactor: 1,
-                  //     ),
-                  //     image: PrettyQrDecorationImage(
-                  //       image: AssetImage(PngAssets.splashLogo),
-                  //       scale: 0.25,
-                  //     ),
-                  //   ),
-                  // ),
                 ),
               ),
               SizedBox(height: context.h(24)),
@@ -107,10 +93,11 @@ class _AppointmentDetailScreenState
                 textAlign: TextAlign.center,
                 style: CustomFonts.textGrey13w400.copyWith(height: 1.4),
               ),
-              SizedBox(height: context.h(24)),
+              SizedBox(height: context.h(32)),
               CustomButton(
                 onPressed: () => Navigator.pop(context),
                 text: "Dismiss",
+                isBorder: true,
               ),
             ],
           ),
@@ -124,50 +111,53 @@ class _AppointmentDetailScreenState
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(dialogContext.r(16)),
+            borderRadius: BorderRadius.circular(dialogContext.r(32)),
           ),
-          content: Column(
-            mainAxisSize: .min,
-            children: [
-              Icon(
-                Icons.check_circle_rounded,
-                color: Colors.green,
-                size: dialogContext.sp(56),
-              ),
-              SizedBox(height: dialogContext.h(16)),
-              Text(
-                "Checked In",
-                style: CustomFonts.black18w600.copyWith(
-                  fontSize: dialogContext.sp(16),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: context.w(24), vertical: context.h(32)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: context.w(72),
+                  width: context.w(72),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.green.withValues(alpha: 0.1),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: dialogContext.sp(32),
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(height: dialogContext.h(8)),
-              Text(
-                message ??
-                    "You have been successfully checked in for this appointment.",
-                textAlign: TextAlign.center,
-                style: CustomFonts.grey15w400,
-              ),
-            ],
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext); // Close dialog
-                Navigator.pushNamed(context, '/NewPatientIntakeScreen'); // Open Intake form
-              },
-              child: Text(
-                "OK",
-                style: CustomFonts.black16w600.copyWith(
-                  color: CustomColors.purpleColor,
+                SizedBox(height: dialogContext.h(24)),
+                Text(
+                  "Checked In",
+                  style: CustomFonts.black20w600,
                 ),
-              ),
+                SizedBox(height: dialogContext.h(12)),
+                Text(
+                  message ?? "Successfully checked in.",
+                  textAlign: TextAlign.center,
+                  style: CustomFonts.textGrey14w400,
+                ),
+                SizedBox(height: dialogContext.h(32)),
+                CustomButton(
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    Navigator.pushNamed(context, '/NewPatientIntakeScreen');
+                  },
+                  text: "Continue",
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
@@ -178,183 +168,144 @@ class _AppointmentDetailScreenState
     final appointmentState = ref.watch(appointmentProvider);
     final detail = appointmentState.appointmentDetail;
 
-    final isStale =
-        detail == null || detail.id != widget.appointment.appointmentId;
-    final isLoading =
-        (appointmentState.loading || isStale) &&
-        appointmentState.errorMessage == null;
+    final isStale = detail == null || detail.id != widget.appointment.appointmentId;
+    final isLoading = (appointmentState.loading || isStale) && appointmentState.errorMessage == null;
 
-    final type =
-        detail?.appointmentType?.title ??
-        widget.appointment.appointmentType ??
-        "consultation";
+    final isPaymentPending = detail?.paymentType?.status == 'pending';
+
+    // Data for detailed card
+    final type = detail?.appointmentType?.title ?? widget.appointment.appointmentType ?? "consultation";
     final dateVal = detail?.date ?? widget.appointment.date;
-    final dateStr = dateVal != null
-        ? DateTimeUtils.formatTimestampToDayDate(dateVal)
-        : "N/A";
+    final dateStr = dateVal != null ? DateTimeUtils.formatTimestampToDayDate(dateVal) : "N/A";
 
-    final startTimeVal =
-        detail?.startTime ?? widget.appointment.slot?.startTime;
+    final startTimeVal = detail?.startTime ?? widget.appointment.slot?.startTime;
     final endTimeVal = detail?.endTime ?? widget.appointment.slot?.endTime;
-    final startTime = startTimeVal != null
-        ? DateTimeUtils.formatTimestampToTime(startTimeVal)
-        : "--:--";
-    final endTime = endTimeVal != null
-        ? DateTimeUtils.formatTimestampToTime(endTimeVal)
-        : "--:--";
+    final startTime = startTimeVal != null ? DateTimeUtils.formatTimestampToTime(startTimeVal) : "--:--";
+    final endTime = endTimeVal != null ? DateTimeUtils.formatTimestampToTime(endTimeVal) : "--:--";
     final timeString = "$startTime - $endTime";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
       appBar: CustomAppBar(
-        title: "Appointment Detail",
+        title: "Appointment Details",
         actions: [
-          //   const ScanQrButton(),
-          IconButton(
-            onPressed: () async {
-              final encryptedText = await ref
-                  .read(appointmentProvider.notifier)
-                  .encryptAppointmentData(detail);
-              if (encryptedText == null) {
-                return;
-              }
-              log('Encrypted Text: $encryptedText');
-              _showQrDialog(
-                context: context,
-                appointmentId: detail!.id!,
-                encryptedData: encryptedText,
-              );
-            },
-            icon: Icon(
-              Icons.qr_code_scanner_rounded,
-              color: CustomColors.darkPurple,
-              size: context.sp(24),
+          if (detail != null)
+            IconButton(
+              onPressed: () async {
+                final encryptedText = await ref.read(appointmentProvider.notifier).encryptAppointmentData(detail);
+                if (encryptedText != null) {
+                  _showQrDialog(context: context, appointmentId: detail.id!, encryptedData: encryptedText);
+                }
+              },
+              icon: Icon(Icons.qr_code_scanner_rounded, color: CustomColors.darkPurple, size: context.sp(24)),
             ),
-            tooltip: "Generate QR",
-          ),
-
-          SizedBox(width: context.w(12)),
         ],
       ),
       body: isLoading
           ? const AppLoader()
           : SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(
-                horizontal: context.w(20),
-                vertical: context.h(20),
-              ),
+              padding: EdgeInsets.fromLTRB(context.w(20), context.h(10), context.w(20), context.h(40)),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Align(
-                    alignment: .topRight,
-                    child: CustomButton(
-                      isBorder: true,
-                      onPressed: () async {
-                        final data = await Navigator.push<String?>(
+                  _buildCheckInCard(context, detail?.id, isPaymentPending),
+                  SizedBox(height: context.h(20)),
+                  StaggeredGrid.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: context.h(16),
+                    crossAxisSpacing: context.w(16),
+                    children: [
+                      // 1. Detailed Appointment Info Card (Replaces Tile)
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 2,
+                        mainAxisCellCount: 1.3,
+                        child: _buildDetailedInfoCard(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const QrScanScreen(),
-                          ),
-                        );
-                        if (data == null) return;
-
-                        final response = await ref
-                            .read(appointmentProvider.notifier)
-                            .decodeQrCode(data, appointmentId: detail!.id!);
-
-                        if (response == null) {
-                          final message =
-                              ref.read(appointmentProvider).errorMessage ??
-                              'Could not check in with this QR code';
-                          EasyLoading.showError(message);
-                          return;
-                        }
-
-                        log("Checked in successfully via QR");
-                        if (!context.mounted) return;
-                        _showCheckInSuccessDialog(context, response.message);
-                      },
-                      text: 'Scan To Check In',
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                  _buildInfoSection(
-                    title: "Appointment Info",
-                    icon: Icons.event_available_rounded,
-                    children: [
-                      _buildDetailRow(
-                        "Key",
-                        detail?.appointmentKey ??
-                            widget.appointment.appointmentKey ??
-                            "N/A",
-                      ),
-                      _buildDetailRow("Type", type, isType: true),
-                      _buildDetailRow("Date", dateStr),
-                      _buildDetailRow("Time Slot", timeString),
-                      _buildDetailRow(
-                        "Status",
-                        detail?.status ??
-                            widget.appointment.status ??
-                            "Confirmed",
-                        isStatus: true,
-                      ),
-                      if (detail?.bookingType != null &&
-                          detail!.bookingType!.isNotEmpty)
-                        _buildDetailRow("Booking Type", detail.bookingType!),
-                      if (detail?.createdAt != null)
-                        _buildDetailRow(
-                          "Created At",
-                          DateTimeUtils.formatISOStringToDateTime(
-                            detail!.createdAt!,
-                          ),
+                          type: type,
+                          dateStr: dateStr,
+                          timeString: timeString,
+                          key: detail?.appointmentKey ?? widget.appointment.appointmentKey ?? "N/A",
+                          status: detail?.status ?? widget.appointment.status ?? "Confirmed",
                         ),
-                    ],
-                  ),
-                  SizedBox(height: context.h(20)),
-                  _buildInfoSection(
-                    title: "Financial Summary",
-                    icon: Icons.account_balance_wallet_rounded,
-                    children: [
-                      _buildDetailRow(
-                        "Treatment Total",
-                        "\$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
                       ),
-                      if (detail?.discount != null && detail!.discount! > 0)
-                        _buildDetailRow(
-                          "Discount",
-                          "${detail.discountType == 'percent' ? '-' : '-\$'}${detail.discount}${detail.discountType == 'percent' ? '%' : ''}",
+                      
+                      // 2. Financial Summary
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Financial",
+                          subtitle: "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
+                          icon: Iconsax.wallet_money,
+                          color: Colors.green,
+                          gradient: CustomColors.greenGradient,
+                          backgroundImage: PngAssets.masterLogo,
+                          onTap: () => _showFinancialDialog(context, detail),
+                        ),
+                      ),
+
+                      // 3. Clinic Details
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Clinic",
+                          subtitle: detail?.clinic?.name ?? widget.appointment.clinic?.clinicName ?? "View Details",
+                          icon: Iconsax.hospital,
+                          color: CustomColors.blueColor,
+                          gradient: CustomColors.blueGradient,
+                          backgroundImage: PngAssets.mapIcon,
+                          onTap: () => _showClinicDialog(context, detail?.clinic ?? widget.appointment.clinic),
+                        ),
+                      ),
+
+                      // 4. Doctor Details
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Doctor",
+                          subtitle: detail?.doctor?.name ?? widget.appointment.doctor?.doctorName ?? "View Details",
+                          icon: Iconsax.user,
+                          color: CustomColors.pinkColor,
+                          gradient: CustomColors.pinkGradient,
+                          backgroundImage: PngAssets.face,
+                          onTap: () => _showDoctorDialog(context, detail?.doctor ?? widget.appointment.doctor),
+                        ),
+                      ),
+
+                      // 5. Treatment Details
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Treatments",
+                          subtitle: "${detail?.treatments?.length ?? 0} Items",
+                          icon: Iconsax.mask,
                           color: Colors.orange,
+                          gradient: CustomColors.orangeGradient,
+                          backgroundImage: PngAssets.syringe,
+                          onTap: () => _showTreatmentDialog(context, detail?.treatments),
                         ),
-                      _buildDetailRow(
-                        "Payment Type",
-                        detail?.paymentType?.type?.toUpperCase() ?? "N/A",
                       ),
-                      _buildDetailRow(
-                        "Payment Status",
-                        detail?.paymentType?.status?.toUpperCase() ?? "N/A",
-                        isStatus: true,
-                        color: detail?.paymentType?.status == 'completed'
-                            ? Colors.green
-                            : Colors.orange,
-                      ),
+
+                      // 6. Simulations
+                      if (detail?.simulations != null)
+                        StaggeredGridTile.count(
+                          crossAxisCellCount: 2,
+                          mainAxisCellCount: 0.85,
+                          child: SummaryTile(
+                            title: "Simulations",
+                            subtitle: "View Before & After Results",
+                            icon: Iconsax.magicpen,
+                            color: Colors.teal,
+                            gradient: CustomColors.tealGradient,
+                            backgroundImage: PngAssets.beforeAfter,
+                            onTap: () => _showSimulationDialog(context, detail!.simulations!),
+                          ),
+                        ),
                     ],
                   ),
-                  SizedBox(height: context.h(20)),
-                  _buildClinicSection(
-                    detail?.clinic ?? widget.appointment.clinic,
-                  ),
-                  SizedBox(height: context.h(20)),
-                  _buildDoctorSection(
-                    detail?.doctor ?? widget.appointment.doctor,
-                  ),
-                  SizedBox(height: context.h(20)),
-                  _buildTreatmentSection(detail?.treatments),
-                  if (detail?.simulations != null) ...[
-                    SizedBox(height: context.h(20)),
-                    _buildSimulationSection(detail!.simulations!),
-                  ],
                   SizedBox(height: context.h(40)),
                 ],
               ),
@@ -362,548 +313,208 @@ class _AppointmentDetailScreenState
     );
   }
 
-  Widget _buildClinicSection(AppointmentClinic? clinic) {
-    if (clinic == null) return const SizedBox.shrink();
-    return _buildInfoSection(
-      title: "Clinic Details",
-      icon: Icons.business_rounded,
-      children: [
-        Row(
+  Widget _buildDetailedInfoCard(
+    BuildContext context, {
+    required String type,
+    required String dateStr,
+    required String timeString,
+    required String key,
+    required String status,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: CustomColors.purpleBlueGradient,
+        borderRadius: BorderRadius.circular(context.r(28)),
+        boxShadow: CustomColors.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(context.r(28)),
+        child: Stack(
           children: [
-            if (clinic.logo != null && clinic.logo!.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(context.r(8)),
-                child: CachedNetworkImage(
-                  imageUrl: clinic.logo!,
-                  height: context.w(40),
-                  width: context.w(40),
-                  fit: BoxFit.cover,
-                  errorWidget: (_, _, _) => const Icon(Icons.business_rounded),
+            Positioned(
+              right: -context.w(10),
+              bottom: -context.h(10),
+              child: Opacity(
+                opacity: 0.12,
+                child: Image.asset(
+                  PngAssets.laserTreatment,
+                  height: context.h(150),
+                  fit: BoxFit.contain,
                 ),
               ),
-            if (clinic.logo != null && clinic.logo!.isNotEmpty)
-              SizedBox(width: context.w(12)),
-            Expanded(
-              child: Text(
-                clinic.name?.capitalize ?? "N/A",
-                style: CustomFonts.black16w700,
-              ),
             ),
-          ],
-        ),
-        SizedBox(height: context.h(12)),
-        _buildDetailRow(
-          "Email",
-          clinic.email ?? "N/A",
-          icon: Icons.email_outlined,
-        ),
-        _buildDetailRow(
-          "Phone",
-          "${clinic.cc ?? ''} ${clinic.phone ?? 'N/A'}".trim(),
-          icon: Icons.phone_outlined,
-        ),
-        _buildDetailRow(
-          "Address",
-          clinic.address ?? "N/A",
-          icon: Icons.location_on_outlined,
-        ),
-        _buildDetailRow(
-          "Country",
-          clinic.country ?? "N/A",
-          icon: Icons.public_outlined,
-        ),
-        if (clinic.latitude != null && clinic.longitude != null)
-          _buildDetailRow(
-            "Location",
-            "${clinic.latitude?.toStringAsFixed(4)}, ${clinic.longitude?.toStringAsFixed(4)}",
-            icon: Icons.map_outlined,
-          ),
-      ],
-    );
-  }
-
-  Widget _buildDoctorSection(AppointmentDoctor? doctor) {
-    if (doctor == null) return const SizedBox.shrink();
-    return _buildInfoSection(
-      title: "Doctor Details",
-      icon: Icons.person_rounded,
-      children: [
-        Row(
-          children: [
-            if (doctor.image != null && doctor.image!.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(context.r(8)),
-                child: CachedNetworkImage(
-                  imageUrl: doctor.image!,
-                  height: context.w(40),
-                  width: context.w(40),
-                  fit: BoxFit.cover,
-                  errorWidget: (_, _, _) => const Icon(Icons.person_rounded),
-                ),
-              ),
-            if (doctor.image != null && doctor.image!.isNotEmpty)
-              SizedBox(width: context.w(12)),
-            Expanded(
-              child: Text(
-                "${doctor.title?.capitalize ?? ''} ${doctor.name?.capitalize ?? 'N/A'}"
-                    .trim(),
-                style: CustomFonts.black16w700,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: context.h(12)),
-        _buildDetailRow(
-          "Email",
-          doctor.email ?? "N/A",
-          icon: Icons.email_outlined,
-        ),
-        _buildDetailRow(
-          "Phone",
-          "${doctor.cc ?? ''} ${doctor.phone ?? 'N/A'}".trim(),
-          icon: Icons.phone_outlined,
-        ),
-        _buildDetailRow(
-          "Country",
-          doctor.country ?? "N/A",
-          icon: Icons.public_outlined,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTreatmentSection(
-    List<DetailedAppointmentTreatment>? treatments,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(left: context.w(4), bottom: context.h(12)),
-          child: Text(
-            "TREATMENT DETAILS",
-            style: CustomFonts.darkPurple12w600.copyWith(letterSpacing: 1.1),
-          ),
-        ),
-        if (treatments == null || treatments.isEmpty)
-          _buildInfoSection(
-            title: "General",
-            icon: Icons.medical_services_rounded,
-            children: [_buildDetailRow("Treatment", "General Consultation")],
-          )
-        else
-          ...treatments.map((t) {
-            Color statusColor = Colors.grey;
-            switch (t.treatmentStatus?.toLowerCase()) {
-              case 'pending':
-                statusColor = Colors.orange;
-                break;
-              case 'completed':
-                statusColor = Colors.green;
-                break;
-              default:
-                statusColor = Colors.blue;
-                break;
-            }
-
-            return Container(
-              margin: EdgeInsets.only(bottom: context.h(16)),
+            Padding(
               padding: EdgeInsets.all(context.w(20)),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(context.r(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: CustomColors.purpleColor.withValues(alpha: 0.12),
-                    blurRadius: 25,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-                border: Border.all(
-                  color: CustomColors.purpleColor.withValues(alpha: 0.05),
-                ),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(context.r(16)),
-                        child: CachedNetworkImage(
-                          imageUrl: t.treatmentImage ?? "",
-                          height: context.w(50),
-                          width: context.w(50),
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: CustomColors.purpleColor.withValues(
-                              alpha: 0.1,
-                            ),
-                            child: const Center(
-                              child: CupertinoActivityIndicator(radius: 8),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            padding: EdgeInsets.all(context.w(10)),
-                            decoration: BoxDecoration(
-                              color: CustomColors.purpleColor.withValues(
-                                alpha: 0.1,
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.auto_awesome_rounded,
-                              size: context.sp(18),
-                              color: CustomColors.purpleColor,
-                            ),
-                          ),
+                      Container(
+                        padding: EdgeInsets.all(context.w(10)),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
                         ),
+                        child: Icon(Iconsax.calendar_tick, color: Colors.black87, size: context.sp(22)),
                       ),
-                      SizedBox(width: context.w(16)),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              t.treatmentName?.capitalize ?? "N/A",
-                              style: CustomFonts.black16w700.copyWith(
-                                fontSize: context.sp(16),
-                              ),
-                            ),
-                            SizedBox(height: context.h(4)),
-                            Text(
-                              "Area: ${t.areaName ?? 'N/A'}",
-                              style: CustomFonts.grey700_12w400,
-                            ),
-                            if (t.treatmentCost != null)
-                              Text(
-                                "Cost: \$${t.treatmentCost!.toStringAsFixed(2)}",
-                                style: CustomFonts.darkPurple10w700.copyWith(
-                                  fontSize: context.sp(11),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      if (t.treatmentStatus != null)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.w(10),
-                            vertical: context.h(4),
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(context.r(8)),
-                          ),
-                          child: Text(
-                            t.treatmentStatus!.toUpperCase(),
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: context.sp(9),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      _buildStatusBadge(status),
                     ],
                   ),
-                  if (t.material != null) ...[
-                    SizedBox(height: context.h(16)),
-                    const Divider(color: Colors.black12),
-                    SizedBox(height: context.h(12)),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  const Spacer(),
+                  Text("Appointment Info", style: CustomFonts.black18w600.copyWith(fontSize: context.sp(19))),
+                  SizedBox(height: context.h(12)),
+                  Row(
+                    children: [
+                      _buildInfoItem(context, Iconsax.key, key),
+                      SizedBox(width: context.w(16)),
+                      _buildInfoItem(context, Iconsax.tag, type.capitalize),
+                    ],
+                  ),
+                  SizedBox(height: context.h(8)),
+                  Row(
+                    children: [
+                      _buildInfoItem(context, Iconsax.calendar, dateStr),
+                      SizedBox(width: context.w(16)),
+                      _buildInfoItem(context, Iconsax.clock, timeString),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(BuildContext context, IconData icon, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: context.sp(14), color: Colors.black54),
+        SizedBox(width: context.w(6)),
+        Text(
+          value,
+          style: CustomFonts.black12w600.copyWith(color: Colors.black87),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCheckInCard(BuildContext context, int? appointmentId, bool isPaymentPending) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(context.r(32)),
+        boxShadow: CustomColors.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(context.r(32)),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: CustomColors.purpleBlueGradient,
+                ),
+              ),
+            ),
+            Positioned(
+              right: -context.w(10),
+              bottom: -context.h(10),
+              child: Opacity(
+                opacity: 0.12,
+                child: Image.asset(
+                  PngAssets.vector2,
+                  height: context.h(120),
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(context.w(24)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text("Ready to Check-in?", style: CustomFonts.black18w600),
+                        SizedBox(height: context.h(6)),
                         Text(
-                          "Dosage/Material",
-                          style: CustomFonts.grey700_10w400.copyWith(
-                            fontSize: context.sp(12),
-                          ),
-                        ),
-                        SizedBox(width: context.w(10)),
-                        Flexible(
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: context.w(12),
-                              vertical: context.h(6),
-                            ),
-                            decoration: BoxDecoration(
-                              color: CustomColors.darkPurple.withValues(
-                                alpha: 0.1,
-                              ),
-                              borderRadius: BorderRadius.circular(context.r(8)),
-                            ),
-                            child: Text(
-                              "${t.material!.selectedQuantity} ${t.material!.name?.capitalize ?? 'Syringes'}",
-                              textAlign: TextAlign.end,
-                              style: CustomFonts.darkPurple10w700.copyWith(
-                                fontSize: context.sp(11),
-                              ),
-                            ),
-                          ),
+                          isPaymentPending 
+                            ? "Please complete payment to check-in."
+                            : "Scan the clinic QR code to start.", 
+                          style: CustomFonts.black14w400.copyWith(color: Colors.black87.withValues(alpha: 0.7))
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                  CustomButton(
+                    width: context.w(100),
+                    height: context.h(44),
+                    onPressed: isPaymentPending ? null : () => _handleScanCheckIn(context, appointmentId),
+                    text: 'Scan',
+                    backgroundColor: Colors.black,
+                    textColor: Colors.white,
+                  ),
                 ],
               ),
-            );
-          }),
-      ],
-    );
-  }
-
-  Widget _buildSimulationSection(Simulations simulations) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(left: context.w(4), bottom: context.h(12)),
-          child: Text(
-            "SIMULATIONS",
-            style: CustomFonts.darkPurple12w600.copyWith(letterSpacing: 1.1),
-          ),
-        ),
-        _buildSimulationPair(
-          "Front View",
-          simulations.frontImageBefore,
-          simulations.frontImageAfter,
-        ),
-        SizedBox(height: context.h(12)),
-        _buildSimulationPair(
-          "Right View",
-          simulations.rightImageBefore,
-          simulations.rightImageAfter,
-        ),
-        SizedBox(height: context.h(12)),
-        _buildSimulationPair(
-          "Left View",
-          simulations.leftImageBefore,
-          simulations.leftImageAfter,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSimulationPair(String label, String? before, String? after) {
-    bool hasBefore = before != null && before.isNotEmpty;
-    bool hasAfter = after != null && after.isNotEmpty;
-    if (!hasBefore && !hasAfter) return const SizedBox.shrink();
-
-    return Container(
-      padding: EdgeInsets.all(context.w(16)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(context.r(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: CustomFonts.black14w700),
-          SizedBox(height: context.h(12)),
-          Row(
-            children: [
-              Expanded(child: _buildSimulationImage("Before", before)),
-              SizedBox(width: context.w(12)),
-              Expanded(child: _buildSimulationImage("After", after)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSimulationImage(String label, String? url) {
-    return Column(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(context.r(12)),
-          child: url != null && url.isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: url,
-                  height: context.h(100),
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (_, _) =>
-                      const Center(child: CupertinoActivityIndicator()),
-                  errorWidget: (_, _, _) => Container(
-                    height: context.h(100),
-                    width: double.infinity,
-                    color: Colors.grey.shade100,
-                    child: const Icon(Icons.image_not_supported_outlined),
-                  ),
-                )
-              : Container(
-                  height: context.h(100),
-                  width: double.infinity,
-                  color: Colors.grey.shade100,
-                  child: const Icon(
-                    Icons.image_not_supported_outlined,
-                    color: Colors.grey,
-                  ),
-                ),
-        ),
-        SizedBox(height: context.h(4)),
-        Text(label, style: CustomFonts.grey700_10w400),
-      ],
-    );
-  }
-
-  Widget _buildInfoSection({
-    required String title,
-    required List<Widget> children,
-    required IconData icon,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(context.w(20)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(context.r(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 25,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: context.sp(18), color: CustomColors.darkPurple),
-              SizedBox(width: context.w(10)),
-              Text(
-                title.capitalize.toUpperCase(),
-                style: CustomFonts.darkPurple12w600.copyWith(
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: context.h(16)),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(
-    String label,
-    String value, {
-    bool isType = false,
-    bool isStatus = false,
-    bool isPaid = false,
-    bool isBold = false,
-    Color? color,
-    IconData? icon,
-  }) {
-    Color? accentColor = color;
-    Color? badgeBgColor;
-    TextStyle badgeStyle = CustomFonts.darkPurple10w700;
-
-    if (isType) {
-      switch (value.toLowerCase()) {
-        case "consultation":
-          accentColor = CustomColors.blueColor;
-          badgeBgColor = CustomColors.blueColor.withValues(alpha: 0.08);
-          badgeStyle = CustomFonts.blue10w700;
-          break;
-        case "treatment session":
-          accentColor = CustomColors.pinkColor;
-          badgeBgColor = CustomColors.pinkColor.withValues(alpha: 0.08);
-          badgeStyle = CustomFonts.pink10w700;
-          break;
-        default:
-          accentColor = CustomColors.purpleColor;
-          badgeBgColor = CustomColors.purpleColor.withValues(alpha: 0.08);
-          badgeStyle = CustomFonts.darkPurple10w700;
-      }
-    }
-
-    if (isStatus) {
-      accentColor = color ?? Colors.green.shade700;
-      badgeBgColor = (color ?? Colors.green).withValues(alpha: 0.1);
-      badgeStyle = CustomFonts.darkPurple10w700; // fallback
-    }
-
-    if (isPaid) {
-      accentColor = Colors.green.shade600;
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: context.h(10)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (icon != null) ...[
-            Padding(
-              padding: EdgeInsets.only(top: context.h(2)),
-              child: Icon(
-                icon,
-                size: context.sp(16),
-                color: Colors.grey.shade400,
-              ),
             ),
-            SizedBox(width: context.w(10)),
           ],
-          Text(
-            "${label.capitalize}:",
-            style: CustomFonts.grey700_10w400.copyWith(
-              fontSize: context.sp(12),
-            ),
-          ),
-          SizedBox(width: context.w(10)),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: isType || isStatus
-                  ? Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.w(12),
-                        vertical: context.h(6),
-                      ),
-                      decoration: BoxDecoration(
-                        color: badgeBgColor,
-                        borderRadius: BorderRadius.circular(context.r(20)),
-                      ),
-                      child: Text(
-                        value,
-                        style: isStatus
-                            ? TextStyle(
-                                color: accentColor,
-                                fontSize: context.sp(10),
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Degular',
-                              )
-                            : badgeStyle.copyWith(fontSize: context.sp(10)),
-                      ),
-                    )
-                  : Text(
-                      value,
-                      textAlign: TextAlign.end,
-                      style: isBold
-                          ? CustomFonts.black14w700.copyWith(
-                              color: accentColor ?? Colors.black,
-                              fontSize: context.sp(14),
-                            )
-                          : CustomFonts.black13w600.copyWith(
-                              color: accentColor ?? Colors.black87,
-                              fontSize: context.sp(13),
-                            ),
-                    ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: context.w(10), vertical: context.h(4)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(context.r(20)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(color: Colors.black87, fontSize: context.sp(9), fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  // Dialog Handlers
+  void _showFinancialDialog(BuildContext context, dynamic detail) {
+    showDialog(context: context, builder: (_) => FinancialSummaryDialog(detail: detail));
+  }
+
+  void _showClinicDialog(BuildContext context, dynamic clinic) {
+    showDialog(context: context, builder: (_) => ClinicDetailsDialog(clinic: clinic));
+  }
+
+  void _showDoctorDialog(BuildContext context, dynamic doctor) {
+    showDialog(context: context, builder: (_) => DoctorDetailsDialog(doctor: doctor));
+  }
+
+  void _showTreatmentDialog(BuildContext context, dynamic treatments) {
+    showDialog(context: context, builder: (_) => TreatmentDetailsDialog(treatments: treatments));
+  }
+
+  void _showSimulationDialog(BuildContext context, dynamic simulations) {
+    showDialog(context: context, builder: (_) => SimulationDetailsDialog(simulations: simulations));
+  }
+
+  Future<void> _handleScanCheckIn(BuildContext context, int? appointmentId) async {
+    if (appointmentId == null) return;
+    final data = await Navigator.push<String?>(context, MaterialPageRoute(builder: (_) => const QrScanScreen()));
+    if (data == null) return;
+
+    final response = await ref.read(appointmentProvider.notifier).decodeQrCode(data, appointmentId: appointmentId);
+    if (response != null) {
+      _showCheckInSuccessDialog(context, response.message);
+    } else {
+      EasyLoading.showError(ref.read(appointmentProvider).errorMessage ?? 'Check-in failed');
+    }
   }
 }

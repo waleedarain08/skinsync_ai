@@ -22,6 +22,7 @@ import 'bottom_nav_screens/explore_screen.dart';
 import 'bottom_nav_screens/home_screen.dart';
 import 'bottom_nav_screens/my_profile_screen.dart';
 import 'bottom_nav_screens/treatment_explore_screen.dart';
+import 'my_care_screen.dart';
 import 'treatment_requests_screen.dart';
 
 class BottomNavPage extends ConsumerStatefulWidget {
@@ -108,25 +109,27 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
                 0 => const HomeScreen(),
                 1 => const TreatmentExploreScreen(),
                 2 => const ExploreScreen(),
-                3 => const TreatmentRequestsScreen(isFromBottomNav: true),
+                3 => const MyCareScreen(),
                 4 => const MyProfileScreen(),
                 int() => throw UnimplementedError(),
               },
-              if (index != 2)
+              if (index != 2 && index != 3)
                 Positioned(
                   bottom: 110.h + MediaQuery.paddingOf(context).bottom,
                   child: const ScanFaceButton(),
                 ),
-              Positioned(
-                left: 20.w,
-                bottom: 110.h + MediaQuery.paddingOf(context).bottom,
-                child: const HelpChatButton(),
-              ),
-              Positioned(
-                right: 20.w,
-                bottom: 110.h + MediaQuery.paddingOf(context).bottom,
-                child: const ChatButton(),
-              ),
+              if (index != 3)
+                Positioned(
+                  left: 20.w,
+                  bottom: 110.h + MediaQuery.paddingOf(context).bottom,
+                  child: const HelpChatButton(),
+                ),
+              if (index != 3)
+                Positioned(
+                  right: 20.w,
+                  bottom: 110.h + MediaQuery.paddingOf(context).bottom,
+                  child: const ChatButton(),
+                ),
             ],
           ),
           extendBody: true,

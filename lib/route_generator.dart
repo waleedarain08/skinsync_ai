@@ -12,6 +12,7 @@ import 'models/responses/treatment_area_list_response.dart';
 import 'models/responses/treatment_category_list_response.dart';
 import 'models/responses/treatment_list_response.dart';
 import 'screens/clinical_journey/clinical_journey_screen.dart';
+import 'screens/my_care_screen.dart';
 import 'screens/additional_info_screen.dart';
 import 'screens/allergy_and_medical_history.dart';
 import 'screens/appointment_detail_screen.dart';
@@ -436,6 +437,11 @@ class RouteGenerator {
         return MaterialPageRoute(
           settings: const RouteSettings(name: BiometricScreen.routeName),
           builder: (_) => const BiometricScreen(),
+        );
+      case MyCareScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(name: MyCareScreen.routeName),
+          builder: (_) => const MyCareScreen(),
         );
       case ClinicalJourneyScreen.routeName:
         return MaterialPageRoute(

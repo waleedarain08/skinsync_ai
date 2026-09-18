@@ -47,15 +47,15 @@ class ScanFaceButton extends ConsumerWidget {
           boxShadow: [
             // Outer glow
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 30,
-              spreadRadius: 10,
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 16,
+              spreadRadius: 3,
             ),
             // Soft white diffuse glow
             BoxShadow(
               color: Colors.white.withValues(alpha: 0.15),
-              blurRadius: 40,
-              spreadRadius: 20,
+              blurRadius: 20,
+              spreadRadius: 6,
             ),
           ],
         ),

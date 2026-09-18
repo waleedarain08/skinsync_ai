@@ -30,9 +30,9 @@ class BottomNavBar extends StatelessWidget {
       unselectedIcon: FontAwesomeIcons.compass,
     ),
     const BottomNavItem(
-      label: 'Journey',
-      selectedIcon: FontAwesomeIcons.route,
-      unselectedIcon: FontAwesomeIcons.route,
+      label: 'My Care',
+      selectedIcon: FontAwesomeIcons.heartPulse,
+      unselectedIcon: FontAwesomeIcons.heartPulse,
     ),
     const BottomNavItem(
       label: 'Profile',
