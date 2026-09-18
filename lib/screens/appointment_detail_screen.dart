@@ -37,6 +37,8 @@ class AppointmentDetailScreen extends ConsumerStatefulWidget {
 
 class _AppointmentDetailScreenState
     extends ConsumerState<AppointmentDetailScreen> {
+  bool _hasAutoOpenedFinancialDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -173,6 +175,18 @@ class _AppointmentDetailScreenState
 
     final isPaymentPending = detail?.paymentType?.status == 'pending';
 
+    if (detail != null &&
+        detail.id == widget.appointment.appointmentId &&
+        isPaymentPending &&
+        !_hasAutoOpenedFinancialDialog) {
+      _hasAutoOpenedFinancialDialog = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showFinancialDialog(context, detail);
+        }
+      });
+    }
+
     // Data for detailed card
     final type = detail?.appointmentType?.title ?? widget.appointment.appointmentType ?? "consultation";
     final dateVal = detail?.date ?? widget.appointment.date;
@@ -208,7 +222,7 @@ class _AppointmentDetailScreenState
               padding: EdgeInsets.fromLTRB(context.w(20), context.h(10), context.w(20), context.h(40)),
               child: Column(
                 children: [
-                  _buildCheckInCard(context, detail?.id, isPaymentPending),
+                  _buildCheckInCard(context, detail?.id, isPaymentPending, detail?.paymentType?.status),
                   SizedBox(height: context.h(20)),
                   StaggeredGrid.count(
                     crossAxisCount: 2,
@@ -236,6 +250,7 @@ class _AppointmentDetailScreenState
                         child: SummaryTile(
                           title: "Financial",
                           subtitle: "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
+                          trailing: _buildStatusBadge(detail?.paymentType?.status ?? (isPaymentPending ? 'pending' : 'paid')),
                           icon: Iconsax.wallet_money,
                           color: Colors.green,
                           gradient: CustomColors.greenGradient,
@@ -403,7 +418,14 @@ class _AppointmentDetailScreenState
     );
   }
 
-  Widget _buildCheckInCard(BuildContext context, int? appointmentId, bool isPaymentPending) {
+  Widget _buildCheckInCard(
+    BuildContext context, 
+    int? appointmentId, 
+    bool isPaymentPending,
+    String? paymentStatus,
+  ) {
+    final rawStatus = paymentStatus ?? (isPaymentPending ? "pending" : "paid");
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -441,7 +463,13 @@ class _AppointmentDetailScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Ready to Check-in?", style: CustomFonts.black18w600),
+                        Row(
+                          children: [
+                            Text("Ready to Check-in?", style: CustomFonts.black18w600),
+                            SizedBox(width: context.w(8)),
+                            _buildStatusBadge(rawStatus),
+                          ],
+                        ),
                         SizedBox(height: context.h(6)),
                         Text(
                           isPaymentPending 
@@ -452,6 +480,7 @@ class _AppointmentDetailScreenState
                       ],
                     ),
                   ),
+                  SizedBox(width: context.w(8)),
                   CustomButton(
                     width: context.w(100),
                     height: context.h(44),

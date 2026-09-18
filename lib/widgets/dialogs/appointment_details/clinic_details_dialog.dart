@@ -1,11 +1,15 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../models/responses/appointments_list_response.dart';
+import '../../../models/responses/chats_response.dart';
+import '../../../screens/chat_screen.dart';
 import '../../../utils/custom_fonts.dart';
 import '../../../utils/color_constant.dart';
 import '../../../utils/string_utils.dart';
+import '../../../view_models/chat_view_model.dart';
 import '../../custom_button.dart';
 
 class ClinicDetailsDialog extends StatelessWidget {
@@ -71,7 +75,32 @@ class ClinicDetailsDialog extends StatelessWidget {
             _buildRow("Address", clinic!.address ?? "N/A", Iconsax.location),
             _buildRow("Country", clinic!.country ?? "N/A", Iconsax.global),
             
-            SizedBox(height: context.h(32)),
+            SizedBox(height: context.h(28)),
+            Consumer(
+              builder: (context, ref, _) {
+                return SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      if (clinic?.id != null) {
+                        ref.read(chatProvider.notifier).selectChat(
+                          Chat(
+                            id: clinic!.id,
+                            clinicName: clinic!.name,
+                          ),
+                        );
+                        Navigator.pushNamed(context, ChatScreen.routeName);
+                      }
+                    },
+                    text: "Chat with Clinic",
+                    backgroundColor: CustomColors.blackColor,
+                    textColor: Colors.white,
+                  ),
+                );
+              },
+            ),
+            SizedBox(height: context.h(12)),
             SizedBox(
               width: double.infinity,
               child: CustomButton(

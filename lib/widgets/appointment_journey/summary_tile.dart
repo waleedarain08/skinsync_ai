@@ -111,7 +111,7 @@ class SummaryTile extends StatelessWidget {
                               style: CustomFonts.grey700_12w400.copyWith(
                                 color: Colors.black54,
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],
