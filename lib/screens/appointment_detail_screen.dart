@@ -26,6 +26,7 @@ import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
 import 'appointment_forms_screen.dart';
 import 'pre_treatment_instructions_screen.dart';
 import 'post_treatment_instructions_screen.dart';
+import 'recovery_journey_screen.dart';
 import 'treatment_progress/my_treatment_progress_screen.dart';
 import 'qr_scan_screen.dart';
 
@@ -356,6 +357,28 @@ class _AppointmentDetailScreenState
                           onTap: () => Navigator.pushNamed(
                             context,
                             MyTreatmentProgressScreen.routeName,
+                          ),
+                        ),
+                      ),
+
+                      // 8. Recovery Journey
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Recovery Journey",
+                          subtitle: "Milestones & Healing Timeline",
+                          icon: Iconsax.health,
+                          color: CustomColors.darkPurple,
+                          gradient: CustomColors.blueGradient,
+                          backgroundImage: PngAssets.faceAndMarks,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            RecoveryJourneyScreen.routeName,
+                            arguments: RecoveryJourneyArgs(
+                              detail: detail,
+                              appointment: widget.appointment,
+                            ),
                           ),
                         ),
                       ),
