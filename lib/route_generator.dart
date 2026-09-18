@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'models/treatment_progress/treatment_progress.dart';
 import 'models/requests/preferred_slot.dart';
 import 'models/responses/appointments_list_response.dart';
+import 'models/responses/appointment_detail_response.dart';
 import 'models/responses/get_clinic_response.dart';
 import 'models/responses/patient_treatment_request_response.dart';
 import 'models/responses/simulation_history_response.dart';
@@ -16,6 +17,7 @@ import 'screens/my_care_screen.dart';
 import 'screens/additional_info_screen.dart';
 import 'screens/allergy_and_medical_history.dart';
 import 'screens/appointment_detail_screen.dart';
+import 'screens/appointment_forms_screen.dart';
 import 'screens/ar_face_model_preview_screen.dart';
 import 'screens/biometric_screen.dart';
 import 'screens/bottom_nav_page.dart';
@@ -242,6 +244,15 @@ class RouteGenerator {
           ),
           builder: (_) =>
               AppointmentDetailScreen(appointment: args as AppointmentItem),
+        );
+      case AppointmentFormsScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(
+            name: AppointmentFormsScreen.routeName,
+          ),
+          builder: (_) => AppointmentFormsScreen(
+            detail: args as AppointmentDetailData?,
+          ),
         );
       case ExploreClinicsScreen.routeName:
         return MaterialPageRoute(

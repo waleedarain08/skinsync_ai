@@ -108,8 +108,8 @@ class SummaryTile extends StatelessWidget {
                             SizedBox(height: context.h(4)),
                             Text(
                               subtitle!,
-                              style: CustomFonts.grey700_12w400.copyWith(
-                                color: Colors.black54,
+                              style: CustomFonts.black12w600.copyWith(
+                                color: CustomColors.blackColor,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,

@@ -91,9 +91,9 @@ class DoctorDetailsDialog extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18.sp, color: Colors.grey.shade400),
+          Icon(icon, size: 18.sp, color: Colors.black87),
           SizedBox(width: 12.w),
-          Text("$label:", style: CustomFonts.grey700_12w400),
+          Text("$label:", style: CustomFonts.black13w600),
           SizedBox(width: 8.w),
           Expanded(
             child: Text(

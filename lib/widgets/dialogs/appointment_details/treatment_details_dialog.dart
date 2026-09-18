@@ -119,7 +119,7 @@ class TreatmentDetailsDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(t.treatmentName?.capitalize ?? "N/A", style: CustomFonts.black14w700),
-                    Text("Area: ${t.areaName ?? 'N/A'}", style: CustomFonts.grey700_12w400),
+                    Text("Area: ${t.areaName ?? 'N/A'}", style: CustomFonts.black12w600),
                   ],
                 ),
               ),

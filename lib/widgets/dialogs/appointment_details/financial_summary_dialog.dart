@@ -90,7 +90,7 @@ class FinancialSummaryDialog extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: CustomFonts.grey700_12w400),
+          Text(label, style: CustomFonts.black13w600),
           Text(
             value, 
             style: isBold 

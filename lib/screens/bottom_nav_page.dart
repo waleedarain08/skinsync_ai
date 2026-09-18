@@ -23,7 +23,6 @@ import 'bottom_nav_screens/home_screen.dart';
 import 'bottom_nav_screens/my_profile_screen.dart';
 import 'bottom_nav_screens/treatment_explore_screen.dart';
 import 'my_care_screen.dart';
-import 'treatment_requests_screen.dart';
 
 class BottomNavPage extends ConsumerStatefulWidget {
   const BottomNavPage({super.key});

@@ -13,6 +13,7 @@ import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
+import '../view_models/forms_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -22,6 +23,8 @@ import '../widgets/dialogs/appointment_details/clinic_details_dialog.dart';
 import '../widgets/dialogs/appointment_details/doctor_details_dialog.dart';
 import '../widgets/dialogs/appointment_details/treatment_details_dialog.dart';
 import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
+import 'appointment_forms_screen.dart';
+import 'treatment_progress/my_treatment_progress_screen.dart';
 import 'qr_scan_screen.dart';
 
 class AppointmentDetailScreen extends ConsumerStatefulWidget {
@@ -48,6 +51,7 @@ class _AppointmentDetailScreenState
             .read(appointmentProvider.notifier)
             .getAppointmentDetail(widget.appointment.appointmentId!);
       }
+      ref.read(formsViewModel.notifier).fetchForms();
     });
   }
 
@@ -170,6 +174,10 @@ class _AppointmentDetailScreenState
     final appointmentState = ref.watch(appointmentProvider);
     final detail = appointmentState.appointmentDetail;
 
+    final formsState = ref.watch(formsViewModel);
+    final signedCount = formsState.signDocument.length;
+    final unsignedCount = formsState.unSignDocument.length;
+
     final isStale = detail == null || detail.id != widget.appointment.appointmentId;
     final isLoading = (appointmentState.loading || isStale) && appointmentState.errorMessage == null;
 
@@ -223,7 +231,21 @@ class _AppointmentDetailScreenState
               child: Column(
                 children: [
                   _buildCheckInCard(context, detail?.id, isPaymentPending, detail?.paymentType?.status),
-                  SizedBox(height: context.h(20)),
+                  SizedBox(height: context.h(16)),
+                  
+                  // Financial Summary (Placed directly below Check-in card)
+                  SummaryTile(
+                    title: "Financial",
+                    subtitle: "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
+                    trailing: _buildStatusBadge(detail?.paymentType?.status ?? (isPaymentPending ? 'pending' : 'paid')),
+                    icon: Iconsax.wallet_money,
+                    color: Colors.green,
+                    gradient: CustomColors.greenGradient,
+                    backgroundImage: PngAssets.masterLogo,
+                    onTap: () => _showFinancialDialog(context, detail),
+                  ),
+                  SizedBox(height: context.h(16)),
+
                   StaggeredGrid.count(
                     crossAxisCount: 2,
                     mainAxisSpacing: context.h(16),
@@ -242,24 +264,8 @@ class _AppointmentDetailScreenState
                           status: detail?.status ?? widget.appointment.status ?? "Confirmed",
                         ),
                       ),
-                      
-                      // 2. Financial Summary
-                      StaggeredGridTile.count(
-                        crossAxisCellCount: 1,
-                        mainAxisCellCount: 1.3,
-                        child: SummaryTile(
-                          title: "Financial",
-                          subtitle: "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
-                          trailing: _buildStatusBadge(detail?.paymentType?.status ?? (isPaymentPending ? 'pending' : 'paid')),
-                          icon: Iconsax.wallet_money,
-                          color: Colors.green,
-                          gradient: CustomColors.greenGradient,
-                          backgroundImage: PngAssets.masterLogo,
-                          onTap: () => _showFinancialDialog(context, detail),
-                        ),
-                      ),
 
-                      // 3. Clinic Details
+                      // 2. Clinic Details
                       StaggeredGridTile.count(
                         crossAxisCellCount: 1,
                         mainAxisCellCount: 1.3,
@@ -274,7 +280,7 @@ class _AppointmentDetailScreenState
                         ),
                       ),
 
-                      // 4. Doctor Details
+                      // 3. Doctor Details
                       StaggeredGridTile.count(
                         crossAxisCellCount: 1,
                         mainAxisCellCount: 1.3,
@@ -289,7 +295,7 @@ class _AppointmentDetailScreenState
                         ),
                       ),
 
-                      // 5. Treatment Details
+                      // 4. Treatment Details
                       StaggeredGridTile.count(
                         crossAxisCellCount: 1,
                         mainAxisCellCount: 1.3,
@@ -304,17 +310,54 @@ class _AppointmentDetailScreenState
                         ),
                       ),
 
-                      // 6. Simulations
+                      // 5. Forms
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Forms",
+                          subtitle: "Signed: $signedCount | Unsigned: $unsignedCount",
+                          icon: Iconsax.document_text,
+                          color: CustomColors.purpleColor,
+                          gradient: CustomColors.pinkGradient,
+                          backgroundImage: PngAssets.faceAndMarks,
+                          onTap: () => Navigator.pushNamed(
+                            context, 
+                            AppointmentFormsScreen.routeName,
+                            arguments: detail,
+                          ),
+                        ),
+                      ),
+
+                      // 6. Treatment Progress
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: detail?.simulations != null ? 1 : 2,
+                        mainAxisCellCount: detail?.simulations != null ? 1.3 : 0.85,
+                        child: SummaryTile(
+                          title: "Progress",
+                          subtitle: "Track Recovery & Milestones",
+                          icon: Iconsax.status_up,
+                          color: CustomColors.darkPurple,
+                          gradient: CustomColors.tealGradient,
+                          backgroundImage: PngAssets.hand,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            MyTreatmentProgressScreen.routeName,
+                          ),
+                        ),
+                      ),
+
+                      // 7. Simulations
                       if (detail?.simulations != null)
                         StaggeredGridTile.count(
-                          crossAxisCellCount: 2,
-                          mainAxisCellCount: 0.85,
+                          crossAxisCellCount: 1,
+                          mainAxisCellCount: 1.3,
                           child: SummaryTile(
                             title: "Simulations",
                             subtitle: "View Before & After Results",
                             icon: Iconsax.magicpen,
                             color: Colors.teal,
-                            gradient: CustomColors.tealGradient,
+                            gradient: CustomColors.blueGradient,
                             backgroundImage: PngAssets.beforeAfter,
                             onTap: () => _showSimulationDialog(context, detail!.simulations!),
                           ),
@@ -466,8 +509,10 @@ class _AppointmentDetailScreenState
                         Row(
                           children: [
                             Text("Ready to Check-in?", style: CustomFonts.black18w600),
-                            SizedBox(width: context.w(8)),
-                            _buildStatusBadge(rawStatus),
+                            if (!isPaymentPending && rawStatus.toLowerCase() != 'pending') ...[
+                              SizedBox(width: context.w(8)),
+                              _buildStatusBadge(rawStatus),
+                            ],
                           ],
                         ),
                         SizedBox(height: context.h(6)),
@@ -475,7 +520,7 @@ class _AppointmentDetailScreenState
                           isPaymentPending 
                             ? "Please complete payment to check-in."
                             : "Scan the clinic QR code to start.", 
-                          style: CustomFonts.black14w400.copyWith(color: Colors.black87.withValues(alpha: 0.7))
+                          style: CustomFonts.black14w400.copyWith(color: CustomColors.blackColor)
                         ),
                       ],
                     ),
