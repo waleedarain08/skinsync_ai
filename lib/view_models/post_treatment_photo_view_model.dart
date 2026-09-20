@@ -21,7 +21,10 @@ class PostTreatmentPhotoViewModel extends Notifier<PostTreatmentPhotoState> {
     required String milestoneTitle,
     required ImageSource source,
   }) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
+    final pickedFile = await ImagePicker().pickImage(
+      source: source,
+      preferredCameraDevice: CameraDevice.front,
+    );
     if (pickedFile == null) return;
 
     final newPhoto = UploadedPhoto(

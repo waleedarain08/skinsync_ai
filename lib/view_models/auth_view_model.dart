@@ -78,7 +78,10 @@ class AuthViewModel extends BaseViewModel<AuthState> {
 
   Future<void> pickProfileImage(ImageSource source) async {
     try {
-      final XFile? image = await _imagePicker.pickImage(source: source);
+      final XFile? image = await _imagePicker.pickImage(
+        source: source,
+        preferredCameraDevice: CameraDevice.front,
+      );
       if (image == null) return;
       await runSafely(() async {
         await EasyLoading.show(status: 'Loading....');
@@ -106,6 +109,7 @@ class AuthViewModel extends BaseViewModel<AuthState> {
       final XFile? image = await _imagePicker.pickImage(
         source: source,
         imageQuality: 85, // Retains high detail for readability
+        preferredCameraDevice: CameraDevice.front,
       );
 
       if (image == null) return null;

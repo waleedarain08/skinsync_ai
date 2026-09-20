@@ -8,6 +8,7 @@ import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../view_models/auth_view_model.dart';
 import '../widgets/app_loader.dart';
+import '../widgets/dialogs/image_source_dialog.dart';
 import '../widgets/app_network_image.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -49,59 +50,13 @@ class _PersonalDocumentScreenState
     //   EasyLoading.showSuccess('Profile updated!');
   }
 
-  void _showImageSourceDialog({
+  Future<void> _showImageSourceDialog({
     required Function(ImageSource source) onSelect,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      constraints: .new(minWidth: 1.sw),
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(context.r(24)),
-        ),
-      ),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: context.h(8)),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.photo_library_outlined,
-                    color: CustomColors.darkPurple,
-                  ),
-                  title: Text(
-                    'Choose from Gallery',
-                    style: CustomFonts.black14w600,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    onSelect(ImageSource.gallery);
-                  },
-                ),
-              ),
-              Divider(color: Colors.grey.shade100, height: context.h(1)),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: context.h(8)),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.photo_camera_outlined,
-                    color: CustomColors.darkPurple,
-                  ),
-                  title: Text('Take a Photo', style: CustomFonts.black14w600),
-                  onTap: () {
-                    Navigator.pop(context);
-                    onSelect(ImageSource.camera);
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  }) async {
+    final source = await showImageSourceDialog(context);
+    if (source != null) {
+      onSelect(source);
+    }
   }
 
   Future<void> _pickDocumentImage({required bool isDrivingLicense}) async {

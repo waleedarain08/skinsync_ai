@@ -4,7 +4,6 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../main.dart';
@@ -13,6 +12,7 @@ import '../utils/custom_fonts.dart';
 import '../utils/string_utils.dart';
 import '../view_models/auth_view_model.dart';
 import '../widgets/app_loader.dart';
+import '../widgets/dialogs/image_source_dialog.dart';
 import '../widgets/app_network_image.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
@@ -87,61 +87,11 @@ class _PersonalDetailScreenState extends ConsumerState<PersonalDetailScreen> {
   //   super.dispose();
   // }
 
-  void _showImageSourceDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(context.r(24)),
-        ),
-      ),
-      constraints: .new(minWidth: 1.sw),
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: context.h(8)),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.photo_library_outlined,
-                    color: CustomColors.darkPurple,
-                  ),
-                  title: Text(
-                    'Choose from Gallery',
-                    style: CustomFonts.black14w600,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ref
-                        .read(authViewModel.notifier)
-                        .pickProfileImage(ImageSource.gallery);
-                  },
-                ),
-              ),
-              Divider(color: Colors.grey.shade100, height: context.h(1)),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: context.h(8)),
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.photo_camera_outlined,
-                    color: CustomColors.darkPurple,
-                  ),
-                  title: Text('Take a Photo', style: CustomFonts.black14w600),
-                  onTap: () {
-                    Navigator.pop(context);
-                    ref
-                        .read(authViewModel.notifier)
-                        .pickProfileImage(ImageSource.camera);
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  Future<void> _showImageSourceDialog() async {
+    final source = await showImageSourceDialog(context);
+    if (source != null) {
+      ref.read(authViewModel.notifier).pickProfileImage(source);
+    }
   }
 
   int _calculateAge(DateTime birthDate) {

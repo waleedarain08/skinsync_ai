@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../widgets/bottom_sheets/media_picker_button.dart';
-import '../widgets/bottom_sheets/media_source_sheet.dart';
+import '../widgets/dialogs/image_source_dialog.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/post_image_preview.dart';
@@ -43,7 +43,10 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         });
       }
     } else {
-      final XFile? image = await _picker.pickImage(source: source);
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        preferredCameraDevice: CameraDevice.front,
+      );
       if (image != null) {
         setState(() {
           _selectedImages.add(image);
@@ -63,28 +66,18 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
   }
 
-  void _showPickerOptions({required bool isVideo}) {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(context.r(20)),
-        ),
-      ),
-      constraints: .new(minWidth: 1.sw),
-      builder: (context) {
-        return MediaSourceSheet(
-          isVideo: isVideo,
-          onSourceSelected: (source) {
-            if (isVideo) {
-              _pickVideo(source);
-            } else {
-              _pickImages(source);
-            }
-          },
-        );
-      },
+  Future<void> _showPickerOptions({required bool isVideo}) async {
+    final source = await showImageSourceDialog(
+      context,
+      title: isVideo ? 'Select Video Source' : 'Select Image Source',
     );
+    if (source != null) {
+      if (isVideo) {
+        _pickVideo(source);
+      } else {
+        _pickImages(source);
+      }
+    }
   }
 
   void _removeImage(int index) {

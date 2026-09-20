@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/post_treatment_photo_model.dart';
@@ -14,7 +13,7 @@ import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/string_utils.dart';
 import '../view_models/post_treatment_photo_view_model.dart';
-import '../widgets/bottom_sheets/media_source_sheet.dart';
+import '../widgets/dialogs/image_source_dialog.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 
@@ -360,28 +359,17 @@ class PostTreatmentPhotosScreen extends ConsumerWidget {
               if (!isCompleted)
                 Expanded(
                   child: InkWell(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(context.r(24)),
-                          ),
-                        ),
-                        backgroundColor: Colors.white,
-                        builder: (bottomSheetContext) => MediaSourceSheet(
-                          isVideo: false,
-                          onSourceSelected: (ImageSource source) {
-                            ref
-                                .read(postTreatmentPhotoProvider.notifier)
-                                .addPhotoToMilestone(
-                                  treatmentId: treatmentId,
-                                  milestoneTitle: milestone.title,
-                                  source: source,
-                                );
-                          },
-                        ),
-                      );
+                    onTap: () async {
+                      final source = await showImageSourceDialog(context);
+                      if (source != null) {
+                        ref
+                            .read(postTreatmentPhotoProvider.notifier)
+                            .addPhotoToMilestone(
+                              treatmentId: treatmentId,
+                              milestoneTitle: milestone.title,
+                              source: source,
+                            );
+                      }
                     },
                     borderRadius: BorderRadius.circular(context.r(16)),
                     child: Container(

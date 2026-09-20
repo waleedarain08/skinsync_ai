@@ -45,19 +45,19 @@ class SummaryTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(context.r(28)),
         child: Stack(
           children: [
-            if (backgroundImage != null)
-              Positioned(
-                right: -context.w(20),
-                bottom: -context.h(10),
-                child: Opacity(
-                  opacity: 0.1,
-                  child: Image.asset(
-                    backgroundImage!,
-                    height: context.h(120),
-                    fit: BoxFit.contain,
-                  ),
+            // Smart Translucent Watermark Icon in Background
+            Positioned(
+              right: -context.w(15),
+              bottom: -context.h(15),
+              child: Opacity(
+                opacity: gradient != null ? 0.12 : 0.08,
+                child: Icon(
+                  icon,
+                  size: context.sp(95),
+                  color: gradient != null ? Colors.black : color,
                 ),
               ),
+            ),
             
             Material(
               color: Colors.transparent,
@@ -90,7 +90,7 @@ class SummaryTile extends StatelessWidget {
                               size: context.sp(20)
                             ),
                           ),
-                          if (trailing != null) trailing!,
+                          if (trailing case final Widget t) t,
                         ],
                       ),
                       Column(
