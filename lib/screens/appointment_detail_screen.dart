@@ -75,7 +75,7 @@ class _AppointmentDetailScreenState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Check-in QR Code", style: CustomFonts.black18w600),
+              Text("Appointment QR Code", style: CustomFonts.black20w600),
               SizedBox(height: context.h(24)),
               Container(
                 padding: EdgeInsets.all(context.w(16)),
@@ -98,9 +98,9 @@ class _AppointmentDetailScreenState
               ),
               SizedBox(height: context.h(24)),
               Text(
-                "Please scan this code at the clinic reception to confirm your arrival.",
+                "Show this QR code to your provider or clinic staff. Once scanned, they can instantly view and verify your appointment details.",
                 textAlign: TextAlign.center,
-                style: CustomFonts.textGrey13w400.copyWith(height: 1.4),
+                style: CustomFonts.black13w600.copyWith(color: Colors.black87, height: 1.4),
               ),
               SizedBox(height: context.h(32)),
               CustomButton(
