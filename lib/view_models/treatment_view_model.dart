@@ -17,6 +17,8 @@ import '../models/responses/simulation_history_response.dart';
 import '../models/responses/treatment_area_list_response.dart';
 import '../models/responses/treatment_detail_response.dart';
 import '../models/responses/treatment_list_response.dart';
+import '../models/responses/treatment_progress_detail_response.dart';
+import '../models/responses/treatment_progress_response.dart';
 import '../models/selected_treatment_and_areas_model.dart';
 import '../repositories/treatment_repository.dart';
 import '../services/api_base_helper.dart';
@@ -319,6 +321,21 @@ class TreatmentViewModel extends BaseViewModel<TreatmentsState> {
     });
   }
 
+Future<List<TreatmentProgressData>?> getTreatmentProgress({
+  int page = 1,
+}) async {
+  return runSafely(() async {
+    final response = await _repo.getTreatmentProgress(page: page, limit: 10);
+    if (!ref.mounted) return null;
+
+    final newItems = response.data ?? [];
+    final apiTotalPages = response.totalPages ?? 1;
+    state = state.copyWith(
+      treatmentProgressTotalPages: apiTotalPages < 1 ? 1 : apiTotalPages,
+    );
+    return newItems;
+  });
+}
   Future<MaterialsResponse?> getMaterials({
     required String treatmentSku,
     required String areaSku,
@@ -352,7 +369,38 @@ class TreatmentViewModel extends BaseViewModel<TreatmentsState> {
     }
     return response?.data;
   }
+Future<TreatmentProgressDetailResponse?> callTreatmentProgressDetail({
+  required int id,
+}) async {
+  final response = await runSafely(() async {
+    state = state.copyWith(
+      loading: true,
+      treatmentProgressDetail: null,
+    );
 
+    final res = await _repo.getTreatmentprogressDetail(
+      progressID: id,
+    );
+
+    if (!ref.mounted) return null;
+
+    state = state.copyWith(
+      loading: false,
+      treatmentProgressDetail: res,
+    );
+
+    return res;
+  });
+
+  if (response == null) {
+    state = state.copyWith(
+      loading: false,
+    );
+  }
+
+  return response;
+}
+ 
   Future<bool> callPredictAPI() async {
     if (state.capturedImagesNull) {
       const msg =
@@ -619,6 +667,8 @@ class TreatmentViewModel extends BaseViewModel<TreatmentsState> {
 class TreatmentsState extends BaseStateModel {
   final List<TreatmentData> treatments;
   final List<TreatmentAreaModel> areaNavigationStack;
+  final TreatmentProgressResponse? treatmentProgressResponse;
+  final TreatmentProgressDetailResponse? treatmentProgressDetail;
   final bool isBefore;
   final XFile? frontPoseImage;
   final XFile? leftPoseImage;
@@ -627,7 +677,7 @@ class TreatmentsState extends BaseStateModel {
   final XFile? frontAiImage;
   final XFile? leftAiImage;
   final XFile? rightAiImage;
-
+  final int treatmentProgressTotalPages;
   final bool isAiImageGenerated;
   final MaterialData? material;
   final bool materialsLoading;
@@ -635,6 +685,8 @@ class TreatmentsState extends BaseStateModel {
   const TreatmentsState({
     super.loading = false,
     super.errorMessage,
+    this.treatmentProgressResponse,
+    this.treatmentProgressDetail,
     this.treatments = const [],
     this.material,
     this.materialsLoading = false,
@@ -648,6 +700,7 @@ class TreatmentsState extends BaseStateModel {
     this.rightAiImage,
     this.isAiImageGenerated = false,
     this.treatmentDetail,
+    this.treatmentProgressTotalPages = 1
   });
 
   @override
@@ -655,9 +708,10 @@ class TreatmentsState extends BaseStateModel {
     bool? loading,
     String? errorMessage,
     List<TreatmentData>? treatments,
+    TreatmentProgressResponse? treatmentProgressResponse,
+    TreatmentProgressDetailResponse? treatmentProgressDetail,
     List<TreatmentAreaModel>? areaNavigationStack,
     TreatmentDetailModel? treatmentDetail,
-
     bool? isBefore,
     XFile? capturedImage,
     XFile? aiImage,
@@ -671,28 +725,53 @@ class TreatmentsState extends BaseStateModel {
     bool? isAiImageGenerated,
     MaterialData? material,
     bool? materialsLoading,
+    int? treatmentProgressTotalPages
   }) {
     return TreatmentsState(
       loading: loading ?? this.loading,
       errorMessage: errorMessage ?? this.errorMessage,
       treatments: treatments ?? this.treatments,
-      areaNavigationStack: areaNavigationStack ?? this.areaNavigationStack,
+      areaNavigationStack:
+          areaNavigationStack ?? this.areaNavigationStack,
       isBefore: isBefore ?? this.isBefore,
-      frontPoseImage: frontPoseImage ?? this.frontPoseImage,
-      leftPoseImage: leftPoseImage ?? this.leftPoseImage,
-      rightPoseImage: rightPoseImage ?? this.rightPoseImage,
-      frontAiImage: clearAiImage ? null : (frontAiImage ?? this.frontAiImage),
-      leftAiImage: clearAiImage ? null : (leftAiImage ?? this.leftAiImage),
-      rightAiImage: clearAiImage ? null : (rightAiImage ?? this.rightAiImage),
-      isAiImageGenerated: isAiImageGenerated ?? this.isAiImageGenerated,
+
+      frontPoseImage:
+          frontPoseImage ?? this.frontPoseImage,
+      leftPoseImage:
+          leftPoseImage ?? this.leftPoseImage,
+      rightPoseImage:
+          rightPoseImage ?? this.rightPoseImage,
+
+      frontAiImage:
+          clearAiImage ? null : (frontAiImage ?? this.frontAiImage),
+      leftAiImage:
+          clearAiImage ? null : (leftAiImage ?? this.leftAiImage),
+      rightAiImage:
+          clearAiImage ? null : (rightAiImage ?? this.rightAiImage),
+
+      isAiImageGenerated:
+          isAiImageGenerated ?? this.isAiImageGenerated,
+
       material: material ?? this.material,
-      materialsLoading: materialsLoading ?? this.materialsLoading,
-      treatmentDetail: treatmentDetail ?? this.treatmentDetail,
+      materialsLoading:
+          materialsLoading ?? this.materialsLoading,
+
+      treatmentDetail:
+          treatmentDetail ?? this.treatmentDetail,
+
+      treatmentProgressResponse:
+          treatmentProgressResponse ?? this.treatmentProgressResponse,
+
+      treatmentProgressDetail:
+          treatmentProgressDetail ?? this.treatmentProgressDetail,
+       treatmentProgressTotalPages:   treatmentProgressTotalPages ?? this.treatmentProgressTotalPages
     );
   }
 
   bool get aiImagesNull {
-    return frontAiImage == null && leftAiImage == null && rightAiImage == null;
+    return frontAiImage == null &&
+        leftAiImage == null &&
+        rightAiImage == null;
   }
 
   bool get capturedImagesNull {

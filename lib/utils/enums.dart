@@ -41,7 +41,7 @@ enum EndPoints {
   biometricUnregister('biometric/unregister'),
   onBoardingQues("onboarding/masters"),
   saveAnswer("v1/onboarding/answer"),
-
+  treatmentProgress('v1/treatment-progress'),
   verifyOtp("verify-otp"),
   onBoardingProfile("v1/onboarding/profile"),
   getClinic("clinics/filter"),

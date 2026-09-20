@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 
-import 'models/treatment_progress/treatment_progress.dart';
 import 'models/requests/preferred_slot.dart';
 import 'models/responses/appointments_list_response.dart';
 import 'models/responses/appointment_detail_response.dart';
@@ -504,11 +503,11 @@ class RouteGenerator {
           settings: const RouteSettings(name: MyTreatmentProgressScreen.routeName),
           builder: (_) => const MyTreatmentProgressScreen(),
         );
-      case TreatmentProgressDetailScreen.routeName:
-        return MaterialPageRoute(
-          settings: const RouteSettings(name: TreatmentProgressDetailScreen.routeName),
-          builder: (_) => TreatmentProgressDetailScreen(treatmentProgress: args as TreatmentProgress),
-        );
+case TreatmentProgressDetailScreen.routeName:
+  return MaterialPageRoute(
+    settings: const RouteSettings(name: TreatmentProgressDetailScreen.routeName),
+    builder: (_) => TreatmentProgressDetailScreen(treatmentId: args as int),
+  );
       case SimulationHistoryScreen.routeName:
         return MaterialPageRoute(
           settings: const RouteSettings(
