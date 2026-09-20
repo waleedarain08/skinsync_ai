@@ -20,6 +20,7 @@ import 'screens/appointment_detail_screen.dart';
 import 'screens/appointment_forms_screen.dart';
 import 'screens/pre_treatment_instructions_screen.dart';
 import 'screens/post_treatment_instructions_screen.dart';
+import 'screens/post_treatment_photos_screen.dart';
 import 'screens/recovery_journey_screen.dart';
 import 'screens/ar_face_model_preview_screen.dart';
 import 'screens/biometric_screen.dart';
@@ -272,6 +273,15 @@ class RouteGenerator {
             name: PostTreatmentInstructionsScreen.routeName,
           ),
           builder: (_) => PostTreatmentInstructionsScreen(
+            treatments: args as List<DetailedAppointmentTreatment>?,
+          ),
+        );
+      case PostTreatmentPhotosScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(
+            name: PostTreatmentPhotosScreen.routeName,
+          ),
+          builder: (_) => PostTreatmentPhotosScreen(
             treatments: args as List<DetailedAppointmentTreatment>?,
           ),
         );

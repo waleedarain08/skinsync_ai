@@ -26,6 +26,7 @@ import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
 import 'appointment_forms_screen.dart';
 import 'pre_treatment_instructions_screen.dart';
 import 'post_treatment_instructions_screen.dart';
+import 'post_treatment_photos_screen.dart';
 import 'recovery_journey_screen.dart';
 import 'treatment_progress/my_treatment_progress_screen.dart';
 import 'qr_scan_screen.dart';
@@ -338,6 +339,25 @@ class _AppointmentDetailScreenState
                           onTap: () => Navigator.pushNamed(
                             context,
                             PostTreatmentInstructionsScreen.routeName,
+                            arguments: detail?.treatments,
+                          ),
+                        ),
+                      ),
+
+                      // 8. Post-Treatment Photos
+                      StaggeredGridTile.count(
+                        crossAxisCellCount: 1,
+                        mainAxisCellCount: 1.3,
+                        child: SummaryTile(
+                          title: "Post Photos",
+                          subtitle: "Milestone Photo Updates",
+                          icon: Iconsax.camera,
+                          color: Colors.teal,
+                          gradient: CustomColors.purpleBlueGradient,
+                          backgroundImage: PngAssets.face,
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            PostTreatmentPhotosScreen.routeName,
                             arguments: detail?.treatments,
                           ),
                         ),
