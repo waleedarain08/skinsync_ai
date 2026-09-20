@@ -120,6 +120,7 @@ class TreatmentDetailsDialog extends StatelessWidget {
                   children: [
                     Text(t.treatmentName?.capitalize ?? "N/A", style: CustomFonts.black14w700),
                     Text("Area: ${t.areaName ?? 'N/A'}", style: CustomFonts.black12w600),
+                    Text('Session: ${t.sessionName ?? 'N/A'}' , style: CustomFonts.black12w600)
                   ],
                 ),
               ),
@@ -137,6 +138,7 @@ class TreatmentDetailsDialog extends StatelessWidget {
                 ),
             ],
           ),
+          
           if (t.material != null) ...[
             SizedBox(height: 12.h),
             const Divider(height: 1),

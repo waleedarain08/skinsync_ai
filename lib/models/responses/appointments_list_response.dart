@@ -147,6 +147,8 @@ class AppointmentTreatment {
   int? treatmentId;
   String? treatmentName;
   String? treatmentImage;
+  int? sessionId;
+  String? sessionName;
   int? areaId;
   String? areaName;
   AppointmentMaterial? material;
@@ -164,6 +166,8 @@ class AppointmentTreatment {
     this.status,
     this.startTime,
     this.endTime,
+    this.sessionId,
+    this.sessionName
   });
 
   AppointmentTreatment.fromJson(Map<String, dynamic> json) {
@@ -176,6 +180,8 @@ class AppointmentTreatment {
     status = json['status'];
     startTime = json['start_time'];
     endTime = json['end_time'];
+    sessionId =  json['session_id'];
+    sessionName = json['session_name'];
   }
 
   Map<String, dynamic> toJson() {
@@ -191,6 +197,8 @@ class AppointmentTreatment {
     data['status'] = status;
     data['start_time'] = startTime;
     data['end_time'] = endTime;
+    data['session_id'] = sessionId;
+    data['session_name'] = sessionName;
     return data;
   }
 }
