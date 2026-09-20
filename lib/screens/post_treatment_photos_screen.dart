@@ -305,104 +305,109 @@ class PostTreatmentPhotosScreen extends ConsumerWidget {
           SizedBox(height: context.h(16)),
 
           Row(
-            children: [
-              ...milestone.uploadedPhotos.map(
-                (photo) => Padding(
-                  padding: EdgeInsets.only(right: context.w(12)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(context.r(16)),
-                        child: photo.url.startsWith('http')
-                            ? CachedNetworkImage(
-                                imageUrl: photo.url,
-                                height: context.w(80),
-                                width: context.w(80),
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  height: context.w(80),
-                                  width: context.w(80),
-                                  color: Colors.grey.shade100,
-                                  child: const Center(
-                                    child: CupertinoActivityIndicator(),
+            children: List.generate(milestone.requiredPhotos, (index) {
+              final hasPhoto = index < milestone.uploadedPhotos.length;
+              final photo = hasPhoto ? milestone.uploadedPhotos[index] : null;
+
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < milestone.requiredPhotos - 1
+                        ? context.w(10)
+                        : 0,
+                  ),
+                  child: hasPhoto && photo != null
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(context.r(16)),
+                              child: photo.url.startsWith('http')
+                                  ? CachedNetworkImage(
+                                      imageUrl: photo.url,
+                                      height: context.w(85),
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        height: context.w(85),
+                                        color: Colors.grey.shade100,
+                                        child: const Center(
+                                          child: CupertinoActivityIndicator(),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => Container(
+                                        height: context.w(85),
+                                        color: Colors.grey.shade100,
+                                        child: const Icon(Icons.image_not_supported),
+                                      ),
+                                    )
+                                  : Image.file(
+                                      File(photo.url),
+                                      height: context.w(85),
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                            if (photo.label != null && photo.label!.isNotEmpty) ...[
+                              SizedBox(height: context.h(4)),
+                              Text(
+                                photo.label!,
+                                style: CustomFonts.black12w600.copyWith(
+                                  color: Colors.grey.shade700,
+                                  fontSize: context.sp(10),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        )
+                      : InkWell(
+                          onTap: () async {
+                            final source = await showImageSourceDialog(context);
+                            if (source != null) {
+                              ref
+                                  .read(postTreatmentPhotoProvider.notifier)
+                                  .addPhotoToMilestone(
+                                    treatmentId: treatmentId,
+                                    milestoneTitle: milestone.title,
+                                    source: source,
+                                  );
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(context.r(16)),
+                          child: Container(
+                            height: context.w(85),
+                            decoration: BoxDecoration(
+                              color: CustomColors.darkPurple.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(context.r(16)),
+                              border: Border.all(
+                                color: CustomColors.darkPurple.withValues(alpha: 0.3),
+                                style: BorderStyle.solid,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_a_photo_rounded,
+                                  color: CustomColors.darkPurple,
+                                  size: context.sp(22),
+                                ),
+                                SizedBox(height: context.h(4)),
+                                Text(
+                                  "Photo ${index + 1}",
+                                  style: CustomFonts.black12w600.copyWith(
+                                    color: CustomColors.darkPurple,
                                   ),
                                 ),
-                                errorWidget: (context, url, error) => Container(
-                                  height: context.w(80),
-                                  width: context.w(80),
-                                  color: Colors.grey.shade100,
-                                  child: const Icon(Icons.image_not_supported),
-                                ),
-                              )
-                            : Image.file(
-                                File(photo.url),
-                                height: context.w(80),
-                                width: context.w(80),
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                      if (photo.label != null) ...[
-                        SizedBox(height: context.h(4)),
-                        Text(
-                          photo.label!,
-                          style: CustomFonts.black12w600.copyWith(
-                            color: Colors.grey,
-                            fontSize: context.sp(10),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              if (!isCompleted)
-                Expanded(
-                  child: InkWell(
-                    onTap: () async {
-                      final source = await showImageSourceDialog(context);
-                      if (source != null) {
-                        ref
-                            .read(postTreatmentPhotoProvider.notifier)
-                            .addPhotoToMilestone(
-                              treatmentId: treatmentId,
-                              milestoneTitle: milestone.title,
-                              source: source,
-                            );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(context.r(16)),
-                    child: Container(
-                      height: context.w(80),
-                      decoration: BoxDecoration(
-                        color: CustomColors.darkPurple.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(context.r(16)),
-                        border: Border.all(
-                          color: CustomColors.darkPurple.withValues(alpha: 0.3),
-                          style: BorderStyle.solid,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_a_photo_rounded,
-                            color: CustomColors.darkPurple,
-                            size: context.sp(22),
-                          ),
-                          SizedBox(height: context.h(4)),
-                          Text(
-                            "Add Photo",
-                            style: CustomFonts.black12w600.copyWith(
-                              color: CustomColors.darkPurple,
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        ),
                 ),
-            ],
+              );
+            }),
           ),
         ],
       ),

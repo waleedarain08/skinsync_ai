@@ -1,3 +1,4 @@
+import 'doctor_treatment_photo_model.dart';
 import 'pre_treatment_instruction_model.dart';
 
 class PostTreatmentInstructionItem {
@@ -6,6 +7,7 @@ class PostTreatmentInstructionItem {
   final String? areaName;
   final String? postTreatmentInstructions;
   final List<InstructionAttachment> postTreatmentAttachments;
+  final List<DoctorTreatmentPhoto> doctorPhotos;
 
   PostTreatmentInstructionItem({
     required this.treatmentId,
@@ -13,6 +15,7 @@ class PostTreatmentInstructionItem {
     this.areaName,
     this.postTreatmentInstructions,
     this.postTreatmentAttachments = const [],
+    this.doctorPhotos = const [],
   });
 
   List<String> get parsedPostInstructions {
@@ -40,6 +43,12 @@ class PostTreatmentInstructionItem {
                   .map((x) => InstructionAttachment.fromJson(x)),
             )
           : [],
+      doctorPhotos: json['doctor_photos'] != null
+          ? List<DoctorTreatmentPhoto>.from(
+              (json['doctor_photos'] as List)
+                  .map((x) => DoctorTreatmentPhoto.fromJson(x)),
+            )
+          : [],
     );
   }
 
@@ -50,5 +59,6 @@ class PostTreatmentInstructionItem {
         'post_treatment_instructions': postTreatmentInstructions,
         'post_treatment_attachments':
             postTreatmentAttachments.map((x) => x.toJson()).toList(),
+        'doctor_photos': doctorPhotos.map((x) => x.toJson()).toList(),
       };
 }

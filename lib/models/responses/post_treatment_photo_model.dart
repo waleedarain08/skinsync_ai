@@ -1,3 +1,5 @@
+import 'doctor_treatment_photo_model.dart';
+
 class UploadedPhoto {
   final String id;
   final String url;
@@ -75,6 +77,7 @@ class PostTreatmentPhotoItem {
   final String? areaName;
   final bool requirePostTreatmentPhotos;
   final List<PhotoMilestoneItem> photoMilestones;
+  final List<DoctorTreatmentPhoto> doctorPhotos;
 
   PostTreatmentPhotoItem({
     required this.treatmentId,
@@ -82,6 +85,7 @@ class PostTreatmentPhotoItem {
     this.areaName,
     this.requirePostTreatmentPhotos = true,
     this.photoMilestones = const [],
+    this.doctorPhotos = const [],
   });
 
   factory PostTreatmentPhotoItem.fromJson(Map<String, dynamic> json) {
@@ -97,6 +101,12 @@ class PostTreatmentPhotoItem {
                   .map((x) => PhotoMilestoneItem.fromJson(x)),
             )
           : [],
+      doctorPhotos: json['doctor_photos'] != null
+          ? List<DoctorTreatmentPhoto>.from(
+              (json['doctor_photos'] as List)
+                  .map((x) => DoctorTreatmentPhoto.fromJson(x)),
+            )
+          : [],
     );
   }
 
@@ -106,5 +116,6 @@ class PostTreatmentPhotoItem {
         'area_name': areaName,
         'require_post_treatment_photos': requirePostTreatmentPhotos,
         'photo_milestone': photoMilestones.map((x) => x.toJson()).toList(),
+        'doctor_photos': doctorPhotos.map((x) => x.toJson()).toList(),
       };
 }

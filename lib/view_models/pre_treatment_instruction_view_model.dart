@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/base_state_model.dart';
+import '../models/responses/doctor_treatment_photo_model.dart';
 import '../models/responses/pre_treatment_instruction_model.dart';
 
 final preTreatmentInstructionProvider = NotifierProvider<
@@ -32,6 +33,24 @@ class PreTreatmentInstructionViewModel
             type: "pdf",
           ),
         ],
+        doctorPhotos: [
+          DoctorTreatmentPhoto(
+            id: "dp1",
+            url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
+            title: "Baseline Frontal Angle",
+            doctorName: "Dr. Sarah Johnson",
+            dateTaken: DateTime.now().subtract(const Duration(days: 3)),
+            note: "Pre-procedure facial mapping photo.",
+          ),
+          DoctorTreatmentPhoto(
+            id: "dp2",
+            url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500",
+            title: "Baseline Profile 45°",
+            doctorName: "Dr. Sarah Johnson",
+            dateTaken: DateTime.now().subtract(const Duration(days: 3)),
+            note: "Pre-procedure side symmetry analysis.",
+          ),
+        ],
       ),
       PreTreatmentInstructionItem(
         treatmentId: 102,
@@ -44,6 +63,16 @@ class PreTreatmentInstructionViewModel
             name: "Forehead_Filler_PreCare.pdf",
             url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
             type: "pdf",
+          ),
+        ],
+        doctorPhotos: [
+          DoctorTreatmentPhoto(
+            id: "dp3",
+            url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500",
+            title: "Forehead Baseline Close-Up",
+            doctorName: "Dr. Sarah Johnson",
+            dateTaken: DateTime.now().subtract(const Duration(days: 4)),
+            note: "Baseline wrinkle depth assessment.",
           ),
         ],
       ),

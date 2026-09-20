@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../models/base_state_model.dart';
+import '../models/responses/doctor_treatment_photo_model.dart';
 import '../models/responses/post_treatment_photo_model.dart';
 
 final postTreatmentPhotoProvider =
@@ -110,6 +111,24 @@ class PostTreatmentPhotoViewModel extends Notifier<PostTreatmentPhotoState> {
             uploadedPhotos: [],
           ),
         ],
+        doctorPhotos: [
+          DoctorTreatmentPhoto(
+            id: "dp101",
+            url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
+            title: "Immediate Post-Treatment Result",
+            doctorName: "Dr. Sarah Johnson",
+            dateTaken: DateTime.now().subtract(const Duration(hours: 12)),
+            note: "Right after injection. Minimal swelling, excellent symmetry.",
+          ),
+          DoctorTreatmentPhoto(
+            id: "dp102",
+            url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500",
+            title: "Day 7 Clinical Follow-Up",
+            doctorName: "Dr. Sarah Johnson",
+            dateTaken: DateTime.now().subtract(const Duration(days: 7)),
+            note: "Volume evaluation and wrinkle smoothing confirmed.",
+          ),
+        ],
       ),
       PostTreatmentPhotoItem(
         treatmentId: 102,
@@ -135,6 +154,16 @@ class PostTreatmentPhotoViewModel extends Notifier<PostTreatmentPhotoState> {
             requiredPhotos: 2,
             title: "Day 7 Volume Assessment",
             uploadedPhotos: [],
+          ),
+        ],
+        doctorPhotos: [
+          DoctorTreatmentPhoto(
+            id: "dp103",
+            url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500",
+            title: "Clinical Post-Injection Baseline",
+            doctorName: "Dr. Sarah Johnson",
+            dateTaken: DateTime.now().subtract(const Duration(days: 1)),
+            note: "Forehead filler placement check.",
           ),
         ],
       ),

@@ -1,3 +1,5 @@
+import 'doctor_treatment_photo_model.dart';
+
 class InstructionAttachment {
   final String name;
   final String url;
@@ -30,6 +32,7 @@ class PreTreatmentInstructionItem {
   final String? areaName;
   final String? preTreatmentInstructions;
   final List<InstructionAttachment> preTreatmentAttachments;
+  final List<DoctorTreatmentPhoto> doctorPhotos;
 
   PreTreatmentInstructionItem({
     required this.treatmentId,
@@ -37,6 +40,7 @@ class PreTreatmentInstructionItem {
     this.areaName,
     this.preTreatmentInstructions,
     this.preTreatmentAttachments = const [],
+    this.doctorPhotos = const [],
   });
 
   List<String> get parsedPreInstructions {
@@ -64,6 +68,12 @@ class PreTreatmentInstructionItem {
                   .map((x) => InstructionAttachment.fromJson(x)),
             )
           : [],
+      doctorPhotos: json['doctor_photos'] != null
+          ? List<DoctorTreatmentPhoto>.from(
+              (json['doctor_photos'] as List)
+                  .map((x) => DoctorTreatmentPhoto.fromJson(x)),
+            )
+          : [],
     );
   }
 
@@ -74,5 +84,6 @@ class PreTreatmentInstructionItem {
         'pre_treatment_instructions': preTreatmentInstructions,
         'pre_treatment_attachments':
             preTreatmentAttachments.map((x) => x.toJson()).toList(),
+        'doctor_photos': doctorPhotos.map((x) => x.toJson()).toList(),
       };
 }
