@@ -1,21 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../models/responses/appointment_detail_response.dart';
+import '../../../models/responses/pre_treatment_instruction_model.dart';
 import '../../../utils/color_constant.dart';
 import '../../../utils/custom_fonts.dart';
 import '../../../utils/string_utils.dart';
+import '../../../view_models/pre_treatment_instruction_view_model.dart';
 import '../../custom_button.dart';
 
-class PreTreatmentInstructionsDialog extends StatelessWidget {
+class PreTreatmentInstructionsDialog extends ConsumerWidget {
   final List<DetailedAppointmentTreatment>? treatments;
 
   const PreTreatmentInstructionsDialog({super.key, this.treatments});
 
   @override
-  Widget build(BuildContext context) {
-    final list = treatments ?? [];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final instructionState = ref.watch(preTreatmentInstructionProvider);
+    final allInstructions = instructionState.instructions;
+
+    final itemsToShow = <PreTreatmentInstructionItem>[];
+    if (treatments != null && treatments!.isNotEmpty) {
+      for (var t in treatments!) {
+        final match = allInstructions.firstWhere(
+          (item) {
+            final tNameMatch =
+                item.treatmentName.toLowerCase().contains(
+                      (t.treatmentName ?? '').toLowerCase(),
+                    ) ||
+                (t.treatmentName ?? '').toLowerCase().contains(
+                      item.treatmentName.toLowerCase(),
+                    );
+            final areaMatch = t.areaName == null ||
+                t.areaName!.isEmpty ||
+                (item.areaName ?? '').toLowerCase().contains(
+                      t.areaName!.toLowerCase(),
+                    ) ||
+                t.areaName!.toLowerCase().contains(
+                      (item.areaName ?? '').toLowerCase(),
+                    );
+            return tNameMatch && areaMatch;
+          },
+          orElse: () => PreTreatmentInstructionItem(
+            treatmentId: t.treatmentId ?? 0,
+            treatmentName: t.treatmentName ?? "Treatment Care",
+            areaName: t.areaName,
+            preTreatmentInstructions:
+                "• Avoid blood thinners and alcohol 24-48 hours before.\n• Keep treatment area clean and unblemished prior to arrival.",
+          ),
+        );
+        itemsToShow.add(match);
+      }
+    } else {
+      itemsToShow.addAll(allInstructions);
+    }
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -34,7 +75,6 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Branded Header Icon Badge
             Container(
               height: context.w(72),
               width: context.w(72),
@@ -59,36 +99,21 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
               style: CustomFonts.black12w600.copyWith(color: Colors.black87),
             ),
             SizedBox(height: context.h(24)),
-
-            // Treatment-Wise Instructions List
             Flexible(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Column(
-                  children: [
-                    if (list.isNotEmpty)
-                      ...list.map((t) => _buildTreatmentInstructionCard(
-                            context,
-                            treatmentName: t.treatmentName ?? "Treatment Care",
-                            areaName: t.areaName,
-                          ))
-                    else ...[
-                      _buildTreatmentInstructionCard(
-                        context,
-                        treatmentName: "Botox & Dermal Fillers",
-                        areaName: "Cheeks & Lips",
-                      ),
-                      _buildTreatmentInstructionCard(
-                        context,
-                        treatmentName: "Skin Rejuvenation & Laser",
-                        areaName: "Full Face",
-                      ),
-                    ],
-                  ],
+                  children: itemsToShow
+                      .map(
+                        (item) => _buildTreatmentInstructionCard(
+                          context,
+                          item: item,
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
             ),
-
             SizedBox(height: context.h(24)),
             SizedBox(
               width: double.infinity,
@@ -106,10 +131,9 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
 
   Widget _buildTreatmentInstructionCard(
     BuildContext context, {
-    required String treatmentName,
-    String? areaName,
+    required PreTreatmentInstructionItem item,
   }) {
-    final instructions = _getInstructionsForTreatment(treatmentName);
+    final instructions = item.parsedPreInstructions;
 
     return Container(
       margin: EdgeInsets.only(bottom: context.h(16)),
@@ -123,7 +147,6 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Treatment Title & Area
           Row(
             children: [
               Container(
@@ -144,12 +167,12 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      treatmentName.capitalize,
+                      item.treatmentName.capitalize,
                       style: CustomFonts.black16w700,
                     ),
-                    if (areaName != null && areaName.isNotEmpty)
+                    if (item.areaName != null && item.areaName!.isNotEmpty)
                       Text(
-                        "Target Area: $areaName",
+                        "Target Area: ${item.areaName}",
                         style: CustomFonts.black12w600.copyWith(
                           color: CustomColors.darkPurple,
                         ),
@@ -162,8 +185,6 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
           SizedBox(height: context.h(12)),
           const Divider(height: 1, color: CustomColors.greyColor),
           SizedBox(height: context.h(12)),
-
-          // Instruction Bullet Points
           Column(
             children: instructions
                 .map((text) => Padding(
@@ -190,34 +211,80 @@ class PreTreatmentInstructionsDialog extends StatelessWidget {
                     ))
                 .toList(),
           ),
+          if (item.preTreatmentAttachments.isNotEmpty) ...[
+            SizedBox(height: context.h(12)),
+            const Divider(height: 1, color: CustomColors.greyColor),
+            SizedBox(height: context.h(10)),
+            Text(
+              "ATTACHMENTS",
+              style: CustomFonts.darkPurple10w700.copyWith(
+                letterSpacing: 1.0,
+              ),
+            ),
+            SizedBox(height: context.h(6)),
+            Wrap(
+              spacing: context.w(8),
+              runSpacing: context.h(8),
+              children: item.preTreatmentAttachments
+                  .map((att) => _buildAttachmentChip(context, att))
+                  .toList(),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  List<String> _getInstructionsForTreatment(String treatmentName) {
-    final lower = treatmentName.toLowerCase();
-    if (lower.contains('botox') || lower.contains('filler') || lower.contains('injectable')) {
-      return [
-        "Avoid alcohol, aspirin, ibuprofen, and blood thinners 24-48 hours before treatment.",
-        "Arrive with clean skin free of makeup, moisturizers, or sunscreen.",
-        "Notify your practitioner if you have a history of cold sores or skin infections.",
-        "Ensure you are well-hydrated and have eaten a light meal prior to your visit.",
-      ];
-    } else if (lower.contains('laser') || lower.contains('peel') || lower.contains('skin')) {
-      return [
-        "Avoid direct sun exposure, tanning beds, and self-tanners for 2 weeks prior.",
-        "Discontinue retinoids, AHAs, BHAs, and active exfoliating serums 3-5 days before.",
-        "Do not wax, shave, or perform chemical depilatory treatments on the area 48 hours prior.",
-        "Inform your clinician of any oral medications, antibiotics, or skin sensitivity.",
-      ];
-    } else {
-      return [
-        "Avoid blood-thinning supplements, alcohol, and anti-inflammatory drugs 24 hours prior.",
-        "Keep the treatment area clean and unblemished before arrival.",
-        "Stay hydrated and avoid strenuous workouts immediately before your visit.",
-        "Arrive 10-15 minutes early to complete any remaining intake or consent forms.",
-      ];
-    }
+  Widget _buildAttachmentChip(
+    BuildContext context,
+    InstructionAttachment att,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          if (att.url.isNotEmpty) {
+            final uri = Uri.parse(att.url);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          }
+        },
+        borderRadius: BorderRadius.circular(context.r(12)),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.w(10),
+            vertical: context.h(6),
+          ),
+          decoration: BoxDecoration(
+            color: CustomColors.darkPurple.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(context.r(12)),
+            border: Border.all(
+              color: CustomColors.darkPurple.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Iconsax.document_download,
+                size: context.sp(14),
+                color: CustomColors.darkPurple,
+              ),
+              SizedBox(width: context.w(6)),
+              Flexible(
+                child: Text(
+                  att.name,
+                  style: CustomFonts.black12w600.copyWith(
+                    color: CustomColors.darkPurple,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
