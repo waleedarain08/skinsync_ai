@@ -1,5 +1,4 @@
 import '../responses/appointments_list_response.dart';
-import '../responses/simulation_history_response.dart';
 
 enum JourneyStepStatus {
   sent,

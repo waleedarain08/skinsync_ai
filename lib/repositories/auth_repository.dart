@@ -16,7 +16,7 @@ abstract class AuthRepository {
   Future<BaseResponseModel> onboardingProfile({
     required OnBoardingProfileRequest onBoardingProfileRequest,
   });
-  Future<AuthData> getMe();
+  Future<AuthData> getMe({String? fcmToken});
 
   Future<AuthResponse> googleSignInApi({
     required SocialLoginRequest request,

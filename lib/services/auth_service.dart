@@ -212,12 +212,12 @@ class AuthService implements AuthRepository {
   }
 
   @override
-  Future<AuthData> getMe() async {
+  Future<AuthData> getMe({String? fcmToken}) async {
     String type = Platform.isIOS ? 'apple' : 'android';
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.getMe,
       requestType: .get,
-      params: '?type=$type',
+      params: '?type=$type&fcm_token=$fcmToken',
     );
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final parsed = json.decode(response.body);
