@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import '../exceptions/app_exception.dart';
 import '../models/requests/appointment_request.dart';
+import '../models/requests/change_payment_status_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointment_response.dart';
 import '../models/responses/appointment_type_list_response.dart';
 import '../models/responses/appointments_list_response.dart';
+import '../models/responses/base_response_model.dart';
 import '../models/responses/scan_qr_response.dart';
 import '../models/responses/simulation_history_response.dart';
 import '../repositories/appointment_repository.dart';
@@ -127,6 +129,24 @@ class AppointmentService implements AppointmentRepository {
       params: '',
     );
     final data = ScanQrResponse.fromJson(jsonDecode(response.body));
+    if (!(data.status ?? false)) {
+      throw AppException(data.message ?? 'Something went wrong!');
+    }
+    return data;
+  }
+
+ @override
+  Future<BaseResponseModel> changePaymentStatus({
+    required int appointmentId,
+    required ChangePaymentStatusRequest request,
+  })async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.appointments,
+      requestType: .patch,
+      requestBody: request.toJson(),
+      params: '/$appointmentId/payment-status',
+    );
+    final data = BaseResponseModel.fromJson(jsonDecode(response.body));
     if (!(data.status ?? false)) {
       throw AppException(data.message ?? 'Something went wrong!');
     }

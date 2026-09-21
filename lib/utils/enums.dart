@@ -52,6 +52,7 @@ enum EndPoints {
   refreshToken('v1/auth/refresh'),
   getAvailability('v1/appointments/availability'),
   paymentOptions('v1/appointments/payment-options'),
+  changePaymentStatus('appointments/{appointment_id}/payment-status'),
   treatmentPricing('v1/treatments/pricing'),
   appointments('v1/appointments'),
   inviteClinic('v1/invite-clinic'),

@@ -72,7 +72,10 @@ class _AppointmentDetailScreenState
           borderRadius: BorderRadius.circular(context.r(32)),
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: context.w(24), vertical: context.h(32)),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.w(24),
+            vertical: context.h(32),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -101,7 +104,10 @@ class _AppointmentDetailScreenState
               Text(
                 "Show this QR code to your provider or clinic staff. Once scanned, they can instantly view and verify your appointment details.",
                 textAlign: TextAlign.center,
-                style: CustomFonts.black13w600.copyWith(color: Colors.black87, height: 1.4),
+                style: CustomFonts.black13w600.copyWith(
+                  color: Colors.black87,
+                  height: 1.4,
+                ),
               ),
               SizedBox(height: context.h(32)),
               CustomButton(
@@ -127,7 +133,10 @@ class _AppointmentDetailScreenState
             borderRadius: BorderRadius.circular(dialogContext.r(32)),
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: context.w(24), vertical: context.h(32)),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.w(24),
+              vertical: context.h(32),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -147,10 +156,7 @@ class _AppointmentDetailScreenState
                   ),
                 ),
                 SizedBox(height: dialogContext.h(24)),
-                Text(
-                  "Checked In",
-                  style: CustomFonts.black20w600,
-                ),
+                Text("Checked In", style: CustomFonts.black20w600),
                 SizedBox(height: dialogContext.h(12)),
                 Text(
                   message ?? "Successfully checked in.",
@@ -182,8 +188,11 @@ class _AppointmentDetailScreenState
     final signedCount = formsState.signDocument.length;
     final unsignedCount = formsState.unSignDocument.length;
 
-    final isStale = detail == null || detail.id != widget.appointment.appointmentId;
-    final isLoading = (appointmentState.loading || isStale) && appointmentState.errorMessage == null;
+    final isStale =
+        detail == null || detail.id != widget.appointment.appointmentId;
+    final isLoading =
+        (appointmentState.loading || isStale) &&
+        appointmentState.errorMessage == null;
 
     final isPaymentPending = detail?.paymentType?.status == 'pending';
 
@@ -200,14 +209,24 @@ class _AppointmentDetailScreenState
     }
 
     // Data for detailed card
-    final type = detail?.appointmentType?.title ?? widget.appointment.appointmentType ?? "consultation";
+    final type =
+        detail?.appointmentType?.title ??
+        widget.appointment.appointmentType ??
+        "consultation";
     final dateVal = detail?.date ?? widget.appointment.date;
-    final dateStr = dateVal != null ? DateTimeUtils.formatTimestampToDayDate(dateVal) : "N/A";
+    final dateStr = dateVal != null
+        ? DateTimeUtils.formatTimestampToDayDate(dateVal)
+        : "N/A";
 
-    final startTimeVal = detail?.startTime ?? widget.appointment.slot?.startTime;
+    final startTimeVal =
+        detail?.startTime ?? widget.appointment.slot?.startTime;
     final endTimeVal = detail?.endTime ?? widget.appointment.slot?.endTime;
-    final startTime = startTimeVal != null ? DateTimeUtils.formatTimestampToTime(startTimeVal) : "--:--";
-    final endTime = endTimeVal != null ? DateTimeUtils.formatTimestampToTime(endTimeVal) : "--:--";
+    final startTime = startTimeVal != null
+        ? DateTimeUtils.formatTimestampToTime(startTimeVal)
+        : "--:--";
+    final endTime = endTimeVal != null
+        ? DateTimeUtils.formatTimestampToTime(endTimeVal)
+        : "--:--";
     final timeString = "$startTime - $endTime";
 
     return Scaffold(
@@ -218,12 +237,22 @@ class _AppointmentDetailScreenState
           if (detail != null)
             IconButton(
               onPressed: () async {
-                final encryptedText = await ref.read(appointmentProvider.notifier).encryptAppointmentData(detail);
+                final encryptedText = await ref
+                    .read(appointmentProvider.notifier)
+                    .encryptAppointmentData(detail);
                 if (encryptedText != null) {
-                  _showQrDialog(context: context, appointmentId: detail.id!, encryptedData: encryptedText);
+                  _showQrDialog(
+                    context: context,
+                    appointmentId: detail.id!,
+                    encryptedData: encryptedText,
+                  );
                 }
               },
-              icon: Icon(Icons.qr_code_scanner_rounded, color: CustomColors.darkPurple, size: context.sp(24)),
+              icon: Icon(
+                Icons.qr_code_scanner_rounded,
+                color: CustomColors.darkPurple,
+                size: context.sp(24),
+              ),
             ),
         ],
       ),
@@ -231,20 +260,34 @@ class _AppointmentDetailScreenState
           ? const AppLoader()
           : SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(context.w(20), context.h(10), context.w(20), context.h(40)),
+              padding: EdgeInsets.fromLTRB(
+                context.w(20),
+                context.h(10),
+                context.w(20),
+                context.h(40),
+              ),
               child: Column(
                 children: [
-                  _buildCheckInCard(context, detail?.id, isPaymentPending, detail?.paymentType?.status),
+                  _buildCheckInCard(
+                    context,
+                    detail?.id,
+                    isPaymentPending,
+                    detail?.paymentType?.status,
+                  ),
                   SizedBox(height: context.h(16)),
-                  
+
                   // Financial Summary (Placed directly below Check-in card)
                   SummaryTile(
                     title: "Payment",
-                    subtitle: "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
-                    trailing: _buildStatusBadge(detail?.paymentType?.status ?? (isPaymentPending ? 'pending' : 'paid')),
+                    subtitle:
+                        "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
+                    trailing: _buildStatusBadge(
+                      detail?.paymentType?.status ??
+                          (isPaymentPending ? 'pending' : 'paid'),
+                    ),
                     icon: Iconsax.wallet_money,
                     color: Colors.green,
-                    gradient: CustomColors.greenGradient,
+                    gradient: CustomColors.purpleBlueGradient,
                     backgroundImage: PngAssets.masterLogo,
                     onTap: () => _showFinancialDialog(context, detail),
                   ),
@@ -264,11 +307,27 @@ class _AppointmentDetailScreenState
                           type: type,
                           dateStr: dateStr,
                           timeString: timeString,
-                          key: detail?.appointmentKey ?? widget.appointment.appointmentKey ?? "N/A",
-                          status: detail?.status ?? widget.appointment.status ?? "Confirmed",
-                          clinicName: detail?.clinic?.name ?? widget.appointment.clinic?.clinicName ?? "N/A",
-                          doctorName: detail?.doctor?.name ?? widget.appointment.doctor?.doctorName ?? "N/A",
-                          onTap: () => _showAppointmentInfoDialog(context, detail, widget.appointment),
+                          key:
+                              detail?.appointmentKey ??
+                              widget.appointment.appointmentKey ??
+                              "N/A",
+                          status:
+                              detail?.status ??
+                              widget.appointment.status ??
+                              "Confirmed",
+                          clinicName:
+                              detail?.clinic?.name ??
+                              widget.appointment.clinic?.clinicName ??
+                              "N/A",
+                          doctorName:
+                              detail?.doctor?.name ??
+                              widget.appointment.doctor?.doctorName ??
+                              "N/A",
+                          onTap: () => _showAppointmentInfoDialog(
+                            context,
+                            detail,
+                            widget.appointment,
+                          ),
                         ),
                       ),
 
@@ -281,9 +340,10 @@ class _AppointmentDetailScreenState
                           subtitle: "${detail?.treatments?.length ?? 0} Items",
                           icon: Iconsax.mask,
                           color: Colors.orange,
-                          gradient: CustomColors.orangeGradient,
+                          gradient: CustomColors.purpleBlueGradient,
                           backgroundImage: PngAssets.syringe,
-                          onTap: () => _showTreatmentDialog(context, detail?.treatments),
+                          onTap: () =>
+                              _showTreatmentDialog(context, detail?.treatments),
                         ),
                       ),
 
@@ -293,13 +353,14 @@ class _AppointmentDetailScreenState
                         mainAxisCellCount: 1.3,
                         child: SummaryTile(
                           title: "Forms",
-                          subtitle: "Signed: $signedCount | Unsigned: $unsignedCount",
+                          subtitle:
+                              "Signed: $signedCount | Unsigned: $unsignedCount",
                           icon: Iconsax.document_text,
                           color: CustomColors.purpleColor,
-                          gradient: CustomColors.pinkGradient,
+                          gradient: CustomColors.purpleBlueGradient,
                           backgroundImage: PngAssets.faceAndMarks,
                           onTap: () => Navigator.pushNamed(
-                            context, 
+                            context,
                             AppointmentFormsScreen.routeName,
                             arguments: detail,
                           ),
@@ -315,7 +376,7 @@ class _AppointmentDetailScreenState
                           subtitle: "Care Guidelines & Instructions",
                           icon: Iconsax.clipboard_text,
                           color: CustomColors.blueColor,
-                          gradient: CustomColors.blueGradient,
+                          gradient: CustomColors.purpleBlueGradient,
                           backgroundImage: PngAssets.syringe,
                           onTap: () => Navigator.pushNamed(
                             context,
@@ -334,7 +395,7 @@ class _AppointmentDetailScreenState
                           subtitle: "Care Guidelines & Recovery",
                           icon: Iconsax.clipboard_tick,
                           color: CustomColors.pinkColor,
-                          gradient: CustomColors.pinkGradient,
+                          gradient: CustomColors.purpleBlueGradient,
                           backgroundImage: PngAssets.face,
                           onTap: () => Navigator.pushNamed(
                             context,
@@ -372,7 +433,7 @@ class _AppointmentDetailScreenState
                           subtitle: "Track Recovery & Milestones",
                           icon: Iconsax.status_up,
                           color: CustomColors.darkPurple,
-                          gradient: CustomColors.tealGradient,
+                          gradient: CustomColors.purpleBlueGradient,
                           backgroundImage: PngAssets.hand,
                           onTap: () => Navigator.pushNamed(
                             context,
@@ -390,7 +451,7 @@ class _AppointmentDetailScreenState
                           subtitle: "Milestones & Healing Timeline",
                           icon: Iconsax.health,
                           color: CustomColors.darkPurple,
-                          gradient: CustomColors.blueGradient,
+                          gradient: CustomColors.purpleBlueGradient,
                           backgroundImage: PngAssets.faceAndMarks,
                           onTap: () => Navigator.pushNamed(
                             context,
@@ -415,7 +476,10 @@ class _AppointmentDetailScreenState
                             color: Colors.teal,
                             gradient: CustomColors.purpleBlueGradient,
                             backgroundImage: PngAssets.beforeAfter,
-                            onTap: () => _showSimulationDialog(context, detail!.simulations!),
+                            onTap: () => _showSimulationDialog(
+                              context,
+                              detail!.simulations!,
+                            ),
                           ),
                         ),
                     ],
@@ -454,15 +518,11 @@ class _AppointmentDetailScreenState
             child: Stack(
               children: [
                 Positioned(
-                  right: -context.w(10),
-                  bottom: -context.h(10),
+                  right: -context.w(25),
+                  bottom: -context.h(15),
                   child: Opacity(
                     opacity: 0.12,
-                    child: Image.asset(
-                      PngAssets.laserTreatment,
-                      height: context.h(150),
-                      fit: BoxFit.contain,
-                    ),
+                    child: Icon(Iconsax.calendar_tick, size: context.sp(150)),
                   ),
                 ),
                 Padding(
@@ -478,9 +538,16 @@ class _AppointmentDetailScreenState
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.3),
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.4),
+                                width: 1.5,
+                              ),
                             ),
-                            child: Icon(Iconsax.calendar_tick, color: Colors.black87, size: context.sp(22)),
+                            child: Icon(
+                              Iconsax.calendar_tick,
+                              color: Colors.black87,
+                              size: context.sp(22),
+                            ),
                           ),
                           _buildStatusBadge(status),
                         ],
@@ -490,8 +557,10 @@ class _AppointmentDetailScreenState
                         children: [
                           Expanded(
                             child: Text(
-                              "Appointment Info", 
-                              style: CustomFonts.black18w600.copyWith(fontSize: context.sp(19)),
+                              "Appointment Info",
+                              style: CustomFonts.black18w600.copyWith(
+                                fontSize: context.sp(19),
+                              ),
                             ),
                           ),
                           Icon(
@@ -504,25 +573,57 @@ class _AppointmentDetailScreenState
                       SizedBox(height: context.h(12)),
                       Row(
                         children: [
-                          Expanded(child: _buildInfoItem(context, Iconsax.key, key)),
+                          Expanded(
+                            child: _buildInfoItem(context, Iconsax.key, key),
+                          ),
                           SizedBox(width: context.w(12)),
-                          Expanded(child: _buildInfoItem(context, Iconsax.tag, type.capitalize)),
+                          Expanded(
+                            child: _buildInfoItem(
+                              context,
+                              Iconsax.tag,
+                              type.capitalize,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: context.h(8)),
                       Row(
                         children: [
-                          Expanded(child: _buildInfoItem(context, Iconsax.calendar, dateStr)),
+                          Expanded(
+                            child: _buildInfoItem(
+                              context,
+                              Iconsax.calendar,
+                              dateStr,
+                            ),
+                          ),
                           SizedBox(width: context.w(12)),
-                          Expanded(child: _buildInfoItem(context, Iconsax.clock, timeString)),
+                          Expanded(
+                            child: _buildInfoItem(
+                              context,
+                              Iconsax.clock,
+                              timeString,
+                            ),
+                          ),
                         ],
                       ),
                       SizedBox(height: context.h(8)),
                       Row(
                         children: [
-                          Expanded(child: _buildInfoItem(context, Iconsax.hospital, clinicName)),
+                          Expanded(
+                            child: _buildInfoItem(
+                              context,
+                              Iconsax.hospital,
+                              clinicName,
+                            ),
+                          ),
                           SizedBox(width: context.w(12)),
-                          Expanded(child: _buildInfoItem(context, Iconsax.user, doctorName)),
+                          Expanded(
+                            child: _buildInfoItem(
+                              context,
+                              Iconsax.user,
+                              doctorName,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -555,8 +656,8 @@ class _AppointmentDetailScreenState
   }
 
   Widget _buildCheckInCard(
-    BuildContext context, 
-    int? appointmentId, 
+    BuildContext context,
+    int? appointmentId,
     bool isPaymentPending,
     String? paymentStatus,
   ) {
@@ -574,11 +675,12 @@ class _AppointmentDetailScreenState
           children: [
             Positioned.fill(
               child: Container(
-                decoration: BoxDecoration(
-                  gradient: CustomColors.checkInGradient,
+                decoration: const BoxDecoration(
+                  gradient: CustomColors.purpleBlueGradient,
                 ),
               ),
             ),
+            
             Positioned(
               right: -context.w(10),
               bottom: -context.h(10),
@@ -591,6 +693,7 @@ class _AppointmentDetailScreenState
                 ),
               ),
             ),
+           
             Padding(
               padding: EdgeInsets.all(context.w(24)),
               child: Row(
@@ -601,8 +704,12 @@ class _AppointmentDetailScreenState
                       children: [
                         Row(
                           children: [
-                            Text("Ready to Check-in?", style: CustomFonts.black18w600),
-                            if (!isPaymentPending && rawStatus.toLowerCase() != 'pending') ...[
+                            Text(
+                              "Ready to Check-in?",
+                              style: CustomFonts.black18w600,
+                            ),
+                            if (!isPaymentPending &&
+                                rawStatus.toLowerCase() != 'unpaid') ...[
                               SizedBox(width: context.w(8)),
                               _buildStatusBadge(rawStatus),
                             ],
@@ -610,10 +717,12 @@ class _AppointmentDetailScreenState
                         ),
                         SizedBox(height: context.h(6)),
                         Text(
-                          isPaymentPending 
-                            ? "Please complete payment to check-in."
-                            : "Scan the clinic QR code to start.", 
-                          style: CustomFonts.black14w400.copyWith(color: CustomColors.blackColor)
+                          isPaymentPending
+                              ? "Please complete payment to check-in."
+                              : "Scan the clinic QR code to start.",
+                          style: CustomFonts.black14w400.copyWith(
+                            color: CustomColors.blackColor,
+                          ),
                         ),
                       ],
                     ),
@@ -622,7 +731,9 @@ class _AppointmentDetailScreenState
                   CustomButton(
                     width: context.w(100),
                     height: context.h(44),
-                    onPressed: isPaymentPending ? null : () => _handleScanCheckIn(context, appointmentId),
+                    onPressed: isPaymentPending
+                        ? null
+                        : () => _handleScanCheckIn(context, appointmentId),
                     text: 'Scan',
                     backgroundColor: Colors.black,
                     textColor: Colors.white,
@@ -638,53 +749,83 @@ class _AppointmentDetailScreenState
 
   Widget _buildStatusBadge(String status) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: context.w(10), vertical: context.h(4)),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.w(10),
+        vertical: context.h(4),
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(context.r(20)),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: Text(
         status.toUpperCase(),
-        style: TextStyle(color: Colors.black87, fontSize: context.sp(9), fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: Colors.black87,
+          fontSize: context.sp(9),
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
   // Dialog Handlers
   void _showAppointmentInfoDialog(
-    BuildContext context, 
-    AppointmentDetailData? detail, 
+    BuildContext context,
+    AppointmentDetailData? detail,
     AppointmentItem appointment,
   ) {
     showDialog(
-      context: context, 
-      builder: (_) => AppointmentInfoDialog(detail: detail, appointment: appointment),
+      context: context,
+      builder: (_) =>
+          AppointmentInfoDialog(detail: detail, appointment: appointment),
     );
   }
 
   void _showFinancialDialog(BuildContext context, dynamic detail) {
-    showDialog(context: context, builder: (_) => FinancialSummaryDialog(detail: detail));
+    showDialog(
+      context: context,
+      builder: (_) => FinancialSummaryDialog(detail: detail),
+    );
   }
 
   void _showTreatmentDialog(BuildContext context, dynamic treatments) {
-    showDialog(context: context, builder: (_) => TreatmentDetailsDialog(treatments: treatments));
+    showDialog(
+      context: context,
+      builder: (_) => TreatmentDetailsDialog(treatments: treatments),
+    );
   }
 
   void _showSimulationDialog(BuildContext context, dynamic simulations) {
-    showDialog(context: context, builder: (_) => SimulationDetailsDialog(simulations: simulations));
+    showDialog(
+      context: context,
+      builder: (_) => SimulationDetailsDialog(simulations: simulations),
+    );
   }
 
-  Future<void> _handleScanCheckIn(BuildContext context, int? appointmentId) async {
+  Future<void> _handleScanCheckIn(
+    BuildContext context,
+    int? appointmentId,
+  ) async {
     if (appointmentId == null) return;
-    final data = await Navigator.push<String?>(context, MaterialPageRoute(builder: (_) => const QrScanScreen()));
+    final data = await Navigator.push<String?>(
+      context,
+      MaterialPageRoute(builder: (_) => const QrScanScreen()),
+    );
     if (data == null) return;
 
-    final response = await ref.read(appointmentProvider.notifier).decodeQrCode(data, appointmentId: appointmentId);
+    final response = await ref
+        .read(appointmentProvider.notifier)
+        .decodeQrCode(data, appointmentId: appointmentId);
     if (response != null) {
       _showCheckInSuccessDialog(context, response.message);
     } else {
-      EasyLoading.showError(ref.read(appointmentProvider).errorMessage ?? 'Check-in failed');
+      EasyLoading.showError(
+        ref.read(appointmentProvider).errorMessage ?? 'Check-in failed',
+      );
     }
   }
 }

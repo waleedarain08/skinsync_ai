@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../../models/responses/appointment_detail_response.dart';
 import '../../../utils/custom_fonts.dart';
 import '../../../utils/color_constant.dart';
+import '../../../view_models/appointment_view_model.dart';
 import '../../custom_button.dart';
 
 class FinancialSummaryDialog extends StatelessWidget {
@@ -60,12 +62,20 @@ class FinancialSummaryDialog extends StatelessWidget {
             SizedBox(height: context.h(32)),
             
             if (isPending) ...[
-              CustomButton(
-                onPressed: () {
-                  // TODO: Implement Payment Logic
-                  Navigator.pop(context);
-                },
-                text: "Pay Now",
+              Consumer(
+                builder: (context,ref,_) {
+                  return CustomButton(
+                    onPressed: () {
+                     ref.read(appointmentProvider.notifier).changePaymentStatus(paymentStatus: "paid", appointmentId: detail!.id!).then((value){
+                      if(value == true){
+                         Navigator.pop(context);
+                      }
+                     });
+                     
+                    },
+                    text: "Pay Now",
+                  );
+                }
               ),
               SizedBox(height: context.h(12)),
             ],

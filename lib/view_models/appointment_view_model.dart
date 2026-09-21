@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../exceptions/app_exception.dart';
 import '../models/base_state_model.dart';
+import '../models/requests/change_payment_status_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointment_type_list_response.dart';
@@ -88,6 +89,23 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       state = state.copyWith(scanQrResponse: data);
       EasyLoading.dismiss();
       return data;
+    });
+  }
+Future<bool?> changePaymentStatus({
+    required String paymentStatus,
+    required int appointmentId,
+  }) async {
+    return await runSafely(() async {
+      EasyLoading.show(status: 'Checking in...');
+      await repo.changePaymentStatus(
+        appointmentId: appointmentId,
+        request: ChangePaymentStatusRequest(
+          paymentStatus: paymentStatus
+         
+        ),
+      );
+      EasyLoading.dismiss();
+      return true;
     });
   }
 
