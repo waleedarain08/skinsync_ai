@@ -102,10 +102,15 @@ class WebSocketService {
         },
       );
 
-      _connSub = _socket!.connection.listen((connection) {
+      _connSub = _socket!.connection.listen((connection) async {
         log('WebSocket connection state: ${connection.runtimeType}');
         if (connection is Disconnecting) {
           _cleanupSocket();
+          try {
+            await ApiBaseHelper().refreshToken();
+        } catch (e) {
+        log('WebSocket pre-connect token check error: $e');
+        }
         }
       });
     } catch (e, s) {

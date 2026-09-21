@@ -341,7 +341,8 @@ class AuthViewModel extends BaseViewModel<AuthState> {
   Future<AuthData?> callGetMe() async {
     return await runSafely(() async {
       try {
-        final authData = await _authRepository.getMe();
+        final fcmToken = await _getFcmToken();
+        final authData = await _authRepository.getMe(fcmToken: fcmToken);
         state = state.copyWith(authData: authData);
         log('get me call successful,');
         // Location is fetched in background to avoid blocking the UI thread during splash/init
