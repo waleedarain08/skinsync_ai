@@ -10,8 +10,7 @@ class ChangePaymentStatusRequest  {
 
   Map<String, dynamic> toJson() {
     return {
-      
-      'payment_status': paymentStatus,
+      'status': paymentStatus,
     };
   }
 
