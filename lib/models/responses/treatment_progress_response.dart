@@ -1,14 +1,19 @@
-import 'base_response_model.dart';
-
-class TreatmentProgressResponse extends BaseResponseModel {
- 
+class TreatmentProgressResponse {
+  final bool? isSuccess;
+  final String? message;
   final List<TreatmentProgressData>? data;
-  final int? totalPages; 
+  final int? page;
+  final int? limit;
+  final int? total;
+  final int? totalPages;
 
   TreatmentProgressResponse({
-    super.isSuccess,
-    super.message,
+    this.isSuccess,
+    this.message,
     this.data,
+    this.page,
+    this.limit,
+    this.total,
     this.totalPages,
   });
 
@@ -21,7 +26,10 @@ class TreatmentProgressResponse extends BaseResponseModel {
               .map((e) => TreatmentProgressData.fromJson(e))
               .toList()
           : null,
-      totalPages: json['total_pages'], // ADD
+      page: json['page'],
+      limit: json['limit'],
+      total: json['total'],
+      totalPages: json['total_pages'],
     );
   }
 
@@ -30,118 +38,62 @@ class TreatmentProgressResponse extends BaseResponseModel {
       'is_success': isSuccess,
       'message': message,
       'data': data?.map((e) => e.toJson()).toList(),
+      'page': page,
+      'limit': limit,
+      'total': total,
       'total_pages': totalPages,
     };
   }
 }
+
 class TreatmentProgressData {
-  final int? treatmentId;
-  final int? areaId;
+  final int? id;
   final String? treatmentName;
+  final int? treatmentId;
   final String? areaName;
-  final List<TreatmentProgressItem>? progressData;
+  final int? areaId;
+  final String? status;
+  final num? progress;
+  final int? totalSteps;
+  final int? currentStep;
 
   TreatmentProgressData({
-    this.treatmentId,
-    this.areaId,
+    this.id,
     this.treatmentName,
+    this.treatmentId,
     this.areaName,
-    this.progressData,
+    this.areaId,
+    this.status,
+    this.progress,
+    this.totalSteps,
+    this.currentStep,
   });
 
   factory TreatmentProgressData.fromJson(Map<String, dynamic> json) {
     return TreatmentProgressData(
-      treatmentId: json['treatment_id'],
-      areaId: json['area_id'],
+      id: json['id'],
       treatmentName: json['treatment_name'],
+      treatmentId: json['treatment_id'],
       areaName: json['area_name'],
-      progressData: json['progress_data'] != null
-          ? (json['progress_data'] as List)
-              .map(
-                (e) => TreatmentProgressItem.fromJson(e),
-              )
-              .toList()
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'treatment_id': treatmentId,
-      'area_id': areaId,
-      'treatment_name': treatmentName,
-      'area_name': areaName,
-      'progress_data': progressData
-          ?.map((e) => e.toJson())
-          .toList(),
-    };
-  }
-}
-
-class TreatmentProgressItem {
-  final String? appointmentType;
-  final String? status;
-
-  // Consultation / Follow-up
-  final int? date;
-  final int? time;
-
-  // Treatment session
-  final String? sessionName;
-  final int? sessionTime;
-  final int? sessionDate;
-  final String? doctorName;
-  final int? doctorId;
-  final int? clinicId;
-  final String? clinicName;
-  final int? sessionId;
-
-  TreatmentProgressItem({
-    this.appointmentType,
-    this.status,
-    this.date,
-    this.time,
-    this.sessionName,
-    this.sessionTime,
-    this.sessionDate,
-    this.doctorName,
-    this.doctorId,
-    this.clinicId,
-    this.clinicName,
-    this.sessionId,
-  });
-
-  factory TreatmentProgressItem.fromJson(Map<String, dynamic> json) {
-    return TreatmentProgressItem(
-      appointmentType: json['appointment_type'],
+      areaId: json['area_id'],
       status: json['status'],
-      date: json['date'],
-      time: json['time'],
-      sessionName: json['session_name'],
-      sessionTime: json['session_time'],
-      sessionDate: json['session_date'],
-      doctorName: json['doctor_name'],
-      doctorId: json['doctor_id'],
-      clinicId: json['clinic_id'],
-      clinicName: json['clinic_name'],
-      sessionId: json['session_id'],
+      progress: json['progress'],
+      totalSteps: json['total_steps'],
+      currentStep: json['current_step'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'appointment_type': appointmentType,
+      'id': id,
+      'treatment_name': treatmentName,
+      'treatment_id': treatmentId,
+      'area_name': areaName,
+      'area_id': areaId,
       'status': status,
-      'date': date,
-      'time': time,
-      'session_name': sessionName,
-      'session_time': sessionTime,
-      'session_date': sessionDate,
-      'doctor_name': doctorName,
-      'doctor_id': doctorId,
-      'clinic_id': clinicId,
-      'clinic_name': clinicName,
-      'session_id': sessionId,
+      'progress': progress,
+      'total_steps': totalSteps,
+      'current_step': currentStep,
     };
   }
 }

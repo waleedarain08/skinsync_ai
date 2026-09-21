@@ -14,36 +14,27 @@ class TreatmentProgressCard extends StatelessWidget {
     required this.onTap,
   });
 
-  List<TreatmentProgressItem> get _items =>
-      treatmentProgress.progressData ?? const [];
+  int get _totalSteps => treatmentProgress.totalSteps ?? 0;
+  int get _currentStep => treatmentProgress.currentStep ?? 0;
 
-  int get _totalSteps => _items.length;
+  // ASSUMPTION: `progress` is already 0-100 — confirm with backend
+  double get _progressFraction =>
+      ((treatmentProgress.progress ?? 0) / 100).clamp(0, 1).toDouble();
 
-  int get _completedSteps => _items
-      .where((e) => e.status?.toLowerCase() == 'completed')
-      .length;
+  String get _statusText =>
+      (treatmentProgress.status ?? 'upcoming').replaceAll('_', ' ').toUpperCase();
 
-  double get _progress =>
-      _totalSteps == 0 ? 0 : _completedSteps / _totalSteps;
-
-  // ASSUMPTION: derived from item statuses since there's no single
-  // treatment-level status field on TreatmentProgressData — confirm
-  // against actual API status strings.
-  String get _overallStatusText {
-    if (_totalSteps == 0) return 'UPCOMING';
-    if (_completedSteps == _totalSteps) return 'COMPLETED';
-    if (_completedSteps == 0) return 'UPCOMING';
-    return 'IN PROGRESS';
-  }
-
-  Color get _overallStatusColor {
-    switch (_overallStatusText) {
-      case 'COMPLETED':
+  // ASSUMPTION: status vocabulary — confirm exact strings with backend
+  Color get _statusColor {
+    switch (treatmentProgress.status?.toLowerCase()) {
+      case 'completed':
         return Colors.green;
-      case 'UPCOMING':
-        return Colors.orange;
-      default:
+      case 'in_progress':
         return CustomColors.darkPurple;
+      case 'paused':
+        return Colors.grey;
+      default:
+        return Colors.orange; // upcoming / pending / unknown
     }
   }
 
@@ -101,11 +92,11 @@ class TreatmentProgressCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "$_completedSteps of $_totalSteps completed",
+                        "Step $_currentStep of $_totalSteps",
                         style: CustomFonts.grey14w400,
                       ),
                       Text(
-                        "${(_progress * 100).toInt()}%",
+                        "${(_progressFraction * 100).toInt()}%",
                         style: CustomFonts.black14w600,
                       ),
                     ],
@@ -130,11 +121,11 @@ class TreatmentProgressCard extends StatelessWidget {
         vertical: context.h(6),
       ),
       decoration: BoxDecoration(
-        color: _overallStatusColor,
+        color: _statusColor,
         borderRadius: BorderRadius.circular(context.r(20)),
       ),
       child: Text(
-        _overallStatusText,
+        _statusText,
         style: CustomFonts.white10w600.copyWith(
           letterSpacing: 1,
           fontSize: context.sp(9),
@@ -153,7 +144,7 @@ class TreatmentProgressCard extends StatelessWidget {
       ),
       child: FractionallySizedBox(
         alignment: Alignment.centerLeft,
-        widthFactor: _progress,
+        widthFactor: _progressFraction,
         child: Container(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -167,15 +158,12 @@ class TreatmentProgressCard extends StatelessWidget {
   }
 
   Widget _buildTimelineDots(BuildContext context) {
-    if (_items.isEmpty) return const SizedBox.shrink();
+    if (_totalSteps == 0) return const SizedBox.shrink();
 
     return Row(
-      children: List.generate(_items.length, (index) {
-        final item = _items[index];
-        final isCompleted = item.status?.toLowerCase() == 'completed';
-        // ASSUMPTION: 'upcoming' status string — confirm against backend
-        final isUpcoming = item.status?.toLowerCase() == 'upcoming';
-        final isLast = index == _items.length - 1;
+      children: List.generate(_totalSteps, (index) {
+        final isCompleted = index < _currentStep;
+        final isLast = index == _totalSteps - 1;
 
         return Expanded(
           child: Row(
@@ -186,13 +174,8 @@ class TreatmentProgressCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isCompleted
                       ? CustomColors.darkPurple
-                      : (isUpcoming
-                          ? CustomColors.purpleColor.withValues(alpha: 0.3)
-                          : Colors.grey.shade300),
+                      : Colors.grey.shade300,
                   shape: BoxShape.circle,
-                  border: isUpcoming
-                      ? Border.all(color: CustomColors.darkPurple, width: 1.5)
-                      : null,
                 ),
               ),
               if (!isLast)

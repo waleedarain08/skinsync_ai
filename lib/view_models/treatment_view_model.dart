@@ -323,6 +323,8 @@ class TreatmentViewModel extends BaseViewModel<TreatmentsState> {
 
 Future<List<TreatmentProgressData>?> getTreatmentProgress({
   int page = 1,
+   int? treatmentId,
+    int? areaId,
 }) async {
   return runSafely(() async {
     final response = await _repo.getTreatmentProgress(page: page, limit: 10);

@@ -250,12 +250,9 @@ class RouteGenerator {
         );
       case AppointmentFormsScreen.routeName:
         return MaterialPageRoute(
-          settings: const RouteSettings(
-            name: AppointmentFormsScreen.routeName,
-          ),
-          builder: (_) => AppointmentFormsScreen(
-            detail: args as AppointmentDetailData?,
-          ),
+          settings: const RouteSettings(name: AppointmentFormsScreen.routeName),
+          builder: (_) =>
+              AppointmentFormsScreen(detail: args as AppointmentDetailData?),
         );
       case PreTreatmentInstructionsScreen.routeName:
         return MaterialPageRoute(
@@ -286,12 +283,9 @@ class RouteGenerator {
         );
       case RecoveryJourneyScreen.routeName:
         return MaterialPageRoute(
-          settings: const RouteSettings(
-            name: RecoveryJourneyScreen.routeName,
-          ),
-          builder: (_) => RecoveryJourneyScreen(
-            args: args as RecoveryJourneyArgs?,
-          ),
+          settings: const RouteSettings(name: RecoveryJourneyScreen.routeName),
+          builder: (_) =>
+              RecoveryJourneyScreen(args: args as RecoveryJourneyArgs?),
         );
       case ExploreClinicsScreen.routeName:
         return MaterialPageRoute(
@@ -499,15 +493,24 @@ class RouteGenerator {
           builder: (_) => const ClinicalJourneyScreen(),
         );
       case MyTreatmentProgressScreen.routeName:
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          settings: const RouteSettings(name: MyTreatmentProgressScreen.routeName),
-          builder: (_) => const MyTreatmentProgressScreen(),
+          settings: const RouteSettings(
+            name: MyTreatmentProgressScreen.routeName,
+          ),
+          builder: (_) => MyTreatmentProgressScreen(
+            treatmentId: args?['treatmentId'] as int?,
+            areaId: args?['areaId'] as int?,
+          ),
         );
-case TreatmentProgressDetailScreen.routeName:
-  return MaterialPageRoute(
-    settings: const RouteSettings(name: TreatmentProgressDetailScreen.routeName),
-    builder: (_) => TreatmentProgressDetailScreen(treatmentId: args as int),
-  );
+      case TreatmentProgressDetailScreen.routeName:
+        return MaterialPageRoute(
+          settings: const RouteSettings(
+            name: TreatmentProgressDetailScreen.routeName,
+          ),
+          builder: (_) =>
+              TreatmentProgressDetailScreen(treatmentId: args as int),
+        );
       case SimulationHistoryScreen.routeName:
         return MaterialPageRoute(
           settings: const RouteSettings(
@@ -518,7 +521,9 @@ case TreatmentProgressDetailScreen.routeName:
       case TreatmentRequestsScreen.routeName:
         final arg = args as bool? ?? true;
         return MaterialPageRoute(
-          settings: const RouteSettings(name: TreatmentRequestsScreen.routeName),
+          settings: const RouteSettings(
+            name: TreatmentRequestsScreen.routeName,
+          ),
           builder: (_) => TreatmentRequestsScreen(isTreatmentRequest: arg),
         );
       case SharedTreatmentRequestsScreen.routeName:
@@ -574,16 +579,12 @@ case TreatmentProgressDetailScreen.routeName:
       case ChatListScreen.routeName:
         return MaterialPageRoute(
           settings: const RouteSettings(name: ChatListScreen.routeName),
-          builder: (_) => ChatListScreen(
-            showBackButton: args as bool? ?? true,
-          ),
+          builder: (_) => ChatListScreen(showBackButton: args as bool? ?? true),
         );
       case ChatScreen.routeName:
         return MaterialPageRoute(
           settings: const RouteSettings(name: ChatScreen.routeName),
-          builder: (_) => ChatScreen(
-            showBackButton: args as bool? ?? true,
-          ),
+          builder: (_) => ChatScreen(showBackButton: args as bool? ?? true),
         );
       case PdfViewerScreen.routeName:
         final args = settings.arguments as Map<String, dynamic>;

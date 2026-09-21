@@ -13,7 +13,9 @@ import '../../widgets/treatment_progress/treatment_progress_card.dart';
 import 'treatment_progress_detail_screen.dart';
 
 class MyTreatmentProgressScreen extends ConsumerStatefulWidget {
-  const MyTreatmentProgressScreen({super.key});
+  final int? treatmentId;
+  final int? areaId;
+  const MyTreatmentProgressScreen({super.key,this.treatmentId, this.areaId});
 
   static const String routeName = "/MyTreatmentProgressScreen";
 
@@ -24,7 +26,7 @@ class MyTreatmentProgressScreen extends ConsumerStatefulWidget {
 
 class _MyTreatmentProgressScreenState
     extends ConsumerState<MyTreatmentProgressScreen> {
-  late final _pagingController = PagingController<int, TreatmentProgressData>(
+ late final _pagingController = PagingController<int, TreatmentProgressData>(
     getNextPageKey: (state) {
       final lastPageLength = state.pages?.lastOrNull?.length;
       if (lastPageLength == null) {
@@ -42,12 +44,15 @@ class _MyTreatmentProgressScreenState
       final items =
           await ref
               .read(treatmentViewModel.notifier)
-              .getTreatmentProgress(page: page) ??
+              .getTreatmentProgress(
+                page: page,
+                treatmentId: widget.treatmentId,
+                areaId: widget.areaId,
+              ) ??
           [];
       return items;
     },
   );
-
   @override
   void dispose() {
     _pagingController.dispose();
@@ -79,7 +84,7 @@ class _MyTreatmentProgressScreenState
                     Navigator.pushNamed(
                       context,
                       TreatmentProgressDetailScreen.routeName,
-                      arguments: treatment.treatmentId,
+                      arguments:treatment.id,
                     );
                   },
                 );

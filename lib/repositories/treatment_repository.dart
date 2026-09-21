@@ -25,6 +25,8 @@ abstract class TreatmentRepository {
   Future<TreatmentProgressResponse> getTreatmentProgress({
     int page = 1,
     int limit = 10,
+     int? treatmentId,
+    int? areaId,
   });
   Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
     required int progressID,

@@ -85,7 +85,6 @@ class TreatmentService implements TreatmentRepository {
   Future<TreatmentDetailResponse> getTreatmentDetail({
     required int treatmentId,
   }) async {
-    
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.treatments,
       requestType: .get,
@@ -130,20 +129,29 @@ class TreatmentService implements TreatmentRepository {
       throw AppException(AuthResponse.fromJson(parsed).message as String);
     }
   }
-   @override
+
+  @override
   Future<TreatmentProgressResponse> getTreatmentProgress({
     int page = 1,
     int limit = 10,
+    int? treatmentId,
+    int? areaId,
   }) async {
-     final Map<String, String> queryParams = {};
-       queryParams['page'] = page.toString();
+    final Map<String, String> queryParams = {};
+    queryParams['page'] = page.toString();
     queryParams['limit'] = limit.toString();
-     final queryString = Uri(queryParameters: queryParams).query;
+    if (areaId != null) {
+      queryParams['area_id'] = areaId.toString();
+    }
+    if (treatmentId != null) {
+      queryParams['treatment_id'] = areaId.toString();
+    }
+    final queryString = Uri(queryParameters: queryParams).query;
     final params = queryString.isNotEmpty ? '?$queryString' : '';
-     final jsonResponse = await _apiClient.httpRequest(
+    final jsonResponse = await _apiClient.httpRequest(
       endPoint: EndPoints.treatmentProgress,
       requestType: .get,
-      params:params
+      params: params,
     );
     // Check HTTP status code
     if (jsonResponse.statusCode >= 200 && jsonResponse.statusCode < 300) {
@@ -158,11 +166,12 @@ class TreatmentService implements TreatmentRepository {
       throw AppException(AuthResponse.fromJson(parsed).message as String);
     }
   }
-@override
-Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
-  required int progressID,
-}) async {
-   final response = await _apiClient.httpRequest(
+
+  @override
+  Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
+    required int progressID,
+  }) async {
+    final response = await _apiClient.httpRequest(
       endPoint: EndPoints.treatmentProgress,
       requestType: .get,
       params: '/$progressID',
@@ -170,9 +179,8 @@ Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
     // Check HTTP status code
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final parsed = json.decode(response.body);
-      TreatmentProgressDetailResponse detailResponse = TreatmentProgressDetailResponse.fromJson(
-        parsed,
-      );
+      TreatmentProgressDetailResponse detailResponse =
+          TreatmentProgressDetailResponse.fromJson(parsed);
       return detailResponse;
     } else {
       // Handle HTTP error status codes
@@ -180,5 +188,4 @@ Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
       throw AppException(AuthResponse.fromJson(parsed).message as String);
     }
   }
-
 }
