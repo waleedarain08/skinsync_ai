@@ -61,10 +61,20 @@ class _TreatmentProgressDetailScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(detail.treatmentName ?? 'N/A', style: CustomFonts.black22w600),
+                        Text(
+                          detail.treatmentName ?? 'N/A',
+                          style: CustomFonts.black22w600,
+                        ),
                         Text(
                           detail.areaName ?? 'N/A',
-                          style: CustomFonts.black16w500.copyWith(color: Colors.black54),
+                          style: CustomFonts.black16w500.copyWith(
+                            color: Colors.black54,
+                          ),
+                        ),
+                        SizedBox(height: context.h(12)),
+                        _buildProgressInfo(
+                          context,
+                          progressData: detail.progressData ?? [],
                         ),
                       ],
                     ),
@@ -78,6 +88,41 @@ class _TreatmentProgressDetailScreenState
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildProgressInfo(
+    BuildContext context, {
+    required List<dynamic> progressData,
+  }) {
+    final totalSteps = progressData.length;
+    final completedSteps = progressData
+        .where((e) => e.status == 'completed')
+        .length;
+    final percent = totalSteps == 0
+        ? 0
+        : ((completedSteps / totalSteps) * 100).round();
+
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.w(10),
+            vertical: context.h(4),
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(context.r(12)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+          ),
+          child: Text(
+            "$completedSteps/$totalSteps Completed",
+            style: CustomFonts.black12w600,
+          ),
+        ),
+        SizedBox(width: context.w(8)),
+        Text("$percent% Done", style: CustomFonts.black12w600),
+      ],
     );
   }
 }

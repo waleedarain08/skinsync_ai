@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 import '../models/base_state_model.dart';
+import '../models/dummy_list_model.dart';
 import '../models/requests/save_history_request.dart';
 import '../models/responses/materials_response.dart';
 import '../models/responses/simulation_history_response.dart';
@@ -321,24 +322,46 @@ class TreatmentViewModel extends BaseViewModel<TreatmentsState> {
     });
   }
 
-Future<List<TreatmentProgressData>?> getTreatmentProgress({
+  Future<List<TreatmentProgressData>?> getTreatmentProgress({
   int page = 1,
-   int? treatmentId,
-    int? areaId,
+  int? treatmentId,
+  int? areaId,
 }) async {
-  return runSafely(() async {
-    final response = await _repo.getTreatmentProgress(page: page, limit: 10);
-    if (!ref.mounted) return null;
+  // TODO(temp): API call disabled, showing dummy data only.
+  // final result = await runSafely(() async {
+  //   final response = await _repo.getTreatmentProgress(page: page, limit: 10);
+  //   if (!ref.mounted) return null;
+  //
+  //   final newItems = response.data ?? [];
+  //   final apiTotalPages = response.totalPages ?? 1;
+  //   state = state.copyWith(
+  //     treatmentProgressTotalPages: apiTotalPages < 1 ? 1 : apiTotalPages,
+  //   );
+  //   return newItems;
+  // });
+  //
+  // if (page == 1 && (result == null || result.isEmpty)) {
+  //   if (!ref.mounted) return null;
+  //   state = state.copyWith(treatmentProgressTotalPages: 1);
+  //   return dummyTreatmentProgress();
+  // }
+  //
+  // return result;
 
-    final newItems = response.data ?? [];
-    final apiTotalPages = response.totalPages ?? 1;
-    state = state.copyWith(
-      treatmentProgressTotalPages: apiTotalPages < 1 ? 1 : apiTotalPages,
-    );
-    return newItems;
-  });
+  // Only page 1 returns data, so pagination stops after the first fetch.
+  if (page != 1) return [];
+
+  // Small delay so the loader is visible while testing (remove if unwanted).
+  await Future.delayed(const Duration(milliseconds: 500));
+
+  if (!ref.mounted) return null;
+
+  state = state.copyWith(treatmentProgressTotalPages: 1);
+  return dummyTreatmentProgress();
 }
-  Future<MaterialsResponse?> getMaterials({
+ 
+ 
+ Future<MaterialsResponse?> getMaterials({
     required String treatmentSku,
     required String areaSku,
   }) async {
@@ -371,38 +394,49 @@ Future<List<TreatmentProgressData>?> getTreatmentProgress({
     }
     return response?.data;
   }
-Future<TreatmentProgressDetailResponse?> callTreatmentProgressDetail({
+
+ Future<TreatmentProgressDetailResponse?> callTreatmentProgressDetail({
   required int id,
 }) async {
-  final response = await runSafely(() async {
-    state = state.copyWith(
-      loading: true,
-      treatmentProgressDetail: null,
-    );
+  // TODO(temp): API call disabled, showing dummy data only.
+  // final response = await runSafely(() async {
+  //   state = state.copyWith(loading: true, treatmentProgressDetail: null);
+  //
+  //   final res = await _repo.getTreatmentprogressDetail(progressID: id);
+  //
+  //   if (!ref.mounted) return null;
+  //
+  //   state = state.copyWith(loading: false, treatmentProgressDetail: res);
+  //
+  //   return res;
+  // });
+  //
+  // final hasData = response?.data?.progressData?.isNotEmpty ?? false;
+  // if (!hasData) {
+  //   if (!ref.mounted) return null;
+  //   final dummy = dummyTreatmentProgressDetail(id);
+  //   state = state.copyWith(loading: false, treatmentProgressDetail: dummy);
+  //   return dummy;
+  // }
+  //
+  // if (response == null) {
+  //   state = state.copyWith(loading: false);
+  // }
+  //
+  // return response;
 
-    final res = await _repo.getTreatmentprogressDetail(
-      progressID: id,
-    );
+  state = state.copyWith(loading: true, treatmentProgressDetail: null);
 
-    if (!ref.mounted) return null;
+  // Small delay so the loader is visible while testing (remove if unwanted).
+  await Future.delayed(const Duration(milliseconds: 500));
 
-    state = state.copyWith(
-      loading: false,
-      treatmentProgressDetail: res,
-    );
+  if (!ref.mounted) return null;
 
-    return res;
-  });
-
-  if (response == null) {
-    state = state.copyWith(
-      loading: false,
-    );
-  }
-
-  return response;
+  final dummy = dummyTreatmentProgressDetail(id);
+  state = state.copyWith(loading: false, treatmentProgressDetail: dummy);
+  return dummy;
 }
- 
+
   Future<bool> callPredictAPI() async {
     if (state.capturedImagesNull) {
       const msg =
@@ -702,7 +736,7 @@ class TreatmentsState extends BaseStateModel {
     this.rightAiImage,
     this.isAiImageGenerated = false,
     this.treatmentDetail,
-    this.treatmentProgressTotalPages = 1
+    this.treatmentProgressTotalPages = 1,
   });
 
   @override
@@ -727,53 +761,42 @@ class TreatmentsState extends BaseStateModel {
     bool? isAiImageGenerated,
     MaterialData? material,
     bool? materialsLoading,
-    int? treatmentProgressTotalPages
+    int? treatmentProgressTotalPages,
   }) {
     return TreatmentsState(
       loading: loading ?? this.loading,
       errorMessage: errorMessage ?? this.errorMessage,
       treatments: treatments ?? this.treatments,
-      areaNavigationStack:
-          areaNavigationStack ?? this.areaNavigationStack,
+      areaNavigationStack: areaNavigationStack ?? this.areaNavigationStack,
       isBefore: isBefore ?? this.isBefore,
 
-      frontPoseImage:
-          frontPoseImage ?? this.frontPoseImage,
-      leftPoseImage:
-          leftPoseImage ?? this.leftPoseImage,
-      rightPoseImage:
-          rightPoseImage ?? this.rightPoseImage,
+      frontPoseImage: frontPoseImage ?? this.frontPoseImage,
+      leftPoseImage: leftPoseImage ?? this.leftPoseImage,
+      rightPoseImage: rightPoseImage ?? this.rightPoseImage,
 
-      frontAiImage:
-          clearAiImage ? null : (frontAiImage ?? this.frontAiImage),
-      leftAiImage:
-          clearAiImage ? null : (leftAiImage ?? this.leftAiImage),
-      rightAiImage:
-          clearAiImage ? null : (rightAiImage ?? this.rightAiImage),
+      frontAiImage: clearAiImage ? null : (frontAiImage ?? this.frontAiImage),
+      leftAiImage: clearAiImage ? null : (leftAiImage ?? this.leftAiImage),
+      rightAiImage: clearAiImage ? null : (rightAiImage ?? this.rightAiImage),
 
-      isAiImageGenerated:
-          isAiImageGenerated ?? this.isAiImageGenerated,
+      isAiImageGenerated: isAiImageGenerated ?? this.isAiImageGenerated,
 
       material: material ?? this.material,
-      materialsLoading:
-          materialsLoading ?? this.materialsLoading,
+      materialsLoading: materialsLoading ?? this.materialsLoading,
 
-      treatmentDetail:
-          treatmentDetail ?? this.treatmentDetail,
+      treatmentDetail: treatmentDetail ?? this.treatmentDetail,
 
       treatmentProgressResponse:
           treatmentProgressResponse ?? this.treatmentProgressResponse,
 
       treatmentProgressDetail:
           treatmentProgressDetail ?? this.treatmentProgressDetail,
-       treatmentProgressTotalPages:   treatmentProgressTotalPages ?? this.treatmentProgressTotalPages
+      treatmentProgressTotalPages:
+          treatmentProgressTotalPages ?? this.treatmentProgressTotalPages,
     );
   }
 
   bool get aiImagesNull {
-    return frontAiImage == null &&
-        leftAiImage == null &&
-        rightAiImage == null;
+    return frontAiImage == null && leftAiImage == null && rightAiImage == null;
   }
 
   bool get capturedImagesNull {

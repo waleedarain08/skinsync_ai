@@ -1,4 +1,6 @@
 import '../utils/assets.dart';
+import 'responses/treatment_progress_detail_response.dart';
+import 'responses/treatment_progress_response.dart';
 
 class Treatments {
   final String svg;
@@ -910,4 +912,139 @@ final List<DummyAreaModel> dummyAreas = [
 //   ),
 // ];
 
+// Dummy Dataset
+// TODO(temp): dummy data, delete with the fallback above.
+List<TreatmentProgressData> dummyTreatmentProgress() => [
+  TreatmentProgressData(
+    id: 101,
+    treatmentName: 'Laser Hair Removal',
+    treatmentId: 1,
+    areaName: 'Full Face',
+    areaId: 2,
+    status: 'in_progress',
+    progress: 60,
+    totalSteps: 5,
+    currentStep: 3,
+  ),
+  TreatmentProgressData(
+    id: 102,
+    treatmentName: 'Skin Rejuvenation',
+    treatmentId: 3,
+    areaName: 'Cheeks & Forehead',
+    areaId: 4,
+    status: 'completed',
+    progress: 100,
+    totalSteps: 4,
+    currentStep: 4,
+  ),
+  TreatmentProgressData(
+    id: 103,
+    treatmentName: 'Acne Scar Treatment',
+    treatmentId: 5,
+    areaName: 'Upper Back',
+    areaId: 6,
+    status: 'upcoming',
+    progress: 0,
+    totalSteps: 6,
+    currentStep: 0,
+  ),
+  TreatmentProgressData(
+    id: 104,
+    treatmentName: 'Chemical Peel',
+    treatmentId: 7,
+    areaName: 'Neck & Decolletage',
+    areaId: 8,
+    status: 'paused',
+    progress: 25,
+    totalSteps: 4,
+    currentStep: 1,
+  ),
+  TreatmentProgressData(
+    id: 105,
+    treatmentName: 'HydraFacial',
+    treatmentId: 9,
+    areaName: 'Full Face',
+    areaId: 10,
+    status: 'in_progress',
+    progress: 50,
+    totalSteps: 2,
+    currentStep: 1,
+  ),
+];
+TreatmentProgressDetailResponse dummyTreatmentProgressDetail(int id) {
+  final now = DateTime.now();
+  int ts(int daysFromNow, {int hour = 10}) => DateTime(
+        now.year,
+        now.month,
+        now.day + daysFromNow,
+        hour,
+      ).millisecondsSinceEpoch ~/ 1000; // change to ms if your API uses ms
+
+  return TreatmentProgressDetailResponse(
+    isSuccess: true,
+    message: 'Dummy data',
+    data: TreatmentProgressDetailData(
+      treatmentId: id,
+      areaId: 2,
+      treatmentName: 'Laser Hair Removal',
+      areaName: 'Full Face',
+      progressData: [
+        TreatmentProgressDetailItem(
+          appointmentType: AppointmentType.consultation,
+          status: 'completed',
+          date: ts(-30),
+          time: ts(-30, hour: 11),
+        ),
+        TreatmentProgressDetailItem(
+          appointmentType: AppointmentType.treatment,
+          status: 'completed',
+          sessionId: 201,
+          sessionName: 'Session 1',
+          sessionDate: ts(-20),
+          sessionTime: ts(-20, hour: 14),
+          doctorId: 1,
+          doctorName: 'Dr. Sarah Khan',
+          clinicId: 1,
+          clinicName: 'Glow Skin Clinic',
+        ),
+        TreatmentProgressDetailItem(
+          appointmentType: AppointmentType.followUp,
+          status: 'completed',
+          date: ts(-10),
+          time: ts(-10, hour: 12),
+        ),
+        TreatmentProgressDetailItem(
+          appointmentType: AppointmentType.treatment,
+          status: 'in_progress',
+          sessionId: 202,
+          sessionName: 'Session 2',
+          sessionDate: ts(0),
+          sessionTime: ts(0, hour: 16),
+          doctorId: 1,
+          doctorName: 'Dr. Sarah Khan',
+          clinicId: 1,
+          clinicName: 'Glow Skin Clinic',
+        ),
+        TreatmentProgressDetailItem(
+          appointmentType: AppointmentType.followUp,
+          status: 'upcoming',
+          date: ts(14),
+          time: ts(14, hour: 11),
+        ),
+        TreatmentProgressDetailItem(
+          appointmentType: AppointmentType.treatment,
+          status: 'upcoming',
+          sessionId: 203,
+          sessionName: 'Session 3',
+          sessionDate: ts(30),
+          sessionTime: ts(30, hour: 15),
+          doctorId: 2,
+          doctorName: 'Dr. Ali Raza',
+          clinicId: 1,
+          clinicName: 'Glow Skin Clinic',
+        ),
+      ],
+    ),
+  );
+}
 // Removed AppointmentTypeModel and dummyAppointmentTypes as they are now fetched from the API

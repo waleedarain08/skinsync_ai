@@ -1,6 +1,7 @@
-class TreatmentProgressResponse {
-  final bool? isSuccess;
-  final String? message;
+import 'base_response_model.dart';
+
+class TreatmentProgressResponse extends BaseResponseModel {
+ 
   final List<TreatmentProgressData>? data;
   final int? page;
   final int? limit;
@@ -8,8 +9,8 @@ class TreatmentProgressResponse {
   final int? totalPages;
 
   TreatmentProgressResponse({
-    this.isSuccess,
-    this.message,
+    super.isSuccess,
+  super.message,
     this.data,
     this.page,
     this.limit,
