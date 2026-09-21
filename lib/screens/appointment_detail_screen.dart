@@ -731,9 +731,9 @@ class _AppointmentDetailScreenState
                   CustomButton(
                     width: context.w(100),
                     height: context.h(44),
-                    onPressed: isPaymentPending
-                        ? null
-                        : () => _handleScanCheckIn(context, appointmentId),
+                    onPressed: isPaymentPending?
+                      
+                        () => _handleScanCheckIn(context, appointmentId):null,
                     text: 'Scan',
                     backgroundColor: Colors.black,
                     textColor: Colors.white,

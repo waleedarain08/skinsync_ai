@@ -61,7 +61,7 @@ class FinancialSummaryDialog extends StatelessWidget {
             
             SizedBox(height: context.h(32)),
             
-            if (isPending) ...[
+            if (!isPending) ...[
               Consumer(
                 builder: (context,ref,_) {
                   return CustomButton(

@@ -97,7 +97,7 @@ Future<bool?> changePaymentStatus({
   }) async {
     return await runSafely(() async {
       EasyLoading.show(status: 'Checking in...');
-      await repo.changePaymentStatus(
+       await repo.changePaymentStatus(
         appointmentId: appointmentId,
         request: ChangePaymentStatusRequest(
           paymentStatus: paymentStatus
@@ -105,6 +105,7 @@ Future<bool?> changePaymentStatus({
         ),
       );
       EasyLoading.dismiss();
+      await getAppointmentDetail(appointmentId);
       return true;
     });
   }
