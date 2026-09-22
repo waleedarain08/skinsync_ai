@@ -30,6 +30,22 @@ class ChatsData {
     total: json["total"],
     totalPages: json["total_pages"],
   );
+
+  ChatsData copyWith({
+    List<Chat>? items,
+    int? limit,
+    int? page,
+    int? total,
+    int? totalPages,
+  }) {
+    return ChatsData(
+      items: items ?? this.items,
+      limit: limit ?? this.limit,
+      page: page ?? this.page,
+      total: total ?? this.total,
+      totalPages: totalPages ?? this.totalPages,
+    );
+  }
 }
 
 class Chat {

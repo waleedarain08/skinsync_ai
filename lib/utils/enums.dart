@@ -1,3 +1,4 @@
+import '../exceptions/app_exception.dart';
 import 'string_utils.dart';
 
 enum SharedPreferencesKeys {
@@ -94,9 +95,9 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-  // apiQa('https://api-dev.skinsyncai.com/api/');
+  apiQa('https://api-dev.skinsyncai.com/api/');
 
-  apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
+  // apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);
@@ -196,9 +197,10 @@ enum MessageType {
 }
 
 enum EventType {
-  chat('chat'),
+  message('message'),
   appointment('appointment'),
   newAppointment('new_appointment'),
+  newChat('new_chat'),
   error('error'),
   subscription('subscription');
 
@@ -206,11 +208,12 @@ enum EventType {
   const EventType(this.value);
 
   static EventType fromValue(String? value) {
-    if (value == null) return EventType.chat;
+    if (value == null) {
+      throw const AppException('Event type cannot be null');
+    };
     final val = value.toLowerCase();
     return EventType.values.firstWhere(
       (e) => e.value.toLowerCase() == val,
-      orElse: () => EventType.chat,
     );
   }
 }
