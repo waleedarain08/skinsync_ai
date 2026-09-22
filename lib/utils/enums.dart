@@ -1,4 +1,3 @@
-import '../exceptions/app_exception.dart';
 import 'string_utils.dart';
 
 enum SharedPreferencesKeys {
@@ -44,6 +43,7 @@ enum EndPoints {
   saveAnswer("v1/onboarding/answer"),
   treatmentProgress('v1/treatment-progress'),
   verifyOtp("verify-otp"),
+  clinicalJourney('v1/clinical-journey'),
   onBoardingProfile("v1/onboarding/profile"),
   getClinic("clinics/filter"),
   getDoctor("doctors/by-side-area?"),
@@ -95,9 +95,9 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-  apiQa('https://api-dev.skinsyncai.com/api/');
+   apiQa('https://api-dev.skinsyncai.com/api/');
 
-  // apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
+  //apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);
