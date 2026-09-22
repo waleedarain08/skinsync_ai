@@ -95,6 +95,21 @@ class ChatViewModel extends BaseViewModel<ChatState> {
     );
   }
 
+  void addChat(Chat chat) {
+    final exists = state.chatsData?.items?.any((c) => c.id == chat.id);
+    if (exists ?? false) {
+      return;
+    }
+    state = state.copyWith(
+      chatsData: state.chatsData?.copyWith(
+        items: [
+          chat,
+          ...state.chatsData!.items!,
+        ],
+      ),
+    );
+  }
+
   void selectChat(Chat? chat) {
     state = state.copyWith(selectedChat: chat);
   }

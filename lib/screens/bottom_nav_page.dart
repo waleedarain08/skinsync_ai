@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../models/responses/appointments_list_response.dart';
-import '../models/responses/messages_response.dart';
 import '../services/websocket_service.dart';
 import '../view_models/auth_view_model.dart';
 import '../view_models/bottom_nav_view_model.dart';
@@ -65,10 +64,14 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
                     .read(authViewModel.notifier)
                     .addAppointment(AppointmentItem.fromJson(event.data));
                 break;
-              case .chat:
-                final message = Message.fromJson(event.data);
+              case .message:
                 if (ref.exists(chatProvider)) {
-                  ref.read(chatProvider.notifier).addMessage(message);
+                  ref.read(chatProvider.notifier).addMessage(.fromJson(event.data));
+                }
+                break;
+              case .newChat:
+                if (ref.exists(chatProvider)) {
+                  ref.read(chatProvider.notifier).addChat(.fromJson(event.data));
                 }
                 break;
               case .subscription:
