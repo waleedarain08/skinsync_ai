@@ -16,6 +16,7 @@ import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
 import '../view_models/forms_view_model.dart';
 import '../widgets/app_loader.dart';
+import '../widgets/care_card.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/appointment_journey/summary_tile.dart';
@@ -502,137 +503,89 @@ class _AppointmentDetailScreenState
     required String doctorName,
     required VoidCallback onTap,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: CustomColors.purpleBlueGradient,
-        borderRadius: BorderRadius.circular(context.r(28)),
-        boxShadow: CustomColors.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(context.r(28)),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(context.r(28)),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -context.w(25),
-                  bottom: -context.h(15),
-                  child: Opacity(
-                    opacity: 0.12,
-                    child: Icon(Iconsax.calendar_tick, size: context.sp(150)),
+    return CareCard(
+      icon: Iconsax.calendar_tick,
+      bgIconSize: context.sp(150),
+      showDefaultArrow: false,
+      trailing: _buildStatusBadge(status),
+      onTap: onTap,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "Appointment Info",
+                  style: CustomFonts.black18w600.copyWith(
+                    fontSize: context.sp(19),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.all(context.w(20)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(context.w(10)),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Icon(
-                              Iconsax.calendar_tick,
-                              color: Colors.black87,
-                              size: context.sp(22),
-                            ),
-                          ),
-                          _buildStatusBadge(status),
-                        ],
-                      ),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              "Appointment Info",
-                              style: CustomFonts.black18w600.copyWith(
-                                fontSize: context.sp(19),
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.info_outline_rounded,
-                            size: context.sp(18),
-                            color: Colors.black87,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: context.h(12)),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildInfoItem(context, Iconsax.key, key),
-                          ),
-                          SizedBox(width: context.w(12)),
-                          Expanded(
-                            child: _buildInfoItem(
-                              context,
-                              Iconsax.tag,
-                              type.capitalize,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: context.h(8)),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildInfoItem(
-                              context,
-                              Iconsax.calendar,
-                              dateStr,
-                            ),
-                          ),
-                          SizedBox(width: context.w(12)),
-                          Expanded(
-                            child: _buildInfoItem(
-                              context,
-                              Iconsax.clock,
-                              timeString,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: context.h(8)),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildInfoItem(
-                              context,
-                              Iconsax.hospital,
-                              clinicName,
-                            ),
-                          ),
-                          SizedBox(width: context.w(12)),
-                          Expanded(
-                            child: _buildInfoItem(
-                              context,
-                              Iconsax.user,
-                              doctorName,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+              Icon(
+                Icons.info_outline_rounded,
+                size: context.sp(18),
+                color: Colors.black87,
+              ),
+            ],
           ),
-        ),
+          SizedBox(height: context.h(12)),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoItem(context, Iconsax.key, key),
+              ),
+              SizedBox(width: context.w(12)),
+              Expanded(
+                child: _buildInfoItem(
+                  context,
+                  Iconsax.tag,
+                  type.capitalize,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: context.h(8)),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoItem(
+                  context,
+                  Iconsax.calendar,
+                  dateStr,
+                ),
+              ),
+              SizedBox(width: context.w(12)),
+              Expanded(
+                child: _buildInfoItem(
+                  context,
+                  Iconsax.clock,
+                  timeString,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: context.h(8)),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoItem(
+                  context,
+                  Iconsax.hospital,
+                  clinicName,
+                ),
+              ),
+              SizedBox(width: context.w(12)),
+              Expanded(
+                child: _buildInfoItem(
+                  context,
+                  Iconsax.user,
+                  doctorName,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

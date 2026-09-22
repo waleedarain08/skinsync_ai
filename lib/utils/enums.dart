@@ -1,3 +1,4 @@
+import '../exceptions/app_exception.dart';
 import 'string_utils.dart';
 
 enum SharedPreferencesKeys {
