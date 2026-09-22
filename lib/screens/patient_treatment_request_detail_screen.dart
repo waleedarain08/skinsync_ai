@@ -30,7 +30,7 @@ class _PatientTreatmentRequestDetailScreenState
     final request = widget.request;
     final sim = request;
 
-    final title = request.refId;
+    final title = request.refId ?? request.id ?? "";
     final subtitle = request.createdAt?.formattedDateTime ?? "";
 
     return Scaffold(

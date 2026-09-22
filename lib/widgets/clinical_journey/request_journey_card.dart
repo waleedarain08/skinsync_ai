@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../models/responses/clinical_journey_response.dart';
-import '../../screens/treatment_request_detail_screen.dart';
+import '../../screens/patient_treatment_request_detail_screen.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
@@ -31,19 +31,18 @@ class RequestJourneyCard extends ConsumerWidget {
 
     EasyLoading.show(status: 'Loading request details...');
     try {
-      final success = await ref
+      final simData = await ref
           .read(treatmentRequestsProvider.notifier)
-          .fetchOptions(requestId);
+          .fetchOptionsDetail(requestId);
       EasyLoading.dismiss();
-      if (context.mounted && (success ?? false)) {
+      if (context.mounted && simData != null) {
         Navigator.pushNamed(
           context,
-          TreatmentRequestDetailScreen.routeName,
-          arguments: {
-            'groupId': requestId,
-            'groupName': request.clinicName ?? 'Treatment Request',
-          },
+          PatientTreatmentRequestDetailScreen.routeName,
+          arguments: simData,
         );
+      } else if (context.mounted && simData == null) {
+        EasyLoading.showError('Failed to load request details');
       }
     } catch (_) {
       EasyLoading.dismiss();
