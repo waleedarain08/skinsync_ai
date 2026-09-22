@@ -1,4 +1,5 @@
 import '../models/requests/save_history_request.dart';
+import '../models/responses/clinical_journey_response.dart';
 import '../models/responses/treatment_list_response.dart';
 import '../models/responses/treatment_detail_response.dart';
 import '../models/responses/materials_response.dart';
@@ -31,4 +32,5 @@ abstract class TreatmentRepository {
   Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
     required int progressID,
   });
+   Future<ClinicalJourneyResponse> getClinicalJourney();
 }

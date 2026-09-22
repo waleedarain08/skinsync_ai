@@ -4,6 +4,7 @@ import '../exceptions/app_exception.dart';
 import '../models/requests/save_history_request.dart';
 import '../models/responses/auth_response.dart';
 import '../models/responses/base_response_model.dart';
+import '../models/responses/clinical_journey_response.dart';
 import '../models/responses/materials_response.dart';
 import '../models/responses/treatment_detail_response.dart';
 import '../models/responses/treatment_list_response.dart';
@@ -159,6 +160,26 @@ class TreatmentService implements TreatmentRepository {
       TreatmentProgressResponse response = TreatmentProgressResponse.fromJson(
         parsed,
       );
+      return response;
+    } else {
+      // Handle HTTP error status codes
+      final parsed = json.decode(jsonResponse.body);
+      throw AppException(AuthResponse.fromJson(parsed).message as String);
+    }
+  }
+
+  @override
+  Future<ClinicalJourneyResponse> getClinicalJourney() async {
+    
+    final jsonResponse = await _apiClient.httpRequest(
+      endPoint: EndPoints.clinicalJourney,
+      requestType: .get,
+      params: '',
+    );
+    // Check HTTP status code
+    if (jsonResponse.statusCode >= 200 && jsonResponse.statusCode < 300) {
+      final parsed = json.decode(jsonResponse.body);
+      ClinicalJourneyResponse response = ClinicalJourneyResponse.fromJson(parsed);
       return response;
     } else {
       // Handle HTTP error status codes

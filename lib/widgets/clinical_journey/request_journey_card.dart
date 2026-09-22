@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../models/clinical_journey/clinical_journey_model.dart';
+import '../../models/responses/clinical_journey_response.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
 
 class RequestJourneyCard extends StatelessWidget {
-  final PatientRequestStep request;
+  final PatientRequest request;
 
   const RequestJourneyCard({super.key, required this.request});
 
@@ -28,39 +28,58 @@ class RequestJourneyCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("Original Request", style: CustomFonts.black18w600),
-              _buildBadge(context, request.status.toUpperCase(), CustomColors.blueColor),
+              _buildBadge(
+                context,
+                (request.status ?? '').toUpperCase(),
+                CustomColors.blueColor,
+              ),
             ],
           ),
           SizedBox(height: context.h(16)),
-          
+
           Text("Treatments:", style: CustomFonts.grey14w400),
           SizedBox(height: context.h(8)),
           Wrap(
             spacing: context.w(8),
             runSpacing: context.h(8),
-            children: request.treatments.map((t) => _buildTreatmentChip(context, t)).toList(),
+            children: (request.treatments ?? [])
+                .map((t) => _buildTreatmentChip(context, t.treatmentName ?? ''))
+                .toList(),
           ),
-          
-          if (request.preferredClinic != null) ...[
+
+          if (request.clinicName != null) ...[
             SizedBox(height: context.h(16)),
             Row(
               children: [
                 Icon(Iconsax.hospital, size: context.sp(14), color: Colors.grey),
                 SizedBox(width: context.w(8)),
-                Text(request.preferredClinic!, style: CustomFonts.black12w600.copyWith(color: Colors.black54)),
+                Text(
+                  request.clinicName!,
+                  style: CustomFonts.black12w600.copyWith(color: Colors.black54),
+                ),
               ],
             ),
           ],
-          
+
           SizedBox(height: context.h(16)),
           const Divider(height: 1, color: Colors.black12),
           SizedBox(height: context.h(16)),
-          
+
           Row(
             children: [
-              _buildMiniInfo(context, Iconsax.calendar, request.requestedAt.formattedDayDate),
+              if (request.date != null)
+                _buildMiniInfo(
+                  context,
+                  Iconsax.calendar,
+                  DateTimeUtils.formatTimestampToDayDate(request.date!),
+                ),
               const Spacer(),
-              _buildMiniInfo(context, Iconsax.clock, request.requestedAt.formattedTime),
+              if (request.time != null)
+                _buildMiniInfo(
+                  context,
+                  Iconsax.clock,
+                  DateTimeUtils.formatTimestampToTime(request.time!),
+                ),
             ],
           ),
         ],
