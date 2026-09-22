@@ -86,7 +86,7 @@ dependencies:
   cryptography_flutter: ^2.3.4
   firebase_messaging: ^16.5.0
   firebase_crashlytics: ^5.2.7
-  face_detection_tflite: ^6.8.0
+  face_detection_tflite: ^6.9.0
   flutter_litert: ^3.8.0
   vibration: ^3.2.0
   volume_controller: ^3.6.0
