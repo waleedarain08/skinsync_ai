@@ -24,12 +24,37 @@ enum LoginProviders {
 }
 
 enum AppointmentType {
-  consultation('consultation'),
-  treatment('Treatment session');
+  followUp('follow_up'),
+  treatment('treatment'),
+  consultation('consultation');
 
   final String typeText;
 
   const AppointmentType(this.typeText);
+
+  String get value => typeText;
+
+  static AppointmentType? fromString(String? value) {
+    switch (value?.toLowerCase()) {
+      case 'follow_up':
+      case 'followup':
+        return AppointmentType.followUp;
+      case 'treatment':
+      case 'treatment session':
+        return AppointmentType.treatment;
+      case 'consultation':
+        return AppointmentType.consultation;
+      default:
+        return null;
+    }
+  }
+}
+
+extension AppointmentTypeExtension on AppointmentType {
+  String get value => typeText;
+
+  static AppointmentType? fromString(String? value) =>
+      AppointmentType.fromString(value);
 }
 
 enum EndPoints {
