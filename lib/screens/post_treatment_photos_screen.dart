@@ -413,4 +413,5 @@ class PostTreatmentPhotosScreen extends ConsumerWidget {
       ),
     );
   }
+
 }
