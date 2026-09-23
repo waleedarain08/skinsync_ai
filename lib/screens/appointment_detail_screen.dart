@@ -12,6 +12,7 @@ import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
+import '../utils/enums.dart';
 import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
 import '../view_models/forms_view_model.dart';
@@ -27,7 +28,6 @@ import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
 import 'appointment_forms_screen.dart';
 import 'pre_treatment_instructions_screen.dart';
 import 'post_treatment_instructions_screen.dart';
-import 'post_treatment_photos_screen.dart';
 import 'recovery_journey_screen.dart';
 import 'treatment_progress/my_treatment_progress_screen.dart';
 import 'qr_scan_screen.dart';
@@ -167,6 +167,13 @@ class _AppointmentDetailScreenState
                 SizedBox(height: dialogContext.h(32)),
                 CustomButton(
                   onPressed: () {
+                    if (widget.appointment.appointmentId != null) {
+                      ref
+                          .read(appointmentProvider.notifier)
+                          .getAppointmentDetail(
+                            widget.appointment.appointmentId!,
+                          );
+                    }
                     Navigator.pop(dialogContext);
                     Navigator.pushNamed(context, '/NewPatientIntakeScreen');
                   },
@@ -195,17 +202,15 @@ class _AppointmentDetailScreenState
         (appointmentState.loading || isStale) &&
         appointmentState.errorMessage == null;
 
-    final isPaymentPending = detail?.paymentType?.status == 'pending';
+    final paymentStatus = PaymentStatus.fromApi(detail?.paymentType?.status);
 
     if (detail != null &&
         detail.id == widget.appointment.appointmentId &&
-        isPaymentPending &&
+        paymentStatus.hasBalanceDue &&
         !_hasAutoOpenedFinancialDialog) {
       _hasAutoOpenedFinancialDialog = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _showFinancialDialog(context, detail);
-        }
+        if (mounted) _showFinancialDialog(context, detail);
       });
     }
 
@@ -269,12 +274,7 @@ class _AppointmentDetailScreenState
               ),
               child: Column(
                 children: [
-                  _buildCheckInCard(
-                    context,
-                    detail?.id,
-                    isPaymentPending,
-                    detail?.paymentType?.status,
-                  ),
+                  _buildCheckInCard(context, detail?.id, paymentStatus),
                   SizedBox(height: context.h(16)),
 
                   // Financial Summary (Placed directly below Check-in card)
@@ -282,10 +282,7 @@ class _AppointmentDetailScreenState
                     title: "Payment",
                     subtitle:
                         "Total: \$${detail?.treatmentTotal?.toStringAsFixed(2) ?? '0.00'}",
-                    trailing: _buildStatusBadge(
-                      detail?.paymentType?.status ??
-                          (isPaymentPending ? 'pending' : 'paid'),
-                    ),
+                    trailing: _buildStatusBadge(paymentStatus.label),
                     icon: Iconsax.wallet_money,
                     color: Colors.green,
                     gradient: CustomColors.purpleBlueGradient,
@@ -407,23 +404,23 @@ class _AppointmentDetailScreenState
                       ),
 
                       // 8. Post-Treatment Photos
-                      StaggeredGridTile.count(
-                        crossAxisCellCount: 1,
-                        mainAxisCellCount: 1.3,
-                        child: SummaryTile(
-                          title: "Post Photos",
-                          subtitle: "Milestone Photo Updates",
-                          icon: Iconsax.camera,
-                          color: Colors.teal,
-                          gradient: CustomColors.purpleBlueGradient,
-                          backgroundImage: PngAssets.face,
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            PostTreatmentPhotosScreen.routeName,
-                            arguments: detail?.treatments,
-                          ),
-                        ),
-                      ),
+                      // StaggeredGridTile.count(
+                      //   crossAxisCellCount: 1,
+                      //   mainAxisCellCount: 1.3,
+                      //   child: SummaryTile(
+                      //     title: "Post Photos",
+                      //     subtitle: "Milestone Photo Updates",
+                      //     icon: Iconsax.camera,
+                      //     color: Colors.teal,
+                      //     gradient: CustomColors.purpleBlueGradient,
+                      //     backgroundImage: PngAssets.face,
+                      //     onTap: () => Navigator.pushNamed(
+                      //       context,
+                      //       PostTreatmentPhotosScreen.routeName,
+                      //       arguments: detail?.treatments,
+                      //     ),
+                      //   ),
+                      // ),
 
                       // 7. Treatment Progress
                       StaggeredGridTile.count(
@@ -532,16 +529,10 @@ class _AppointmentDetailScreenState
           SizedBox(height: context.h(12)),
           Row(
             children: [
-              Expanded(
-                child: _buildInfoItem(context, Iconsax.key, key),
-              ),
+              Expanded(child: _buildInfoItem(context, Iconsax.key, key)),
               SizedBox(width: context.w(12)),
               Expanded(
-                child: _buildInfoItem(
-                  context,
-                  Iconsax.tag,
-                  type.capitalize,
-                ),
+                child: _buildInfoItem(context, Iconsax.tag, type.capitalize),
               ),
             ],
           ),
@@ -549,19 +540,11 @@ class _AppointmentDetailScreenState
           Row(
             children: [
               Expanded(
-                child: _buildInfoItem(
-                  context,
-                  Iconsax.calendar,
-                  dateStr,
-                ),
+                child: _buildInfoItem(context, Iconsax.calendar, dateStr),
               ),
               SizedBox(width: context.w(12)),
               Expanded(
-                child: _buildInfoItem(
-                  context,
-                  Iconsax.clock,
-                  timeString,
-                ),
+                child: _buildInfoItem(context, Iconsax.clock, timeString),
               ),
             ],
           ),
@@ -569,19 +552,11 @@ class _AppointmentDetailScreenState
           Row(
             children: [
               Expanded(
-                child: _buildInfoItem(
-                  context,
-                  Iconsax.hospital,
-                  clinicName,
-                ),
+                child: _buildInfoItem(context, Iconsax.hospital, clinicName),
               ),
               SizedBox(width: context.w(12)),
               Expanded(
-                child: _buildInfoItem(
-                  context,
-                  Iconsax.user,
-                  doctorName,
-                ),
+                child: _buildInfoItem(context, Iconsax.user, doctorName),
               ),
             ],
           ),
@@ -611,10 +586,14 @@ class _AppointmentDetailScreenState
   Widget _buildCheckInCard(
     BuildContext context,
     int? appointmentId,
-    bool isPaymentPending,
-    String? paymentStatus,
+    PaymentStatus paymentStatus,
   ) {
-    final rawStatus = paymentStatus ?? (isPaymentPending ? "pending" : "paid");
+    final message = switch (paymentStatus) {
+      PaymentStatus.unpaid => "Please complete payment to check-in.",
+      PaymentStatus.halfPayment =>
+        "Partial payment received. Scan the clinic QR code to start.",
+      PaymentStatus.paid => "Scan the clinic QR code to start.",
+    };
 
     return Container(
       width: double.infinity,
@@ -633,7 +612,6 @@ class _AppointmentDetailScreenState
                 ),
               ),
             ),
-            
             Positioned(
               right: -context.w(10),
               bottom: -context.h(10),
@@ -646,7 +624,6 @@ class _AppointmentDetailScreenState
                 ),
               ),
             ),
-           
             Padding(
               padding: EdgeInsets.all(context.w(24)),
               child: Row(
@@ -661,18 +638,15 @@ class _AppointmentDetailScreenState
                               "Ready to Check-in?",
                               style: CustomFonts.black18w600,
                             ),
-                            if (!isPaymentPending &&
-                                rawStatus.toLowerCase() != 'unpaid') ...[
+                            if (paymentStatus != PaymentStatus.unpaid) ...[
                               SizedBox(width: context.w(8)),
-                              _buildStatusBadge(rawStatus),
+                              _buildStatusBadge(paymentStatus.label),
                             ],
                           ],
                         ),
                         SizedBox(height: context.h(6)),
                         Text(
-                          isPaymentPending
-                              ? "Please complete payment to check-in."
-                              : "Scan the clinic QR code to start.",
+                          message,
                           style: CustomFonts.black14w400.copyWith(
                             color: CustomColors.blackColor,
                           ),
@@ -684,9 +658,9 @@ class _AppointmentDetailScreenState
                   CustomButton(
                     width: context.w(100),
                     height: context.h(44),
-                    onPressed: isPaymentPending?
-                      
-                        () => _handleScanCheckIn(context, appointmentId):null,
+                    onPressed: paymentStatus.canCheckIn
+                        ? () => _handleScanCheckIn(context, appointmentId)
+                        : null,
                     text: 'Scan',
                     backgroundColor: Colors.black,
                     textColor: Colors.white,
