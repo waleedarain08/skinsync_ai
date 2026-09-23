@@ -40,7 +40,7 @@ class HelpChatButton extends StatelessWidget {
           ],
         ),
         child: Image.asset(
-          PngAssets.splashLogo,
+          PngAssets.chatSparkle,
           width: context.sp(32),
           height: context.sp(32),
           fit: BoxFit.contain,

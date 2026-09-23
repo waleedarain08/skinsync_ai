@@ -121,13 +121,43 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-   apiQa('https://api-dev.skinsyncai.com/api/');
+   // apiQa('https://api-dev.skinsyncai.com/api/');
 
-  //apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
+  apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);
 }
+
+enum PaymentStatus {
+  paid,
+  unpaid,
+  halfPayment;
+
+  static PaymentStatus fromApi(String? raw) {
+    switch (raw?.toLowerCase()) {
+      case 'paid':
+        return PaymentStatus.paid;
+      case 'half_payment':
+        return PaymentStatus.halfPayment;
+      default:
+        return PaymentStatus.unpaid;
+    }
+  }
+
+  String get label => switch (this) {
+        PaymentStatus.paid => 'PAID',
+        PaymentStatus.unpaid => 'UNPAID',
+        PaymentStatus.halfPayment => 'HALF PAID',
+      };
+
+  /// Balance still outstanding -> auto-open the financial dialog
+  bool get hasBalanceDue => this != PaymentStatus.paid;
+
+  /// Flip this if half-paid patients shouldn't be able to check in
+  bool get canCheckIn => this != PaymentStatus.unpaid;
+}
+
 
 enum ViewType { grid, map }
 

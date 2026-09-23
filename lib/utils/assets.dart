@@ -32,6 +32,7 @@ class PngAssets {
   static const String treatmentCategories =
       '${_assets}treatment_categories.png';
   static const String treatmentAreas = '${_assets}treatment_areas.png';
+  static const String chatSparkle = '${_assets}sparkle_chat.png';
 }
 
 class SvgAssets {
