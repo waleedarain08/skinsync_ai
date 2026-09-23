@@ -3,19 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../models/responses/appointments_list_response.dart';
+import '../screens/appointment_detail_screen.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/date_time_utils.dart';
 
 class AppointmentCard extends StatelessWidget {
   final AppointmentItem appointment;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool isTreatmentListHorizontal;
 
   const AppointmentCard({
     super.key,
     required this.appointment,
-    required this.onTap,
+    this.onTap,
     this.isTreatmentListHorizontal = false,
   });
 
@@ -38,7 +39,14 @@ class AppointmentCard extends StatelessWidget {
     final timeString = "$startTime - $endTime";
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap ??
+          () {
+            Navigator.pushNamed(
+              context,
+              AppointmentDetailScreen.routeName,
+              arguments: appointment,
+            );
+          },
       child: Container(
         margin: EdgeInsets.only(
           bottom: isTreatmentListHorizontal ? context.h(20) : context.h(22),

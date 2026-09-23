@@ -5,6 +5,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import '../../models/responses/appointments_list_response.dart';
 import '../../models/responses/clinical_journey_response.dart';
+import '../appointment_detail_screen.dart';
 import '../../view_models/treatment_view_model.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/appointment_card.dart';
@@ -206,7 +207,16 @@ class _ClinicalJourneyScreenState extends ConsumerState<ClinicalJourneyScreen> {
                         ],
                       ),
                       SizedBox(height: context.h(10)),
-                      AppointmentCard(appointment: e.appointment, onTap: () {}),
+                      AppointmentCard(
+                        appointment: e.appointment,
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppointmentDetailScreen.routeName,
+                            arguments: e.appointment,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
