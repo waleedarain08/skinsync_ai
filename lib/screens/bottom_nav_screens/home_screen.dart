@@ -265,7 +265,7 @@ class HomeScreen extends ConsumerWidget {
                                 "Your scheduled clinical treatments and session details will appear here.",
                           )
                         : SizedBox(
-                            height: context.h(315),
+                            height: context.h(325),
                             child: ListView.builder(
                               physics: const BouncingScrollPhysics(),
                               scrollDirection: Axis.horizontal,

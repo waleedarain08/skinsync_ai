@@ -55,6 +55,7 @@ class AppointmentPatient {
 
 class AppointmentDetailData {
   int? id;
+  int? chatId;
   String? appointmentKey;
   AppointmentClinic? clinic;
   AppointmentDoctor? doctor;
@@ -76,6 +77,7 @@ class AppointmentDetailData {
 
   AppointmentDetailData({
     this.id,
+    this.chatId,
     this.appointmentKey,
     this.clinic,
     this.doctor,
@@ -98,6 +100,7 @@ class AppointmentDetailData {
 
   AppointmentDetailData.fromJson(Map<String, dynamic> json) {
     id = json['id'];
+    chatId = json['chat_id'];
     appointmentKey = json['appointment_key'];
     clinic = json['clinic'] != null ? AppointmentClinic.fromJson(json['clinic']) : null;
     doctor = json['doctor'] != null ? AppointmentDoctor.fromJson(json['doctor']) : null;
