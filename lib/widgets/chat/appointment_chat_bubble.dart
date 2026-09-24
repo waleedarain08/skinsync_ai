@@ -13,7 +13,7 @@ import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
 import '../../utils/enums.dart';
 import '../../view_models/appointment_view_model.dart';
-import '../bordered_container_widget.dart';
+import '../borderd_container_widget.dart';
 import '../custom_button.dart';
 
 // ---------------------------------------------------------------------------
@@ -247,7 +247,7 @@ class AppointmentChatBubble extends StatelessWidget {
     final patient = appt.patient;
     final patientName = patient?.name ?? 'Patient';
     final patientEmail = patient?.email ?? '';
-    final patientPhone = patient?.phone ?? '';
+    final patientPhone = patient?.phoneNumber ?? '';
     final bookingMethod = appt.bookingType?.toUpperCase() ?? '';
     final appointmentType = appt.appointmentType?.title ?? '';
 
@@ -479,8 +479,8 @@ class AppointmentChatBubble extends StatelessWidget {
     (total - discountAmount - amountPaid).clamp(0.0, double.infinity);
 
     final payment = appt.paymentType;
-    final paymentTypeStr = payment?.type.toUpperCase() ?? 'N/A';
-    final paymentStatusStr = payment?.status.toUpperCase() ?? 'N/A';
+    final paymentTypeStr = payment?.type?.toUpperCase() ?? 'N/A';
+    final paymentStatusStr = payment?.status?.toUpperCase() ?? 'N/A';
 
     return Container(
       decoration: BoxDecoration(
@@ -554,14 +554,14 @@ class AppointmentChatBubble extends StatelessWidget {
   }
 
   Widget _buildSimulationsSection(BuildContext context, Simulations sims) {
-    final simulationsMap = <String, String>{
+    final simulationsMap = <String, String?>{
       'Front Before': sims.frontImageBefore,
       'Front After': sims.frontImageAfter,
       'Right Before': sims.rightImageBefore,
       'Right After': sims.rightImageAfter,
       'Left Before': sims.leftImageBefore,
       'Left After': sims.leftImageAfter,
-    }..removeWhere((k, v) => v.trim().isEmpty);
+    }..removeWhere((k, v) => v?.trim().isEmpty ?? false);
 
     if (simulationsMap.isEmpty) return const SizedBox.shrink();
 
@@ -577,7 +577,7 @@ class AppointmentChatBubble extends StatelessWidget {
             runSpacing: 12.h,
             children: simulationsMap.entries.map((entry) {
               final label = entry.key;
-              final url = entry.value.trim();
+              final url = entry.value?.trim() ?? '';
 
               return Container(
                 width: context.w(110),

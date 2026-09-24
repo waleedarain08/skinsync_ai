@@ -704,10 +704,10 @@ class _AppointmentDetailScreenState
   }
 
   Widget _buildBottomBar(AppointmentDetailData? detail) {
-    // final isInReview = detail?.status == AppointmentStatus.awaitingPatient.value;
-    // if (!isInReview) {
-    //   return const SizedBox.shrink();
-    // }
+    final isInReview = detail?.status == AppointmentStatus.awaitingPatient.value;
+    if (!isInReview) {
+      return const SizedBox.shrink();
+    }
     return Container(
     padding: EdgeInsets.symmetric(
       horizontal: context.w(16),
