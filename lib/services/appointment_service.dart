@@ -275,53 +275,6 @@ Future<PerTreatmentPhotosResponse> savePerTreatmentPhotos({
   );
 }
 
-@override
-Future<PerTreatmentPhotosResponse> getPerTreatmentPhotos({
-  required int appointmentId,
-}) async {
-  final response = await _apiClient.httpRequest(
-    endPoint: EndPoints.perTreatmentPhotos,
-    requestType: .get,
-    params: '?appointment_id=$appointmentId',
-  );
-
-  final data = PerTreatmentPhotosResponse.fromJson(
-    jsonDecode(response.body),
-  );
-
-  if (response.statusCode >= 200 && response.statusCode < 300) {
-    return data;
-  }
-
-  throw AppException(
-    data.message ?? 'Failed to fetch post-treatment photos',
-  );
-}
-
-@override
-Future<PerTreatmentPhotosResponse> savePerTreatmentPhotos({
-  required PerTreatmentPhotosRequest request,
-}) async {
-  final response = await _apiClient.httpRequest(
-    endPoint: EndPoints.perTreatmentPhotos,
-    requestType: .post,
-    requestBody: request.toJson(),
-    params: '',
-  );
-
-  final data = PerTreatmentPhotosResponse.fromJson(
-    jsonDecode(response.body),
-  );
-
-  if (response.statusCode >= 200 && response.statusCode < 300) {
-    return data;
-  }
-
-  throw AppException(
-    data.message ?? 'Failed to save post-treatment photos',
-  );
-}
-
   @override
   Future<BaseResponseModel> updateAppointmentStatus({
     required int appointmentId,
