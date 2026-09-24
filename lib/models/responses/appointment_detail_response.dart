@@ -163,6 +163,33 @@ class AppointmentDetailData {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['chat_id'] = chatId;
+    data['appointment_key'] = appointmentKey;
+    if (clinic != null) data['clinic'] = clinic!.toJson();
+    if (doctor != null) data['doctor'] = doctor!.toJson();
+    if (patient != null) data['patient'] = patient!.toJson();
+    if (appointmentType != null) data['appointment_type'] = appointmentType!.toJson();
+    data['date'] = date;
+    data['start_time'] = startTime;
+    data['end_time'] = endTime;
+    data['is_invite_clinic'] = isInviteClinic;
+    if (simulations != null) data['simulations'] = simulations!.toJson();
+    if (treatments != null) {
+      data['treatments'] = treatments!.map((v) => v.toJson()).toList();
+    }
+    data['treatment_total'] = treatmentTotal;
+    if (paymentType != null) data['payment_type'] = paymentType!.toJson();
+    data['discount_type'] = discountType;
+    data['discount'] = discount;
+    data['booking_type'] = bookingType;
+    data['status'] = status;
+    data['created_at'] = createdAt;
+    return data;
+  }
 }
 
 class PaymentType {

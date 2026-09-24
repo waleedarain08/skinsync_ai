@@ -183,6 +183,18 @@ class Message {
       return null;
     }
   }
+
+  SessionCompletionData? get sessionCompletionData {
+    try {
+      if (content == null || content!.isEmpty) {
+        return null;
+      }
+      final trimmed = content!.trim();
+      return SessionCompletionData.fromJson(jsonDecode(trimmed));
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 class ChatUser {
@@ -226,4 +238,48 @@ class ChatUser {
         ? null
         : DateTime.parse(json["updated_at"]),
   );
+}
+
+class SessionCompletionData {
+  final int? appointmentId;
+  final String? appointmentKey;
+  final String? doctorName;
+  final String? treatmentName;
+  final String? areaName;
+  final String? duration;
+  final String? notes;
+
+  SessionCompletionData({
+    this.appointmentId,
+    this.appointmentKey,
+    this.doctorName,
+    this.treatmentName,
+    this.areaName,
+    this.duration,
+    this.notes,
+  });
+
+  factory SessionCompletionData.fromJson(Map<String, dynamic> json) {
+    return SessionCompletionData(
+      appointmentId: json['appointment_id'] as int? ?? json['id'] as int?,
+      appointmentKey: json['appointment_key'] as String? ?? json['appointmentKey'] as String?,
+      doctorName: json['doctor_name'] as String?,
+      treatmentName: json['treatment_name'] as String?,
+      areaName: json['area_name'] as String?,
+      duration: json['duration'] as String?,
+      notes: json['notes'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'appointment_id': appointmentId,
+      'appointment_key': appointmentKey,
+      'doctor_name': doctorName,
+      'treatment_name': treatmentName,
+      'area_name': areaName,
+      'duration': duration,
+      'notes': notes,
+    };
+  }
 }
