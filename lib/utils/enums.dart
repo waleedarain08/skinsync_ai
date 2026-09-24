@@ -236,10 +236,15 @@ enum HomeSection {
 
 enum MessageType {
   text('text', 'Text'),
+  normal('normal', 'Normal'),
   media('media', 'Media'),
   document('document', 'Document'),
   sharedRequest('request', 'Shared Request'),
-  appointment('appointment', 'Appointment');
+  appointment('appointment', 'Appointment'),
+  planApproval('plan_approval', 'Plan Approval'),
+  treatmentInstructions('treatment_instructions', 'Treatment Instructions'),
+  sessionCompleted('session_completed', 'Session Completed'),
+  consentForm('consent_form', 'Consent Form');
 
   final String value;
   final String label;
@@ -250,7 +255,7 @@ enum MessageType {
     if (value == null) return MessageType.text;
     final val = value.toLowerCase();
     return MessageType.values.firstWhere(
-      (e) => e.value.toLowerCase() == val,
+          (e) => e.value.toLowerCase() == val,
       orElse: () => MessageType.text,
     );
   }

@@ -11,8 +11,9 @@ import '../../screens/appointment_detail_screen.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
+import '../../utils/enums.dart';
 import '../../view_models/appointment_view_model.dart';
-import '../borderd_container_widget.dart';
+import '../bordered_container_widget.dart';
 import '../custom_button.dart';
 
 // ---------------------------------------------------------------------------
@@ -98,6 +99,14 @@ class AppointmentChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMe = message.isMe;
     final appointment = message.appointmentData;
+    final apptStatus = AppointmentStatus.fromValue(appointment?.status);
+    final isInReview = apptStatus.isInReview ||
+        apptStatus.isChangesRequested ||
+        apptStatus.isAwaitingPatient;
+    final headerTitle =
+        isInReview ? 'Treatment Plan' : 'Appointment Receipt & Summary';
+    final buttonText =
+        isInReview ? 'View / Modify Treatment Plan' : 'View Appointment Details';
 
     return Container(
       constraints: BoxConstraints(maxWidth: context.w(340)),
@@ -146,7 +155,7 @@ class AppointmentChatBubble extends StatelessWidget {
                     context.horizontalSpace(8),
                     Expanded(
                       child: Text(
-                        'Appointment Receipt & Summary',
+                        headerTitle,
                         style: context.fonts.black14w600,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -205,7 +214,7 @@ class AppointmentChatBubble extends StatelessWidget {
             Consumer(
               builder: (_, ref, _) {
                 return CustomButton(
-                  text: 'View Appointment Details',
+                  text: buttonText,
                   height: context.h(48),
                   borderRadius: context.r(12),
                   onPressed: () {
@@ -238,7 +247,7 @@ class AppointmentChatBubble extends StatelessWidget {
     final patient = appt.patient;
     final patientName = patient?.name ?? 'Patient';
     final patientEmail = patient?.email ?? '';
-    final patientPhone = patient?.phoneNumber ?? '';
+    final patientPhone = patient?.phone ?? '';
     final bookingMethod = appt.bookingType?.toUpperCase() ?? '';
     final appointmentType = appt.appointmentType?.title ?? '';
 
@@ -248,12 +257,12 @@ class AppointmentChatBubble extends StatelessWidget {
     ].join(' | ');
 
     final dateStr =
-        appt.date != null ? DateTimeUtils.formatTimestamp(appt.date!) : '';
+    appt.date != null ? DateTimeUtils.formatTimestamp(appt.date!) : '';
     final timeSlot = appt.startTime != null && appt.endTime != null
         ? '${DateTimeUtils.formatTimestampToTime(appt.startTime!)} - ${DateTimeUtils.formatTimestampToTime(appt.endTime!)}'
         : appt.startTime != null
-            ? DateTimeUtils.formatTimestampToTime(appt.startTime!)
-            : '';
+        ? DateTimeUtils.formatTimestampToTime(appt.startTime!)
+        : '';
 
     return BorderdContainerWidget(
       padding: context.appEdgeInsets(all: 16),
@@ -348,9 +357,9 @@ class AppointmentChatBubble extends StatelessWidget {
   }
 
   Widget _buildPractitionersSection(BuildContext context, Doctor doctor) {
-    final docName = doctor.name ?? 'Doctor';
+    final docName = doctor.name;
     final roleOrSpec =
-        doctor.specialization ?? doctor.title ?? 'Practitioner';
+        doctor.specialization;
 
     return BorderdContainerWidget(
       padding: context.appEdgeInsets(all: 14),
@@ -393,7 +402,7 @@ class AppointmentChatBubble extends StatelessWidget {
   }
 
   Widget _buildTreatmentsSection(
-      BuildContext context, List<TreatmentDetail> treatments) {
+      BuildContext context, List<DetailedAppointmentTreatment> treatments) {
     return BorderdContainerWidget(
       padding: context.appEdgeInsets(all: 14),
       child: Column(
@@ -405,7 +414,7 @@ class AppointmentChatBubble extends StatelessWidget {
             final treatmentName = t.treatmentName ?? 'Treatment';
             final areaName = t.areaName;
             final cost = t.treatmentCost ?? 0.0;
-            final materialName = t.material?.materialName ?? t.material?.unitType;
+            final materialName = t.material?.name;
             final materialQty = t.material?.selectedQuantity;
             final sessionName = t.sessionName;
 
@@ -467,11 +476,11 @@ class AppointmentChatBubble extends StatelessWidget {
         : discountValue;
     const amountPaid = 0.0;
     final remainingPayable =
-        (total - discountAmount - amountPaid).clamp(0.0, double.infinity);
+    (total - discountAmount - amountPaid).clamp(0.0, double.infinity);
 
     final payment = appt.paymentType;
-    final paymentTypeStr = payment?.type?.toUpperCase() ?? 'N/A';
-    final paymentStatusStr = payment?.status?.toUpperCase() ?? 'N/A';
+    final paymentTypeStr = payment?.type.toUpperCase() ?? 'N/A';
+    final paymentStatusStr = payment?.status.toUpperCase() ?? 'N/A';
 
     return Container(
       decoration: BoxDecoration(
@@ -546,12 +555,12 @@ class AppointmentChatBubble extends StatelessWidget {
 
   Widget _buildSimulationsSection(BuildContext context, Simulations sims) {
     final simulationsMap = <String, String>{
-      'Front Before': sims.frontImageBefore ?? '',
-      'Front After': sims.frontImageAfter ?? '',
-      'Right Before': sims.rightImageBefore ?? '',
-      'Right After': sims.rightImageAfter ?? '',
-      'Left Before': sims.leftImageBefore ?? '',
-      'Left After': sims.leftImageAfter ?? '',
+      'Front Before': sims.frontImageBefore,
+      'Front After': sims.frontImageAfter,
+      'Right Before': sims.rightImageBefore,
+      'Right After': sims.rightImageAfter,
+      'Left Before': sims.leftImageBefore,
+      'Left After': sims.leftImageAfter,
     }..removeWhere((k, v) => v.trim().isEmpty);
 
     if (simulationsMap.isEmpty) return const SizedBox.shrink();
@@ -589,42 +598,42 @@ class AppointmentChatBubble extends StatelessWidget {
                         height: context.h(80),
                         child: url.startsWith('http')
                             ? CachedNetworkImage(
-                                imageUrl: url,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  color: AppColors.softGrey,
-                                  child: const Center(
-                                    child: SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: AppColors.palePurple,
-                                  child: const Icon(
-                                    Icons.broken_image_outlined,
-                                    size: 22,
-                                    color: AppColors.grey,
-                                  ),
-                                ),
-                              )
-                            : Image.asset(
-                                url,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  color: AppColors.palePurple,
-                                  child: const Icon(
-                                    Icons.broken_image_outlined,
-                                    size: 22,
-                                    color: AppColors.grey,
-                                  ),
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: AppColors.softGrey,
+                            child: const Center(
+                              child: SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
                                 ),
                               ),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.palePurple,
+                            child: const Icon(
+                              Icons.broken_image_outlined,
+                              size: 22,
+                              color: AppColors.grey,
+                            ),
+                          ),
+                        )
+                            : Image.asset(
+                          url,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                color: AppColors.palePurple,
+                                child: const Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 22,
+                                  color: AppColors.grey,
+                                ),
+                              ),
+                        ),
                       ),
                     ),
                     context.verticalSpace(6),

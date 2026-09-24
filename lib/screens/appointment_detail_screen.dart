@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 
 import '../models/responses/appointments_list_response.dart';
 import '../models/responses/appointment_detail_response.dart';
+import '../services/websocket_service.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
@@ -486,6 +489,7 @@ class _AppointmentDetailScreenState
                 ],
               ),
             ),
+      bottomNavigationBar: _buildBottomBar(detail),
     );
   }
 
@@ -696,6 +700,61 @@ class _AppointmentDetailScreenState
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+
+  Widget _buildBottomBar(AppointmentDetailData? detail) {
+    // final isInReview = detail?.status == AppointmentStatus.awaitingPatient.value;
+    // if (!isInReview) {
+    //   return const SizedBox.shrink();
+    // }
+    return Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: context.w(16),
+      vertical: context.h(12),
+    ),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.08),
+          blurRadius: 15,
+          offset: const Offset(0, -4),
+        ),
+      ],
+    ),
+    child: SafeArea(
+      child: SizedBox(
+        width: double.infinity,
+        height: context.h(52),
+        child: CustomButton(
+          onPressed: () async {
+            if (detail?.id != null) {
+              final success = await ref
+                  .read(appointmentProvider.notifier)
+                  .updateAppointmentStatus(
+                appointmentId: detail!.id!,
+                status: AppointmentStatus.confirmed.value,
+              );
+              if (success == true && detail.chatId != null) {
+                try {
+                  await WebSocketService().sendMessage(
+                    chatId: detail.chatId!,
+                    type: .planApproval,
+                    content: jsonEncode(detail.copyWith(status: AppointmentStatus.confirmed.value).toJson()),
+                  );
+                } catch (e) {
+                  debugPrint(
+                    'Failed to send approval chat message: $e',
+                  );
+                }
+              }
+            }
+          },
+          text: "Approve Treatment Plan",
+        ),
+      ),
+    ),
     );
   }
 

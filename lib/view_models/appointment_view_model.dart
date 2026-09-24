@@ -372,6 +372,31 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     );
   }
 
+  Future<bool?> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
+  }) async {
+    return await runSafely<bool?>(() async {
+      EasyLoading.show(status: 'Updating status...');
+
+      final response = await repo.updateAppointmentStatus(
+        appointmentId: appointmentId,
+        status: status,
+      );
+
+      if (response.isSuccess == true) {
+        await getAppointmentDetail(appointmentId);
+        EasyLoading.dismiss();
+        EasyLoading.showSuccess(response.message ?? "Status updated successfully");
+        return true;
+      }
+
+      EasyLoading.dismiss();
+      EasyLoading.showError(response.message ?? "Failed to update status");
+      return false;
+    });
+  }
+
   @override
   void onError(String message) {
     state = state.copyWith(loading: false, errorMessage: message);

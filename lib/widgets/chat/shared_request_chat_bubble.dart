@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../../models/responses/messages_response.dart';
-import '../../screens/patient_treatment_request_detail_screen.dart';
 import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 
@@ -74,11 +73,11 @@ class _SharedRequestChatBubbleState extends State<SharedRequestChatBubble> {
 
     return GestureDetector(
       onTap: () {
-        Navigator.pushNamed(
-          context,
-          PatientTreatmentRequestDetailScreen.routeName,
-          arguments: request.toSimulationData(),
-        );
+        // Navigator.pushNamed(
+        //   context,
+        //   TreatmentRequestDetailsScreen.routeName,
+        //   arguments: request.toSimulationData(),
+        // );
       },
       child: Container(
         constraints: BoxConstraints(maxWidth: context.w(340)),
@@ -172,7 +171,7 @@ class _SharedRequestChatBubbleState extends State<SharedRequestChatBubble> {
                     backgroundColor: CustomColors.lightPurpleColor,
                     child: Text(
                       request.patientName != null &&
-                              request.patientName!.isNotEmpty
+                          request.patientName!.isNotEmpty
                           ? request.patientName![0].toUpperCase()
                           : 'P',
                       style: TextStyle(
@@ -243,14 +242,14 @@ class _SharedRequestChatBubbleState extends State<SharedRequestChatBubble> {
                       else if (beforeUrl != null)
                         _buildImageWidget(beforeUrl)
                       else if (afterUrl != null)
-                        _buildImageWidget(afterUrl)
-                      else
-                        const Center(
-                          child: Text(
-                            'Image not available',
-                            style: TextStyle(color: Colors.grey),
+                          _buildImageWidget(afterUrl)
+                        else
+                          const Center(
+                            child: Text(
+                              'Image not available',
+                              style: TextStyle(color: Colors.grey),
+                            ),
                           ),
-                        ),
 
                       // BEFORE Badge
                       if (beforeUrl != null)

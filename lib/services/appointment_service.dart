@@ -124,10 +124,9 @@ class AppointmentService implements AppointmentRepository {
     }
     return data.data!;
   }
-   @override
-  Future<ScanQrResponse> scanQrCode({
-    required ScanQrRequest request,
-  })async {
+
+  @override
+  Future<ScanQrResponse> scanQrCode({required ScanQrRequest request}) async {
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.qrScan,
       requestType: .post,
@@ -140,10 +139,11 @@ class AppointmentService implements AppointmentRepository {
     }
     return data;
   }
-   @override
- Future<InstructionsResponse> postInstructions({
+
+  @override
+  Future<InstructionsResponse> postInstructions({
     required InstructionsRequest request,
-  })async {
+  }) async {
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.postInstructions,
       requestType: .post,
@@ -156,10 +156,11 @@ class AppointmentService implements AppointmentRepository {
     }
     return data;
   }
-   @override
-  Future<InstructionsResponse> preInstructions ({
+
+  @override
+  Future<InstructionsResponse> preInstructions({
     required InstructionsRequest request,
-  })async {
+  }) async {
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.preInstructions,
       requestType: .post,
@@ -172,28 +173,30 @@ class AppointmentService implements AppointmentRepository {
     }
     return data;
   }
-   @override
+
+  @override
   Future<PostTreatmentPhotosResponse> postTreatmentPhotos({
     required InstructionsRequest request,
-  })async {
+  }) async {
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.postTreatmentPhotos,
       requestType: .post,
       requestBody: request.toJson(),
       params: '',
     );
-    final data = PostTreatmentPhotosResponse.fromJson(jsonDecode(response.body));
+    final data = PostTreatmentPhotosResponse.fromJson(
+      jsonDecode(response.body),
+    );
     if (!(data.status ?? false)) {
       throw AppException(data.message ?? 'Something went wrong!');
     }
     return data;
   }
 
-
- @override
- Future<BaseResponseModel> updatePostTreatmentPhotos({
+  @override
+  Future<BaseResponseModel> updatePostTreatmentPhotos({
     required PostTreatmentPhotosRequest request,
-  })async {
+  }) async {
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.postTreatmentPhotos,
       requestType: .patch,
@@ -206,11 +209,12 @@ class AppointmentService implements AppointmentRepository {
     }
     return data;
   }
- @override
+
+  @override
   Future<BaseResponseModel> changePaymentStatus({
     required int appointmentId,
     required ChangePaymentStatusRequest request,
-  })async {
+  }) async {
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.appointments,
       requestType: .patch,
@@ -271,4 +275,74 @@ Future<PerTreatmentPhotosResponse> savePerTreatmentPhotos({
   );
 }
 
+@override
+Future<PerTreatmentPhotosResponse> getPerTreatmentPhotos({
+  required int appointmentId,
+}) async {
+  final response = await _apiClient.httpRequest(
+    endPoint: EndPoints.perTreatmentPhotos,
+    requestType: .get,
+    params: '?appointment_id=$appointmentId',
+  );
+
+  final data = PerTreatmentPhotosResponse.fromJson(
+    jsonDecode(response.body),
+  );
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    return data;
+  }
+
+  throw AppException(
+    data.message ?? 'Failed to fetch post-treatment photos',
+  );
+}
+
+@override
+Future<PerTreatmentPhotosResponse> savePerTreatmentPhotos({
+  required PerTreatmentPhotosRequest request,
+}) async {
+  final response = await _apiClient.httpRequest(
+    endPoint: EndPoints.perTreatmentPhotos,
+    requestType: .post,
+    requestBody: request.toJson(),
+    params: '',
+  );
+
+  final data = PerTreatmentPhotosResponse.fromJson(
+    jsonDecode(response.body),
+  );
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+    return data;
+  }
+
+  throw AppException(
+    data.message ?? 'Failed to save post-treatment photos',
+  );
+}
+
+  @override
+  Future<BaseResponseModel> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
+  }) async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.appointments,
+      requestType: .patch,
+      params: '/$appointmentId/status',
+      requestBody: {'status': status},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final parsed = json.decode(response.body);
+      return BaseResponseModel.fromJson(parsed);
+    } else {
+      final parsed = json.decode(response.body);
+      throw AppException(
+        BaseResponseModel.fromJson(parsed).message ??
+            "Failed to update appointment status",
+      );
+    }
+  }
 }

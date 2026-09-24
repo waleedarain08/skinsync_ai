@@ -28,24 +28,22 @@ abstract class AppointmentRepository {
   Future<AppointmentData> createAppointment({
     required AppointmentRequest request,
   });
-   Future<ScanQrResponse> scanQrCode({
-    required ScanQrRequest request,
-  });
-   Future<BaseResponseModel> changePaymentStatus({
+  Future<ScanQrResponse> scanQrCode({required ScanQrRequest request});
+  Future<BaseResponseModel> changePaymentStatus({
     required int appointmentId,
     required ChangePaymentStatusRequest request,
   });
 
-    Future<InstructionsResponse> preInstructions ({
+  Future<InstructionsResponse> preInstructions({
     required InstructionsRequest request,
   });
-    Future<InstructionsResponse> postInstructions({
+  Future<InstructionsResponse> postInstructions({
     required InstructionsRequest request,
   });
-   Future<PostTreatmentPhotosResponse> postTreatmentPhotos({
+  Future<PostTreatmentPhotosResponse> postTreatmentPhotos({
     required InstructionsRequest request,
   });
-   Future<BaseResponseModel> updatePostTreatmentPhotos({
+  Future<BaseResponseModel> updatePostTreatmentPhotos({
     required PostTreatmentPhotosRequest request,
   });
     Future<PerTreatmentPhotosResponse> getPerTreatmentPhotos({
@@ -54,5 +52,9 @@ abstract class AppointmentRepository {
 
   Future<PerTreatmentPhotosResponse> savePerTreatmentPhotos({
     required PerTreatmentPhotosRequest request,
+  });
+  Future<BaseResponseModel> updateAppointmentStatus({
+    required int appointmentId,
+    required String status,
   });
 }
