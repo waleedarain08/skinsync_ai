@@ -287,3 +287,58 @@ enum PlanInterval {
     return name.capitalize;
   }
 }
+
+enum AppointmentStatus {
+  inReview('in_review', 'In Review'),
+  changesRequested('changes_requested', 'Changes Requested'),
+  awaitingPatient('awaiting_patient', 'Awaiting Patient'),
+  confirmed('confirmed', 'Confirmed'),
+  pending('pending', 'Pending'),
+  scheduled('scheduled', 'Scheduled'),
+  rescheduled('rescheduled', 'Rescheduled'),
+  checked_in('checked_in', 'Checked In'),
+  in_progress('in_progress', 'In Progress'),
+  no_show('no_show', 'No Show'),
+  completed('completed', 'Completed'),
+  cancelled('cancelled', 'Cancelled');
+
+  final String value;
+  final String label;
+
+  const AppointmentStatus(this.value, this.label);
+
+  bool get isInReview =>
+      this == AppointmentStatus.inReview || this == AppointmentStatus.pending;
+  bool get isChangesRequested => this == AppointmentStatus.changesRequested;
+  bool get isAwaitingPatient => this == AppointmentStatus.awaitingPatient;
+  bool get isConfirmed => this == AppointmentStatus.confirmed;
+  bool get isPending => this == AppointmentStatus.pending;
+  bool get isCompleted => this == AppointmentStatus.completed;
+  bool get isCancelled => this == AppointmentStatus.cancelled;
+
+  static List<String> get valuesList =>
+      AppointmentStatus.values.map((e) => e.value).toList();
+
+  static AppointmentStatus fromValue(String? value) {
+    if (value == null) return AppointmentStatus.pending;
+    final val = value.toLowerCase().trim().replaceAll('-', '_');
+    switch (val) {
+      case 'in_review':
+        return AppointmentStatus.inReview;
+      case 'changes_requested':
+        return AppointmentStatus.changesRequested;
+      case 'awaiting_patient':
+        return AppointmentStatus.awaitingPatient;
+      case 'confirmed':
+        return AppointmentStatus.confirmed;
+      case 'completed':
+        return AppointmentStatus.completed;
+      case 'cancelled':
+      case 'canceled':
+        return AppointmentStatus.cancelled;
+      case 'pending':
+      default:
+        return AppointmentStatus.pending;
+    }
+  }
+}
