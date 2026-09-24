@@ -154,10 +154,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Instructions
-  // ---------------------------------------------------------------------------
-
+ 
   Future<void> preInstructions({required InstructionsRequest request}) async {
     return await runSafely(() async {
       state = state.copyWith(loading: true);
@@ -188,7 +185,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     required PostTreatmentPhotosRequest request,
     required InstructionsRequest insRequest,
   }) async {
-    final ok = await runSafely<bool>(() async {
+    final result = await runSafely<bool>(() async {
       state = state.copyWith(loading: true);
       final response = await repo.updatePostTreatmentPhotos(request: request);
       if (response.isSuccess != true) {
@@ -198,7 +195,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       state = state.copyWith(loading: false);
       return true;
     });
-    return ok ?? false;
+    return result ?? false;
   }
 
   /// Clears old data so another appointment's instructions never flash.
@@ -209,12 +206,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Image upload (shared)
-  // ---------------------------------------------------------------------------
-
-  /// Picks an image and uploads it to Firebase. Returns the download URL.
-  /// [folder] decides the Firebase storage sub-path.
+  
   Future<String?> uploadPostTreatmentImage({
     required ImageSource source,
     String folder = 'post-treatment-photos',
@@ -250,11 +242,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Post-treatment milestone photos
-  // ---------------------------------------------------------------------------
-
-  /// Sends already-uploaded Firebase URLs (saved + newly added) to the API.
+  
   Future<bool> submitMilestonePhotos({
     required int treatmentId,
     required int areaId,
@@ -270,7 +258,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       maskType: EasyLoadingMaskType.black,
     );
 
-    final ok = await updatPostTreatmentPhotos(
+    final result = await updatPostTreatmentPhotos(
       request: PostTreatmentPhotosRequest(
         appointmentId: insRequest.appointmentId,
         treatmentId: treatmentId,
@@ -287,14 +275,9 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     );
 
     // On failure, onError already dismissed the loader and showed the message.
-    if (ok) EasyLoading.showSuccess('Photos saved');
-    return ok;
+    if (result) EasyLoading.showSuccess('Photos saved');
+    return result;
   }
-
-  // ---------------------------------------------------------------------------
-  // Pre-treatment (doctor) photos
-  // ---------------------------------------------------------------------------
-
   Future<void> getPerTreatmentPhotos({required int appointmentId}) async {
     await runSafely(() async {
       state = state.copyWith(loading: true, errorMessage: null);
@@ -327,7 +310,6 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     return result ?? false;
   }
 
-  /// Uploads to Firebase first, then sends the URLs to savePerTreatmentPhotos.
   Future<bool> addPerTreatmentPhoto({
     required int appointmentId,
     required ImageSource source,
@@ -343,18 +325,17 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       maskType: EasyLoadingMaskType.black,
     );
 
-    final ok = await savePerTreatmentPhotos(
+    final result = await savePerTreatmentPhotos(
       request: PerTreatmentPhotosRequest(
         appointmentId: appointmentId, // adjust
         imageUrls: [...state.perTreatmentPhotos, url], // adjust
       ),
     );
 
-    if (ok) EasyLoading.showSuccess('Photo saved');
-    return ok;
+    if (result) EasyLoading.showSuccess('Photo saved');
+    return result;
   }
 
-  // ---------------------------------------------------------------------------
 
   void updateStatus(AppointmentStatusEvent event) {
     if (state.appointmentDetail == null) {
