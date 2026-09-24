@@ -24,12 +24,37 @@ enum LoginProviders {
 }
 
 enum AppointmentType {
-  consultation('consultation'),
-  treatment('Treatment session');
+  followUp('follow_up'),
+  treatment('treatment'),
+  consultation('consultation');
 
   final String typeText;
 
   const AppointmentType(this.typeText);
+
+  String get value => typeText;
+
+  static AppointmentType? fromString(String? value) {
+    switch (value?.toLowerCase()) {
+      case 'follow_up':
+      case 'followup':
+        return AppointmentType.followUp;
+      case 'treatment':
+      case 'treatment session':
+        return AppointmentType.treatment;
+      case 'consultation':
+        return AppointmentType.consultation;
+      default:
+        return null;
+    }
+  }
+}
+
+extension AppointmentTypeExtension on AppointmentType {
+  String get value => typeText;
+
+  static AppointmentType? fromString(String? value) =>
+      AppointmentType.fromString(value);
 }
 
 enum EndPoints {
@@ -85,6 +110,9 @@ enum EndPoints {
   qrScan('v1/qrscan'),
   clinic('v1/clinic'),
   chats('v1/chats'),
+  postTreatmentPhotos("v1/appointment/post-treatment-photos"),
+  postInstructions('v1/appointment/post-instructions'),
+  preInstructions('v1/appointment/pre-instructions'),
   messages('v1/chats/messages');
 
   final String path;
@@ -96,9 +124,9 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-   // apiQa('https://api-dev.skinsyncai.com/api/');
+   apiQa('https://api-dev.skinsyncai.com/api/');
 
-  apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
+ // apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);

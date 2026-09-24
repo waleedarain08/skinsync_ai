@@ -231,6 +231,7 @@ class DetailedAppointmentTreatment {
   double? treatmentCost;
   String? treatmentStatus;
   String? sessionName;
+  int? sessionId;
   AppointmentMaterial? material;
 
   DetailedAppointmentTreatment({
@@ -243,6 +244,7 @@ class DetailedAppointmentTreatment {
     this.treatmentStatus,
     this.sessionName,
     this.material,
+    this.sessionId
   });
 
   DetailedAppointmentTreatment.fromJson(Map<String, dynamic> json) {
@@ -254,6 +256,7 @@ class DetailedAppointmentTreatment {
     treatmentCost = (json['treatment_cost'] as num?)?.toDouble();
     treatmentStatus = json['treatment_status'];
     sessionName = json['session_name'];
+    sessionId = json['session_id'];
     material = json['material'] != null ? AppointmentMaterial.fromJson(json['material']) : null;
   }
 
@@ -267,6 +270,7 @@ class DetailedAppointmentTreatment {
     data['treatment_cost'] = treatmentCost;
     data['treatment_status'] = treatmentStatus;
     data['session_name'] = sessionName;
+    data['session_id'] = sessionId;
     if (material != null) {
       data['material'] = material!.toJson();
     }

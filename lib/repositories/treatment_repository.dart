@@ -32,5 +32,7 @@ abstract class TreatmentRepository {
   Future<TreatmentProgressDetailResponse> getTreatmentprogressDetail({
     required int progressID,
   });
-   Future<ClinicalJourneyResponse> getClinicalJourney();
+   Future<ClinicalJourneyResponse> getClinicalJourney(
+    {required int clinicId}
+   );
 }

@@ -1,11 +1,15 @@
 import '../models/requests/appointment_request.dart';
 import '../models/requests/change_payment_status_request.dart';
+import '../models/requests/instructions_request.dart';
+import '../models/requests/post_treatment_photos_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointment_response.dart';
 import '../models/responses/appointment_type_list_response.dart';
 import '../models/responses/appointments_list_response.dart';
 import '../models/responses/base_response_model.dart';
+import '../models/responses/instructions_response.dart';
+import '../models/responses/post_treatment_photos_response.dart';
 import '../models/responses/scan_qr_response.dart';
 import '../models/responses/simulation_history_response.dart';
 
@@ -28,5 +32,18 @@ abstract class AppointmentRepository {
    Future<BaseResponseModel> changePaymentStatus({
     required int appointmentId,
     required ChangePaymentStatusRequest request,
+  });
+
+    Future<InstructionsResponse> preInstructions ({
+    required InstructionsRequest request,
+  });
+    Future<InstructionsResponse> postInstructions({
+    required InstructionsRequest request,
+  });
+   Future<PostTreatmentPhotosResponse> postTreatmentPhotos({
+    required InstructionsRequest request,
+  });
+   Future<BaseResponseModel> updatePostTreatmentPhotos({
+    required PostTreatmentPhotosRequest request,
   });
 }

@@ -3,21 +3,28 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../exceptions/app_exception.dart';
 import '../models/base_state_model.dart';
 import '../models/requests/change_payment_status_request.dart';
+import '../models/requests/instructions_request.dart';
+import '../models/requests/post_treatment_photos_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointment_status_event.dart';
 import '../models/responses/appointment_type_list_response.dart';
 import '../models/responses/appointments_list_response.dart';
+import '../models/responses/instructions_response.dart';
+import '../models/responses/post_treatment_photos_response.dart';
 import '../models/responses/scan_qr_response.dart';
 import '../models/responses/simulation_history_response.dart';
 import '../repositories/appointment_repository.dart';
 import '../services/api_base_helper.dart';
 import '../services/appointment_service.dart';
 import '../services/encryption_service.dart';
+import '../services/media_service.dart';
+import 'auth_view_model.dart';
 import 'base_view_model.dart';
 
 final appointmentProvider =
@@ -146,6 +153,113 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     });
   }
 
+  Future<void> preInstructions({required InstructionsRequest request}) async {
+    return await runSafely(() async {
+      state = state.copyWith(loading: true);
+      final response = await repo.preInstructions(request: request);
+      state = state.copyWith(loading: false, preInstruction: response.data);
+    });
+  }
+
+  Future<void> postInstructions({required InstructionsRequest request}) async {
+    return await runSafely(() async {
+      state = state.copyWith(loading: true);
+      final response = await repo.postInstructions(request: request);
+      state = state.copyWith(loading: false, postInstruction: response.data);
+    });
+  }
+
+  Future<void> postTreatmentPhotos({
+    required InstructionsRequest request,
+  }) async {
+    return await runSafely(() async {
+      state = state.copyWith(loading: true);
+      final response = await repo.postTreatmentPhotos(request: request);
+      state = state.copyWith(loading: false, postTreatmentPhoto: response.data);
+    });
+  }
+
+  Future<bool> updatPostTreatmentPhotos({
+    required PostTreatmentPhotosRequest request,
+    required InstructionsRequest insRequest,
+  }) async {
+    final ok = await runSafely<bool>(() async {
+      state = state.copyWith(loading: true);
+      final response = await repo.updatePostTreatmentPhotos(request: request);
+      if (response.isSuccess != true) {
+        throw AppException(response.message ?? 'Failed to save photo');
+      }
+      await postTreatmentPhotos(request: insRequest);
+      state = state.copyWith(loading: false);
+      return true;
+    });
+    return ok ?? false;
+  }
+
+  /// Clears old data so another appointment's instructions never flash.
+  void clearTreatmentCare() {
+    state = state.copyWith(
+      postInstruction: const [],
+      postTreatmentPhoto: const [],
+    );
+  }
+
+  Future<void> uploadMilestonePhoto({
+    required ImageSource source,
+    required int treatmentId,
+    required int areaId,
+    required PhotoMilestone milestone,
+    required InstructionsRequest insRequest,
+  }) async {
+    final ok = await runSafely<bool>(() async {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        preferredCameraDevice: CameraDevice.front,
+      );
+      if (picked == null) return null;
+
+      EasyLoading.show(
+        status: 'Uploading photo...',
+        maskType: EasyLoadingMaskType.black, // blocks double taps
+      );
+
+      final email = ref.read(authViewModel).authData?.user?.primaryEmail;
+      if (email == null || email.isEmpty) {
+        throw const AppException('User email not found');
+      }
+
+      final url = await MediaService().uploadImage(
+        '$email/post-treatment-photos/${DateTime.now().millisecondsSinceEpoch}_${picked.name}',
+        picked,
+      );
+      if (url == null || url.isEmpty) {
+        throw const AppException('Failed to upload image');
+      }
+
+      final photos = [...milestone.uploadedPhotos, url];
+      final requiredPhotos = milestone.requiredPhotos ?? 0;
+
+      return await updatPostTreatmentPhotos(
+        request: PostTreatmentPhotosRequest(
+          appointmentId: insRequest.appointmentId,
+          treatmentId: treatmentId,
+          areaId: areaId,
+          photoMilestone: PhotoMilestoneRequest(
+            title: milestone.title ?? '',
+            isUpload: photos.length >= requiredPhotos,
+            numberOfDays: milestone.numberOfDays ?? 0,
+            requiredPhotos: requiredPhotos,
+            uploadedPhotos: photos,
+          ),
+        ),
+        insRequest: insRequest,
+      );
+    });
+
+    // On failure, onError already dismissed the loader and showed the message.
+    if (ok == true) EasyLoading.showSuccess('Photo uploaded');
+  }
+
   void updateStatus(AppointmentStatusEvent event) {
     if (state.appointmentDetail == null) {
       log('Appointment detail not found');
@@ -177,6 +291,9 @@ class AppointmentState extends BaseStateModel {
   final AppointmentsListResponse? appointmentsResponse;
   final AppointmentDetailData? appointmentDetail;
   final ScanQrResponse? scanQrResponse;
+  final List<InstructionData> preInstruction;
+  final List<InstructionData> postInstruction;
+  final List<PostTreatmentPhotoData> postTreatmentPhoto;
   const AppointmentState({
     super.loading = false,
     super.errorMessage,
@@ -185,6 +302,9 @@ class AppointmentState extends BaseStateModel {
     this.simulations = const [],
     this.appointmentsResponse,
     this.appointmentDetail,
+    this.preInstruction = const [],
+    this.postInstruction = const [],
+    this.postTreatmentPhoto = const [],
   });
 
   @override
@@ -196,6 +316,9 @@ class AppointmentState extends BaseStateModel {
     ScanQrResponse? scanQrResponse,
     AppointmentsListResponse? appointmentsResponse,
     AppointmentDetailData? appointmentDetail,
+    List<InstructionData>? preInstruction,
+    List<InstructionData>? postInstruction,
+    List<PostTreatmentPhotoData>? postTreatmentPhoto,
   }) {
     return AppointmentState(
       loading: loading ?? this.loading,
@@ -205,6 +328,9 @@ class AppointmentState extends BaseStateModel {
       appointmentsResponse: appointmentsResponse ?? this.appointmentsResponse,
       appointmentDetail: appointmentDetail ?? this.appointmentDetail,
       scanQrResponse: scanQrResponse ?? this.scanQrResponse,
+      preInstruction: preInstruction ?? this.preInstruction,
+      postInstruction: postInstruction ?? this.postInstruction,
+      postTreatmentPhoto: postTreatmentPhoto ?? this.postTreatmentPhoto,
     );
   }
 }

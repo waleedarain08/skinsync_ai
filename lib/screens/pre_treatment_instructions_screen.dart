@@ -7,13 +7,14 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/requests/instructions_request.dart';
 import '../models/responses/appointment_detail_response.dart';
-import '../models/responses/doctor_treatment_photo_model.dart';
-import '../models/responses/pre_treatment_instruction_model.dart';
+import '../models/responses/instructions_response.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
 import '../utils/string_utils.dart';
-import '../view_models/pre_treatment_instruction_view_model.dart';
+import '../view_models/appointment_view_model.dart';
+import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/image_source_dialog.dart';
@@ -28,58 +29,57 @@ class PreTreatmentInstructionsScreen extends ConsumerStatefulWidget {
   ConsumerState<PreTreatmentInstructionsScreen> createState() => _PreTreatmentInstructionsScreenState();
 }
 
-class _PreTreatmentInstructionsScreenState extends ConsumerState<PreTreatmentInstructionsScreen> {
-   File? pickedImage;
+class _PreTreatmentInstructionsScreenState
+    extends ConsumerState<PreTreatmentInstructionsScreen> {
+  File? pickedImage;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_load);
+  }
+
+  InstructionsRequest? _buildRequest() {
+    final appointmentId = ref.read(appointmentProvider).appointmentDetail?.id;
+    if (appointmentId == null) return null;
+
+    final sessionIds = (widget.treatments ?? [])
+        .map((t) => t.sessionId) // <-- adjust to your real field name
+        .whereType<int>()
+        .toSet()
+        .toList();
+
+    return InstructionsRequest(
+      appointmentId: appointmentId,
+      sessionIds: sessionIds,
+    );
+  }
+
+  Future<void> _load() async {
+    final request = _buildRequest();
+    if (request != null) {
+      await ref
+          .read(appointmentProvider.notifier)
+          .preInstructions(request: request);
+    }
+    if (mounted) setState(() => _loaded = true);
+  }
+
+  List<String> _parseInstructions(String? raw) {
+    if (raw == null) return [];
+    return raw
+        .split('\n')
+        .map((l) => l.replaceFirst(RegExp(r'^\s*[•\-*]\s*'), '').trim())
+        .where((l) => l.isNotEmpty)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final instructionState = ref.watch(preTreatmentInstructionProvider);
-    final allInstructions = instructionState.instructions;
-
-    final itemsToShow = <PreTreatmentInstructionItem>[];
-    if (widget.treatments != null && widget.treatments!.isNotEmpty) {
-      for (var t in widget.treatments!) {
-        final match = allInstructions.firstWhere(
-          (item) {
-            final tNameMatch =
-                item.treatmentName.toLowerCase().contains(
-                      (t.treatmentName ?? '').toLowerCase(),
-                    ) ||
-                (t.treatmentName ?? '').toLowerCase().contains(
-                      item.treatmentName.toLowerCase(),
-                    );
-            final areaMatch = t.areaName == null ||
-                t.areaName!.isEmpty ||
-                (item.areaName ?? '').toLowerCase().contains(
-                      t.areaName!.toLowerCase(),
-                    ) ||
-                t.areaName!.toLowerCase().contains(
-                      (item.areaName ?? '').toLowerCase(),
-                    );
-            return tNameMatch && areaMatch;
-          },
-          orElse: () => PreTreatmentInstructionItem(
-            treatmentId: t.treatmentId ?? 0,
-            treatmentName: t.treatmentName ?? "Treatment Care",
-            areaName: t.areaName,
-            preTreatmentInstructions:
-                "• Avoid blood thinners and alcohol 24-48 hours before.\n• Keep treatment area clean and unblemished prior to arrival.",
-            doctorPhotos: [
-              DoctorTreatmentPhoto(
-                id: "dp_pre_1",
-                url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
-                title: "${t.treatmentName ?? 'Treatment'} Baseline Frontal View",
-                doctorName: "Dr. Sarah Johnson",
-                dateTaken: DateTime.now().subtract(const Duration(days: 2)),
-                note: "Pre-procedure facial mapping photo.",
-              ),
-            ],
-          ),
-        );
-        itemsToShow.add(match);
-      }
-    } else {
-      itemsToShow.addAll(allInstructions);
-    }
+    final instructions = ref.watch(
+      appointmentProvider.select((s) => s.preInstruction),
+    );
 
     return DefaultTabController(
       length: 2,
@@ -107,27 +107,43 @@ class _PreTreatmentInstructionsScreenState extends ConsumerState<PreTreatmentIns
               child: TabBarView(
                 children: [
                   // Tab 1: Guidelines List
-                  SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      context.w(20),
-                      context.h(10),
-                      context.w(20),
-                      context.h(20),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTopBanner(context),
-                        SizedBox(height: context.h(24)),
-                        ...itemsToShow.map(
-                          (item) => _buildInstructionCard(context, item: item),
+                  !_loaded
+                      ? const AppLoader()
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            context.w(20),
+                            context.h(10),
+                            context.w(20),
+                            context.h(20),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTopBanner(context),
+                              SizedBox(height: context.h(24)),
+                              if (instructions.isEmpty)
+                                Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: context.h(40),
+                                    ),
+                                    child: Text(
+                                      "No instructions available.",
+                                      style: CustomFonts.grey16w500,
+                                    ),
+                                  ),
+                                )
+                              else
+                                ...instructions.map(
+                                  (item) =>
+                                      _buildInstructionCard(context, item: item),
+                                ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                  ),
 
-                  // Tab 2: Doctor Photos
+                  // Tab 2: Doctor Photos (unchanged)
                   SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
@@ -136,7 +152,7 @@ class _PreTreatmentInstructionsScreenState extends ConsumerState<PreTreatmentIns
                       context.w(20),
                       context.h(20),
                     ),
-                     child: _buildPickImageCard(context),
+                    child: _buildPickImageCard(context),
                   ),
                 ],
               ),
@@ -158,7 +174,6 @@ class _PreTreatmentInstructionsScreenState extends ConsumerState<PreTreatmentIns
       ),
     );
   }
-
 Widget _buildPickImageCard(BuildContext context) {
   return InkWell(
     onTap: () async {
@@ -316,10 +331,10 @@ Widget _buildPickImageCard(BuildContext context) {
   // }
 
   Widget _buildInstructionCard(
-    BuildContext context, {
-    required PreTreatmentInstructionItem item,
-  }) {
-    final instructions = item.parsedPreInstructions;
+  BuildContext context, {
+  required InstructionData item,
+}) {
+  final instructions = _parseInstructions(item.preTreatmentInstructions);
 
     return Container(
       margin: EdgeInsets.only(bottom: context.h(24)),
@@ -343,7 +358,7 @@ Widget _buildPickImageCard(BuildContext context) {
               SizedBox(width: context.w(10)),
               Expanded(
                 child: Text(
-                  item.treatmentName.capitalize,
+                  item.treatmentName?.capitalize ?? 'N/A',
                   style: CustomFonts.black18w600,
                 ),
               ),
@@ -606,21 +621,22 @@ Widget _buildPickImageCard(BuildContext context) {
   //   );
   // }
 
-  Widget _buildAttachmentChip(
-    BuildContext context,
-    InstructionAttachment att,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          if (att.url.isNotEmpty) {
-            final uri = Uri.parse(att.url);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
+ Widget _buildAttachmentChip(
+  BuildContext context,
+  PreTreatmentAttachment att,
+) {
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: () async {
+        final url = att.url;
+        if (url != null && url.isNotEmpty) {
+          final uri = Uri.parse(url);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
           }
-        },
+        }
+      },
         borderRadius: BorderRadius.circular(context.r(12)),
         child: Container(
           padding: EdgeInsets.symmetric(
@@ -645,7 +661,7 @@ Widget _buildPickImageCard(BuildContext context) {
               SizedBox(width: context.w(6)),
               Flexible(
                 child: Text(
-                  att.name,
+                  att.name?.capitalize ?? 'N/A',
                   style: CustomFonts.black12w600.copyWith(
                     color: CustomColors.darkPurple,
                   ),

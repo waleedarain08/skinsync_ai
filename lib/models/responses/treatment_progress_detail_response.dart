@@ -1,36 +1,7 @@
+import '../../utils/enums.dart';
 import 'base_response_model.dart';
 
-enum AppointmentType {
-  followUp,
-  treatment,
-  consultation,
-}
-
-extension AppointmentTypeExtension on AppointmentType {
-  String get value {
-    switch (this) {
-      case AppointmentType.followUp:
-        return 'follow_up';
-      case AppointmentType.treatment:
-        return 'treatment';
-      case AppointmentType.consultation:
-        return 'consultation';
-    }
-  }
-
-  static AppointmentType? fromString(String? value) {
-    switch (value) {
-      case 'follow_up':
-        return AppointmentType.followUp;
-      case 'treatment':
-        return AppointmentType.treatment;
-      case 'consultation':
-        return AppointmentType.consultation;
-      default:
-        return null;
-    }
-  }
-}
+export '../../utils/enums.dart' show AppointmentType, AppointmentTypeExtension;
 
 class TreatmentProgressDetailResponse extends BaseResponseModel {
   final TreatmentProgressDetailData? data;
@@ -53,15 +24,6 @@ class TreatmentProgressDetailResponse extends BaseResponseModel {
             )
           : null,
     );
-  }
-
-  @override
-  Map<String, dynamic> toJson() {
-    return {
-      'is_success': isSuccess,
-      'message': message,
-      'data': data?.toJson(),
-    };
   }
 }
 

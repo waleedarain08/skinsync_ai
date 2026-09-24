@@ -361,10 +361,10 @@ Future<List<TreatmentProgressData>?> getTreatmentProgress({
     return response;
   }
 
- Future<ClinicalJourneyResponse?> getClinicalJourney() async {
+ Future<ClinicalJourneyResponse?> getClinicalJourney({required int clinicId}) async {
     final response =  await runSafely(() async {
       state = state.copyWith(loading: true);
-      final res= await _repo.getClinicalJourney();
+      final res= await _repo.getClinicalJourney(clinicId: clinicId);
         if (!ref.mounted) return null;
       state = state.copyWith(loading: false, clinicJourneyResonse: res);
       return res;
