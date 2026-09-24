@@ -1,23 +1,37 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 
-import '../models/requests/instructions_request.dart';
 import '../models/responses/appointment_detail_response.dart';
-import '../models/responses/post_treatment_photos_response.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
-import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/image_source_dialog.dart';
-import '../widgets/instruction_card_widget.dart';
+// API-driven imports, not used while instructions and milestones are static:
+// import 'package:flutter_easyloading/flutter_easyloading.dart';
+// import '../models/requests/instructions_request.dart';
+// import '../models/responses/post_treatment_photos_response.dart';
+// import '../utils/string_utils.dart';
+// import '../widgets/instruction_card_widget.dart';
+
+/// Static milestone definition (replaces PhotoMilestone from the API for now).
+class _StaticMilestone {
+  final String title;
+  final int numberOfDays;
+  final int requiredPhotos;
+
+  const _StaticMilestone({
+    required this.title,
+    required this.numberOfDays,
+    required this.requiredPhotos,
+  });
+}
 
 class PostTreatmentInstructionsScreen extends ConsumerStatefulWidget {
   static const String routeName = "/PostTreatmentInstructionsScreen";
@@ -32,11 +46,45 @@ class PostTreatmentInstructionsScreen extends ConsumerStatefulWidget {
 
 class _PostTreatmentInstructionsScreenState
     extends ConsumerState<PostTreatmentInstructionsScreen> {
+  // ---------------- Static content ----------------
+
+  static const String _staticInstructionsTitle = "Post-Treatment Instructions";
+  static const List<String> _staticInstructions = [
+    "Temporary swelling, tenderness, firmness, bruising, redness, itching, or mild discomfort may occur after treatment. Follow all aftercare instructions provided by your treating provider.",
+    "Avoid applying makeup for 12 hours after treatment. For the first 24 hours, minimize strenuous exercise, extensive sun or heat exposure, and alcoholic beverages, as these may increase temporary redness, swelling, or itching.",
+    "Avoid unnecessary pressure or manipulation of the treated temple area unless specifically directed by your provider. Contact your clinic if you experience symptoms that are concerning, worsening, unusual, or persistent.",
+    "Seek immediate medical attention if you experience changes in vision, unusual or severe pain, whitening or blanching of the skin, or symptoms suggestive of a stroke. These can be signs of a rare but serious complication associated with dermal filler treatment.",
+    "Keep all recommended follow-up appointments and submit post-treatment photos through SkinSync when requested so your provider can monitor your treatment progress.",
+  ];
+
+  // TODO: adjust days / photo counts to your clinic's real milestones.
+  static const List<_StaticMilestone> _staticMilestones = [
+    _StaticMilestone(
+      title: "Day 2 Post-Treatment",
+      numberOfDays: 2,
+      requiredPhotos: 2,
+    ),
+    _StaticMilestone(
+      title: "Day 5 Post-Treatment",
+      numberOfDays: 5,
+      requiredPhotos: 1,
+    ),
+    _StaticMilestone(
+      title: "Day 14 Follow-Up Result",
+      numberOfDays: 14,
+      requiredPhotos: 2,
+    ),
+  ];
+
   bool _loaded = false;
+
+  /// Photos picked + uploaded to Firebase, waiting for the Upload button.
   final Map<String, List<String>> _pending = {};
 
-  String _milestoneKey(PostTreatmentPhotoData item, PhotoMilestone m) =>
-      '${item.treatmentId}_${item.areaId}_${m.numberOfDays}_${m.title}';
+  /// Photos "submitted" locally (stands in for photos saved on the server).
+  final Map<String, List<String>> _uploaded = {};
+
+  String _milestoneKey(_StaticMilestone m) => '${m.numberOfDays}_${m.title}';
 
   @override
   void initState() {
@@ -44,33 +92,35 @@ class _PostTreatmentInstructionsScreenState
     Future.microtask(_load);
   }
 
-  InstructionsRequest? _buildRequest() {
-    final appointmentId = ref.read(appointmentProvider).appointmentDetail?.id;
-    if (appointmentId == null) return null;
-
-    final sessionIds = (widget.treatments ?? [])
-        .map((t) => t.sessionId) // <-- adjust to your real field name
-        .whereType<int>()
-        .toSet()
-        .toList();
-
-    return InstructionsRequest(
-      appointmentId: appointmentId,
-      sessionIds: sessionIds,
-    );
-  }
-
   Future<void> _load() async {
-    final request = _buildRequest();
-    if (request != null) {
-      final vm = ref.read(appointmentProvider.notifier);
-      vm.clearTreatmentCare();
-      await vm.postInstructions(request: request);
-      if (!mounted) return;
-      await vm.postTreatmentPhotos(request: request);
-    }
+    // Instructions and milestones are static, so nothing to fetch.
+    //
+    // final request = _buildRequest();
+    // if (request != null) {
+    //   final vm = ref.read(appointmentProvider.notifier);
+    //   vm.clearTreatmentCare();
+    //   await vm.postInstructions(request: request);
+    //   if (!mounted) return;
+    //   await vm.postTreatmentPhotos(request: request);
+    // }
     if (mounted) setState(() => _loaded = true);
   }
+
+  // InstructionsRequest? _buildRequest() {
+  //   final appointmentId = ref.read(appointmentProvider).appointmentDetail?.id;
+  //   if (appointmentId == null) return null;
+  //
+  //   final sessionIds = (widget.treatments ?? [])
+  //       .map((t) => t.sessionId)
+  //       .whereType<int>()
+  //       .toSet()
+  //       .toList();
+  //
+  //   return InstructionsRequest(
+  //     appointmentId: appointmentId,
+  //     sessionIds: sessionIds,
+  //   );
+  // }
 
   Future<void> _onPickPhoto({required String key}) async {
     final source = await showImageSourceDialog(context, showGallery: false);
@@ -84,51 +134,39 @@ class _PostTreatmentInstructionsScreenState
     setState(() => _pending.putIfAbsent(key, () => []).add(url));
   }
 
-  Future<void> _onSubmit({
-    required PostTreatmentPhotoData item,
-    required PhotoMilestone milestone,
-    required String key,
-  }) async {
-    final request = _buildRequest();
-    final treatmentId = item.treatmentId;
-    final areaId = item.areaId;
-    if (request == null || treatmentId == null || areaId == null) {
-      EasyLoading.showError('Missing treatment details');
-      return;
-    }
-
+  Future<void> _onSubmit({required String key}) async {
     final pending = List<String>.from(_pending[key] ?? const []);
     if (pending.isEmpty) return;
 
-    final ok = await ref
-        .read(appointmentProvider.notifier)
-        .submitMilestonePhotos(
-          treatmentId: treatmentId,
-          areaId: areaId,
-          milestone: milestone,
-          newPhotos: pending,
-          insRequest: request,
-        );
+    // Milestone photos API disabled for now.
+    // final request = _buildRequest();
+    // final ok = await ref
+    //     .read(appointmentProvider.notifier)
+    //     .submitMilestonePhotos(
+    //       treatmentId: treatmentId,
+    //       areaId: areaId,
+    //       milestone: milestone,
+    //       newPhotos: pending,
+    //       insRequest: request,
+    //     );
+    // if (!ok) return;
 
-    if (ok && mounted) setState(() => _pending.remove(key));
+    if (!mounted) return;
+    setState(() {
+      _uploaded.putIfAbsent(key, () => []).addAll(pending);
+      _pending.remove(key);
+    });
   }
-  // List<String> _parseInstructions(String? raw) {
-  //   if (raw == null) return [];
-  //   return raw
-  //       .split('\n')
-  //       .map((l) => l.replaceFirst(RegExp(r'^\s*[•\-*]\s*'), '').trim())
-  //       .where((l) => l.isNotEmpty)
-  //       .toList();
-  // }
 
   @override
   Widget build(BuildContext context) {
-    final instructions = ref.watch(
-      appointmentProvider.select((s) => s.postInstruction),
-    );
-    final photoItems = ref.watch(
-      appointmentProvider.select((s) => s.postTreatmentPhoto),
-    );
+    // API-driven data, replaced by the static content above.
+    // final instructions = ref.watch(
+    //   appointmentProvider.select((s) => s.postInstruction),
+    // );
+    // final photoItems = ref.watch(
+    //   appointmentProvider.select((s) => s.postTreatmentPhoto),
+    // );
 
     return DefaultTabController(
       length: 2,
@@ -157,22 +195,13 @@ class _PostTreatmentInstructionsScreenState
                 children: [
                   _buildTab(
                     banner: _buildTopBanner(context),
-                    emptyText: "No post-treatment instructions available.",
-                    children: [
-                      for (final item in instructions)
-                        InstructionCard(
-                          item: item,
-                          rawInstructions: item.instructions, // see note below
-                          attachmentsLabel: "AFTERCARE ATTACHMENTS",
-                        ),
-                    ],
+                    children: [_buildStaticInstructionsCard(context)],
                   ),
                   _buildTab(
                     banner: _buildTopBannerPhotos(context),
-                    emptyText: "No photo milestones required.",
                     children: [
-                      for (final item in photoItems)
-                        _buildTreatmentPhotoSection(context, item: item),
+                      for (final m in _staticMilestones)
+                        _buildMilestoneCard(context, milestone: m),
                     ],
                   ),
                 ],
@@ -196,11 +225,7 @@ class _PostTreatmentInstructionsScreenState
     );
   }
 
-  Widget _buildTab({
-    required Widget banner,
-    required String emptyText,
-    required List<Widget> children,
-  }) {
+  Widget _buildTab({required Widget banner, required List<Widget> children}) {
     if (!_loaded) return const AppLoader();
 
     return SingleChildScrollView(
@@ -213,32 +238,23 @@ class _PostTreatmentInstructionsScreenState
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          banner,
-          SizedBox(height: context.h(24)),
-          if (children.isEmpty)
-            Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: context.h(40)),
-                child: Text(emptyText, style: CustomFonts.grey16w500),
-              ),
-            )
-          else
-            ...children,
-        ],
+        children: [banner, SizedBox(height: context.h(24)), ...children],
       ),
     );
   }
 
-  // ---------------- Photos tab ----------------
+  // ---------------- Guidelines tab (static) ----------------
 
-  Widget _buildTreatmentPhotoSection(
-    BuildContext context, {
-    required PostTreatmentPhotoData item,
-  }) {
-    final areaName = item.areaName;
+  Widget _buildStaticInstructionsCard(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: context.h(24)),
+      width: double.infinity,
+      padding: EdgeInsets.all(context.w(20)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(context.r(24)),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        boxShadow: CustomColors.cardShadow,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -251,7 +267,7 @@ class _PostTreatmentInstructionsScreenState
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Iconsax.mask,
+                  Iconsax.clipboard_tick,
                   color: CustomColors.darkPurple,
                   size: context.sp(18),
                 ),
@@ -259,48 +275,42 @@ class _PostTreatmentInstructionsScreenState
               SizedBox(width: context.w(10)),
               Expanded(
                 child: Text(
-                  (item.treatmentName ?? 'Treatment').capitalize,
+                  _staticInstructionsTitle,
                   style: CustomFonts.black18w600,
                 ),
               ),
-              if (areaName != null && areaName.isNotEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.w(10),
-                    vertical: context.h(4),
-                  ),
-                  decoration: BoxDecoration(
-                    color: CustomColors.darkPurple.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(context.r(12)),
-                  ),
-                  child: Text(
-                    areaName,
-                    style: CustomFonts.black12w600.copyWith(
-                      color: CustomColors.darkPurple,
-                    ),
-                  ),
-                ),
             ],
           ),
-          SizedBox(height: context.h(12)),
-          ...item.photoMilestone.map(
-            (m) => _buildMilestoneCard(context, item: item, milestone: m),
-          ),
+          SizedBox(height: context.h(16)),
+          for (int i = 0; i < _staticInstructions.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: context.h(12)),
+                child: const Divider(color: CustomColors.greyColor, height: 1),
+              ),
+            Text(
+              _staticInstructions[i],
+              style: CustomFonts.black14w600.copyWith(
+                height: 1.45,
+                color: Colors.black87,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
+  // ---------------- Photos tab (static milestones) ----------------
+
   Widget _buildMilestoneCard(
     BuildContext context, {
-    required PostTreatmentPhotoData item,
-    required PhotoMilestone milestone,
+    required _StaticMilestone milestone,
   }) {
-    final requiredPhotos = milestone.requiredPhotos ?? 0;
-    final uploaded = milestone.uploadedPhotos; // already saved on the server
-    final key = _milestoneKey(item, milestone);
-    final pending =
-        _pending[key] ?? const <String>[]; // on Firebase, not saved yet
+    final requiredPhotos = milestone.requiredPhotos;
+    final key = _milestoneKey(milestone);
+    final uploaded = _uploaded[key] ?? const <String>[];
+    final pending = _pending[key] ?? const <String>[];
     final isCompleted = requiredPhotos > 0 && uploaded.length >= requiredPhotos;
 
     Widget networkImage(String url) => CachedNetworkImage(
@@ -321,7 +331,7 @@ class _PostTreatmentInstructionsScreenState
     );
 
     Widget slot(int index) {
-      // 1) Saved on the server
+      // 1) Already submitted
       if (index < uploaded.length) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(context.r(16)),
@@ -431,12 +441,9 @@ class _PostTreatmentInstructionsScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text(milestone.title, style: CustomFonts.black16w700),
                           Text(
-                            milestone.title ?? 'Milestone',
-                            style: CustomFonts.black16w700,
-                          ),
-                          Text(
-                            "Day ${milestone.numberOfDays ?? 0} After Treatment • $requiredPhotos Photo(s) Required",
+                            "Day ${milestone.numberOfDays} After Treatment • $requiredPhotos Photo(s) Required",
                             style: CustomFonts.grey12w400,
                           ),
                         ],
@@ -492,249 +499,42 @@ class _PostTreatmentInstructionsScreenState
               textColor: Colors.white,
               onPressed: (isCompleted || pending.isEmpty)
                   ? null
-                  : () => _onSubmit(item: item, milestone: milestone, key: key),
+                  : () => _onSubmit(key: key),
             ),
           ),
         ],
       ),
     );
   }
-  // ---------------- Guidelines tab ----------------
 
-  // Widget _buildInstructionCard(
-  //   BuildContext context, {
-  //   required InstructionData item,
-  // }) {
-  //   final instructions = _parseInstructions(item.preTreatmentInstructions);
-  //   final areaName = item.areaName;
-
-  //   return Container(
-  //     margin: EdgeInsets.only(bottom: context.h(24)),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           children: [
-  //             Container(
-  //               padding: EdgeInsets.all(context.w(6)),
-  //               decoration: BoxDecoration(
-  //                 color: CustomColors.purpleColor.withValues(alpha: 0.15),
-  //                 shape: BoxShape.circle,
-  //               ),
-  //               child: Icon(
-  //                 Iconsax.mask,
-  //                 color: CustomColors.darkPurple,
-  //                 size: context.sp(18),
-  //               ),
-  //             ),
-  //             SizedBox(width: context.w(10)),
-  //             Expanded(
-  //               child: Text(
-  //                 (item.treatmentName ?? 'Treatment').capitalize,
-  //                 style: CustomFonts.black18w600,
-  //               ),
-  //             ),
-  //             if (areaName != null && areaName.isNotEmpty)
-  //               Container(
-  //                 padding: EdgeInsets.symmetric(
-  //                   horizontal: context.w(10),
-  //                   vertical: context.h(4),
-  //                 ),
-  //                 decoration: BoxDecoration(
-  //                   color: CustomColors.darkPurple.withValues(alpha: 0.08),
-  //                   borderRadius: BorderRadius.circular(context.r(12)),
-  //                 ),
-  //                 child: Text(
-  //                   areaName,
-  //                   style: CustomFonts.black12w600.copyWith(
-  //                     color: CustomColors.darkPurple,
-  //                   ),
-  //                 ),
-  //               ),
-  //           ],
-  //         ),
-  //         SizedBox(height: context.h(12)),
-  //         Container(
-  //           padding: EdgeInsets.all(context.w(20)),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white,
-  //             borderRadius: BorderRadius.circular(context.r(24)),
-  //             border: Border.all(color: Colors.grey.shade200, width: 1.5),
-  //             boxShadow: CustomColors.cardShadow,
-  //           ),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               for (int i = 0; i < instructions.length; i++) ...[
-  //                 if (i > 0)
-  //                   Padding(
-  //                     padding: EdgeInsets.symmetric(vertical: context.h(10)),
-  //                     child: const Divider(
-  //                       color: CustomColors.greyColor,
-  //                       height: 1,
-  //                     ),
-  //                   ),
-  //                 Row(
-  //                   crossAxisAlignment: CrossAxisAlignment.start,
-  //                   children: [
-  //                     Container(
-  //                       padding: EdgeInsets.all(context.w(6)),
-  //                       decoration: BoxDecoration(
-  //                         color: CustomColors.darkPurple.withValues(alpha: 0.1),
-  //                         shape: BoxShape.circle,
-  //                       ),
-  //                       child: Icon(
-  //                         Icons.check_circle_rounded,
-  //                         color: CustomColors.darkPurple,
-  //                         size: context.sp(16),
-  //                       ),
-  //                     ),
-  //                     SizedBox(width: context.w(12)),
-  //                     Expanded(
-  //                       child: Text(
-  //                         instructions[i],
-  //                         style: CustomFonts.black14w600.copyWith(
-  //                           height: 1.35,
-  //                           color: Colors.black87,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ],
-  //               if (item.preTreatmentAttachments.isNotEmpty) ...[
-  //                 SizedBox(height: context.h(16)),
-  //                 const Divider(color: CustomColors.greyColor, height: 1),
-  //                 SizedBox(height: context.h(12)),
-  //                 Text(
-  //                   "AFTERCARE ATTACHMENTS",
-  //                   style: CustomFonts.darkPurple10w700.copyWith(
-  //                     letterSpacing: 1.0,
-  //                   ),
-  //                 ),
-  //                 SizedBox(height: context.h(8)),
-  //                 Wrap(
-  //                   spacing: context.w(8),
-  //                   runSpacing: context.h(8),
-  //                   children: item.preTreatmentAttachments
-  //                       .map((att) => _buildAttachmentChip(context, att))
-  //                       .toList(),
-  //                 ),
-  //               ],
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildAttachmentChip(
-  //   BuildContext context,
-  //   PreTreatmentAttachment att,
-  // ) {
-  //   return Material(
-  //     color: Colors.transparent,
-  //     child: InkWell(
-  //       onTap: () async {
-  //         final url = att.url;
-  //         if (url != null && url.isNotEmpty) {
-  //           final uri = Uri.parse(url);
-  //           if (await canLaunchUrl(uri)) {
-  //             await launchUrl(uri, mode: LaunchMode.externalApplication);
-  //           }
-  //         }
-  //       },
-  //       borderRadius: BorderRadius.circular(context.r(12)),
-  //       child: Container(
-  //         padding: EdgeInsets.symmetric(
-  //           horizontal: context.w(12),
-  //           vertical: context.h(8),
-  //         ),
-  //         decoration: BoxDecoration(
-  //           color: CustomColors.darkPurple.withValues(alpha: 0.08),
-  //           borderRadius: BorderRadius.circular(context.r(12)),
-  //           border: Border.all(
-  //             color: CustomColors.darkPurple.withValues(alpha: 0.2),
-  //           ),
-  //         ),
-  //         child: Row(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: [
-  //             Icon(
-  //               Iconsax.document_download,
-  //               size: context.sp(16),
-  //               color: CustomColors.darkPurple,
-  //             ),
-  //             SizedBox(width: context.w(6)),
-  //             Flexible(
-  //               child: Text(
-  //                 att.name ?? 'Attachment',
-  //                 style: CustomFonts.black12w600.copyWith(
-  //                   color: CustomColors.darkPurple,
-  //                 ),
-  //                 overflow: TextOverflow.ellipsis,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
+  // ---------------- Banners ----------------
 
   Widget _buildTopBanner(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(context.w(20)),
-      decoration: BoxDecoration(
-        gradient: CustomColors.purpleBlueGradient,
-        borderRadius: BorderRadius.circular(context.r(24)),
-        boxShadow: CustomColors.cardShadow,
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(context.w(12)),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.35),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-                width: 1.5,
-              ),
-            ),
-            child: Icon(
-              Iconsax.clipboard_tick,
-              color: CustomColors.blackColor,
-              size: context.sp(26),
-            ),
-          ),
-          SizedBox(width: context.w(14)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Post-Treatment Recovery Care",
-                  style: CustomFonts.black18w600,
-                ),
-                SizedBox(height: context.h(4)),
-                Text(
-                  "Follow these aftercare guidelines for smooth recovery and long-lasting results.",
-                  style: CustomFonts.black12w600.copyWith(
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return _buildBanner(
+      context,
+      icon: Iconsax.clipboard_tick,
+      title: "Post-Treatment Recovery Care",
+      subtitle:
+          "Follow these aftercare guidelines for smooth recovery and long-lasting results.",
     );
   }
 
   Widget _buildTopBannerPhotos(BuildContext context) {
+    return _buildBanner(
+      context,
+      icon: Iconsax.camera,
+      title: "Photo Milestone Requirements",
+      subtitle:
+          "Your clinic requires photo updates at specific day milestones after treatment to track recovery.",
+    );
+  }
+
+  Widget _buildBanner(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(context.w(20)),
@@ -756,7 +556,7 @@ class _PostTreatmentInstructionsScreenState
               ),
             ),
             child: Icon(
-              Iconsax.camera,
+              icon,
               color: CustomColors.blackColor,
               size: context.sp(26),
             ),
@@ -766,13 +566,10 @@ class _PostTreatmentInstructionsScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Photo Milestone Requirements",
-                  style: CustomFonts.black18w600,
-                ),
+                Text(title, style: CustomFonts.black18w600),
                 SizedBox(height: context.h(4)),
                 Text(
-                  "Your clinic requires photo updates at specific day milestones after treatment to track recovery.",
+                  subtitle,
                   style: CustomFonts.black12w600.copyWith(
                     color: Colors.black87,
                   ),

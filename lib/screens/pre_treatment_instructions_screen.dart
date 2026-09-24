@@ -15,7 +15,7 @@ import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/image_source_dialog.dart';
-import '../widgets/instruction_card_widget.dart';
+// import '../widgets/instruction_card_widget.dart'; // not used while instructions are static
 
 class PreTreatmentInstructionsScreen extends ConsumerStatefulWidget {
   static const String routeName = "/PreTreatmentInstructionsScreen";
@@ -32,6 +32,15 @@ class PreTreatmentInstructionsScreen extends ConsumerStatefulWidget {
 class _PreTreatmentInstructionsScreenState
     extends ConsumerState<PreTreatmentInstructionsScreen> {
   static const int _maxPhotos = 3;
+
+  // Static pre-treatment instructions (paragraphs are separated by a blank line).
+  static const String _staticInstructionsTitle = "Pre-Treatment Instructions";
+  static const List<String> _staticInstructions = [
+    "Before your appointment, please review your current medications, allergies, medical history, and any previous dermal filler treatments with your provider. Tell your provider if you have a history of severe allergic reactions, an allergy to lidocaine or hyaluronic acid fillers, are pregnant or breastfeeding, take medications that may increase bleeding or bruising, or are receiving treatment that affects your immune system.",
+    "Please notify your clinic if you have an active infection, rash, breakout, irritation, open wound, or other skin concern in or near the temple treatment area. Treatment may need to be postponed until the area has healed. Also tell your provider if you have previously received filler in the temples or surrounding area.",
+    "Do not stop aspirin, blood thinners, anti-inflammatory medications, or any prescribed medication unless your prescribing healthcare professional specifically instructs you to do so. These medications may increase bruising or bleeding, but medication changes should always be directed by the appropriate healthcare professional.",
+    "Your licensed provider will complete a clinical assessment before treatment and determine whether JUVÉDERM VOLUMA XC is appropriate for you and the amount of product recommended for your individual treatment plan.",
+  ];
 
   bool _loaded = false;
 
@@ -58,14 +67,17 @@ class _PreTreatmentInstructionsScreenState
   }
 
   Future<void> _load() async {
-    final request = _buildRequest();
-    if (request != null) {
-      final vm = ref.read(appointmentProvider.notifier);
-      await Future.wait([
-        vm.preInstructions(request: request),
-        vm.getPerTreatmentPhotos(appointmentId: request.appointmentId),
-      ]);
-    }
+    // Instructions are static and the photos API is disabled for now,
+    // so there is nothing to fetch.
+    //
+    // final request = _buildRequest();
+    // if (request != null) {
+    //   final vm = ref.read(appointmentProvider.notifier);
+    //   await Future.wait([
+    //     vm.preInstructions(request: request),
+    //     vm.getPerTreatmentPhotos(appointmentId: request.appointmentId),
+    //   ]);
+    // }
     if (mounted) setState(() => _loaded = true);
   }
 
@@ -77,22 +89,24 @@ class _PreTreatmentInstructionsScreenState
       return;
     }
 
-    final source = await showImageSourceDialog(context,showGallery: false);
+    final source = await showImageSourceDialog(context, showGallery: false);
     if (source == null || !mounted) return;
 
-    await ref
-        .read(appointmentProvider.notifier)
-        .addPerTreatmentPhoto(
-          appointmentId: request.appointmentId,
-          source: source,
-        );
+    // Photos API disabled for now.
+    // await ref
+    //     .read(appointmentProvider.notifier)
+    //     .addPerTreatmentPhoto(
+    //       appointmentId: request.appointmentId,
+    //       source: source,
+    //     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final instructions = ref.watch(
-      appointmentProvider.select((s) => s.preInstruction),
-    );
+    // Instructions come from the static list above instead of the API.
+    // final instructions = ref.watch(
+    //   appointmentProvider.select((s) => s.preInstruction),
+    // );
     final photos = ref.watch(
       appointmentProvider.select((s) => s.perTreatmentPhotos),
     );
@@ -123,7 +137,7 @@ class _PreTreatmentInstructionsScreenState
               child: TabBarView(
                 children: [
                   // ---------------------------------------------------------
-                  // TAB 1 - GUIDELINES
+                  // TAB 1 - GUIDELINES (static)
                   // ---------------------------------------------------------
                   !_loaded
                       ? const AppLoader()
@@ -140,25 +154,7 @@ class _PreTreatmentInstructionsScreenState
                             children: [
                               _buildTopBanner(context),
                               SizedBox(height: context.h(24)),
-                              if (instructions.isEmpty)
-                                Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: context.h(40),
-                                    ),
-                                    child: Text(
-                                      "No instructions available.",
-                                      style: CustomFonts.grey16w500,
-                                    ),
-                                  ),
-                                )
-                              else
-                                ...instructions.map(
-                                  (item) => InstructionCard(
-                                    item: item,
-                                    rawInstructions: item.instructions,
-                                  ),
-                                ),
+                              _buildStaticInstructionsCard(context),
                             ],
                           ),
                         ),
@@ -199,75 +195,135 @@ class _PreTreatmentInstructionsScreenState
     );
   }
 
- Widget _buildDoctorPhotos(BuildContext context, List<String> photos) {
-  // Always show at least 3 boxes; if the server ever returns more, show them all.
-  final slotCount = photos.length > _maxPhotos ? photos.length : _maxPhotos;
+  // ---------------- Guidelines tab (static) ----------------
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _buildDoctorPhotoBanner(context),
-      SizedBox(height: context.h(24)),
-      Text("Your Photos", style: CustomFonts.black18w600),
-      SizedBox(height: context.h(6)),
-      Text(
-        "Add up to $_maxPhotos photos for your treatment record.",
-        style: CustomFonts.grey12w400,
-      ),
-      SizedBox(height: context.h(16)),
-      GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: context.w(10),
-        crossAxisSpacing: context.w(10),
-        children: [
-          for (int i = 0; i < slotCount; i++)
-            i < photos.length
-                ? _buildPhotoTile(context, url: photos[i], index: i)
-                : _buildAddTile(context, index: i),
-        ],
-      ),
-    ],
-  );
-}
-
-Widget _buildAddTile(BuildContext context, {required int index}) {
-  return InkWell(
-    onTap: _addPhoto,
-    borderRadius: BorderRadius.circular(context.r(16)),
-    child: Container(
+  Widget _buildStaticInstructionsCard(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(context.w(20)),
       decoration: BoxDecoration(
-        color: CustomColors.darkPurple.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(context.r(16)),
-        border: Border.all(
-          color: CustomColors.darkPurple.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(context.r(24)),
+        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        boxShadow: CustomColors.cardShadow,
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.add_a_photo_rounded,
-            color: CustomColors.darkPurple,
-            size: context.sp(28),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(context.w(6)),
+                decoration: BoxDecoration(
+                  color: CustomColors.purpleColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Iconsax.clipboard_text,
+                  color: CustomColors.darkPurple,
+                  size: context.sp(18),
+                ),
+              ),
+              SizedBox(width: context.w(10)),
+              Expanded(
+                child: Text(
+                  _staticInstructionsTitle,
+                  style: CustomFonts.black18w600,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: context.h(6)),
-          Text(
-            "Photo ${index + 1}",
-            style: CustomFonts.black12w600.copyWith(
-              color: CustomColors.darkPurple,
+          SizedBox(height: context.h(16)),
+          for (int i = 0; i < _staticInstructions.length; i++) ...[
+            if (i > 0)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: context.h(12)),
+                child: const Divider(color: CustomColors.greyColor, height: 1),
+              ),
+            Text(
+              _staticInstructions[i],
+              style: CustomFonts.black14w600.copyWith(
+                height: 1.45,
+                color: Colors.black87,
+              ),
             ),
-          ),
-          SizedBox(height: context.h(2)),
-          Text("Add", style: CustomFonts.grey12w400),
+          ],
         ],
       ),
-    ),
-  );
-}
- 
+    );
+  }
+
+  // ---------------- Doctor photos tab ----------------
+
+  Widget _buildDoctorPhotos(BuildContext context, List<String> photos) {
+    // Always show at least 3 boxes; if the server ever returns more, show them all.
+    final slotCount = photos.length > _maxPhotos ? photos.length : _maxPhotos;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDoctorPhotoBanner(context),
+        SizedBox(height: context.h(24)),
+        Text("Your Photos", style: CustomFonts.black18w600),
+        SizedBox(height: context.h(6)),
+        Text(
+          "Add up to $_maxPhotos photos for your treatment record.",
+          style: CustomFonts.grey12w400,
+        ),
+        SizedBox(height: context.h(16)),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: context.w(10),
+          crossAxisSpacing: context.w(10),
+          children: [
+            for (int i = 0; i < slotCount; i++)
+              i < photos.length
+                  ? _buildPhotoTile(context, url: photos[i], index: i)
+                  : _buildAddTile(context, index: i),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddTile(BuildContext context, {required int index}) {
+    return InkWell(
+      onTap: _addPhoto,
+      borderRadius: BorderRadius.circular(context.r(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: CustomColors.darkPurple.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(context.r(16)),
+          border: Border.all(
+            color: CustomColors.darkPurple.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_a_photo_rounded,
+              color: CustomColors.darkPurple,
+              size: context.sp(28),
+            ),
+            SizedBox(height: context.h(6)),
+            Text(
+              "Photo ${index + 1}",
+              style: CustomFonts.black12w600.copyWith(
+                color: CustomColors.darkPurple,
+              ),
+            ),
+            SizedBox(height: context.h(2)),
+            Text("Add", style: CustomFonts.grey12w400),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPhotoTile(
     BuildContext context, {
     required String url,
@@ -313,6 +369,7 @@ Widget _buildAddTile(BuildContext context, {required int index}) {
     );
   }
 
+  // ---------------- Banners ----------------
 
   Widget _buildTopBanner(BuildContext context) {
     return _buildBanner(
