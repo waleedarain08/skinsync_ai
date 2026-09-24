@@ -29,16 +29,16 @@ class InstructionData {
   final int? treatmentId;
   final String? areaName;
   final int? areaId;
-  final String? preTreatmentInstructions;
-  final List<PreTreatmentAttachment> preTreatmentAttachments;
+  final String instructions;
+  final List<PreTreatmentAttachment> attachments;
 
   InstructionData({
     this.treatmentName,
     this.treatmentId,
     this.areaName,
     this.areaId,
-    this.preTreatmentInstructions,
-    this.preTreatmentAttachments = const [],
+    this.instructions = '',
+    this.attachments = const [],
   });
 
   factory InstructionData.fromJson(Map<String, dynamic> json) {
@@ -47,15 +47,27 @@ class InstructionData {
       treatmentId: json['treatment_id'],
       areaName: json['area_name'],
       areaId: json['area_id'],
-      preTreatmentInstructions: json['pre_treatment_instructions'],
-      preTreatmentAttachments:
-          json['pre_treatment_attachments'] != null
-              ? List<PreTreatmentAttachment>.from(
-                  json['pre_treatment_attachments'].map(
-                    (x) => PreTreatmentAttachment.fromJson(x),
-                  ),
-                )
-              : [],
+
+      // Check pre-treatment first, then post-treatment.
+      // If both are null, use empty string.
+      instructions:
+          json['pre_treatment_instructions'] ??
+          json['post_treatment_instructions'] ??
+          '',
+
+      attachments: json['pre_treatment_attachments'] != null
+    ? List<PreTreatmentAttachment>.from(
+        json['pre_treatment_attachments'].map(
+          (x) => PreTreatmentAttachment.fromJson(x),
+        ),
+      )
+    : json['post_treatment_attachments'] != null
+        ? List<PreTreatmentAttachment>.from(
+            json['post_treatment_attachments'].map(
+              (x) => PreTreatmentAttachment.fromJson(x),
+            ),
+          )
+        : [],
     );
   }
 }

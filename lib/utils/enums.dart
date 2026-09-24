@@ -70,6 +70,7 @@ enum EndPoints {
   treatmentProgress('v1/treatment-progress'),
   verifyOtp("verify-otp"),
   clinicalJourney('v1/clinical-journey'),
+  perTreatmentPhotos('v1/appointment/per-treatment-photos'),
   onBoardingProfile("v1/onboarding/profile"),
   getClinic("clinics/filter"),
   getDoctor("doctors/by-side-area?"),

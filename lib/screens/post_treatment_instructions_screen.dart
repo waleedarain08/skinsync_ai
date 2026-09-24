@@ -5,11 +5,9 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/requests/instructions_request.dart';
 import '../models/responses/appointment_detail_response.dart';
-import '../models/responses/instructions_response.dart';
 import '../models/responses/post_treatment_photos_response.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
@@ -19,6 +17,7 @@ import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/image_source_dialog.dart';
+import '../widgets/instruction_card_widget.dart';
 
 class PostTreatmentInstructionsScreen extends ConsumerStatefulWidget {
   static const String routeName = "/PostTreatmentInstructionsScreen";
@@ -34,6 +33,10 @@ class PostTreatmentInstructionsScreen extends ConsumerStatefulWidget {
 class _PostTreatmentInstructionsScreenState
     extends ConsumerState<PostTreatmentInstructionsScreen> {
   bool _loaded = false;
+  final Map<String, List<String>> _pending = {};
+
+  String _milestoneKey(PostTreatmentPhotoData item, PhotoMilestone m) =>
+      '${item.treatmentId}_${item.areaId}_${m.numberOfDays}_${m.title}';
 
   @override
   void initState() {
@@ -69,9 +72,22 @@ class _PostTreatmentInstructionsScreenState
     if (mounted) setState(() => _loaded = true);
   }
 
-  Future<void> _onUpload({
+  Future<void> _onPickPhoto({required String key}) async {
+    final source = await showImageSourceDialog(context, showGallery: false);
+    if (source == null || !mounted) return;
+
+    final url = await ref
+        .read(appointmentProvider.notifier)
+        .uploadPostTreatmentImage(source: source);
+    if (url == null || !mounted) return;
+
+    setState(() => _pending.putIfAbsent(key, () => []).add(url));
+  }
+
+  Future<void> _onSubmit({
     required PostTreatmentPhotoData item,
     required PhotoMilestone milestone,
+    required String key,
   }) async {
     final request = _buildRequest();
     final treatmentId = item.treatmentId;
@@ -81,28 +97,29 @@ class _PostTreatmentInstructionsScreenState
       return;
     }
 
-    final source = await showImageSourceDialog(context, showGallery: false);
-    if (source == null || !mounted) return;
+    final pending = List<String>.from(_pending[key] ?? const []);
+    if (pending.isEmpty) return;
 
-    await ref
+    final ok = await ref
         .read(appointmentProvider.notifier)
-        .uploadMilestonePhoto(
-          source: source,
+        .submitMilestonePhotos(
           treatmentId: treatmentId,
           areaId: areaId,
           milestone: milestone,
+          newPhotos: pending,
           insRequest: request,
         );
-  }
 
-  List<String> _parseInstructions(String? raw) {
-    if (raw == null) return [];
-    return raw
-        .split('\n')
-        .map((l) => l.replaceFirst(RegExp(r'^\s*[•\-*]\s*'), '').trim())
-        .where((l) => l.isNotEmpty)
-        .toList();
+    if (ok && mounted) setState(() => _pending.remove(key));
   }
+  // List<String> _parseInstructions(String? raw) {
+  //   if (raw == null) return [];
+  //   return raw
+  //       .split('\n')
+  //       .map((l) => l.replaceFirst(RegExp(r'^\s*[•\-*]\s*'), '').trim())
+  //       .where((l) => l.isNotEmpty)
+  //       .toList();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +160,11 @@ class _PostTreatmentInstructionsScreenState
                     emptyText: "No post-treatment instructions available.",
                     children: [
                       for (final item in instructions)
-                        _buildInstructionCard(context, item: item),
+                        InstructionCard(
+                          item: item,
+                          rawInstructions: item.instructions, // see note below
+                          attachmentsLabel: "AFTERCARE ATTACHMENTS",
+                        ),
                     ],
                   ),
                   _buildTab(
@@ -276,8 +297,104 @@ class _PostTreatmentInstructionsScreenState
     required PhotoMilestone milestone,
   }) {
     final requiredPhotos = milestone.requiredPhotos ?? 0;
-    final uploaded = milestone.uploadedPhotos;
+    final uploaded = milestone.uploadedPhotos; // already saved on the server
+    final key = _milestoneKey(item, milestone);
+    final pending =
+        _pending[key] ?? const <String>[]; // on Firebase, not saved yet
     final isCompleted = requiredPhotos > 0 && uploaded.length >= requiredPhotos;
+
+    Widget networkImage(String url) => CachedNetworkImage(
+      imageUrl: url,
+      height: context.w(85),
+      width: double.infinity,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Container(
+        height: context.w(85),
+        color: Colors.grey.shade100,
+        child: const Center(child: CupertinoActivityIndicator()),
+      ),
+      errorWidget: (context, url, error) => Container(
+        height: context.w(85),
+        color: Colors.grey.shade100,
+        child: const Icon(Icons.image_not_supported),
+      ),
+    );
+
+    Widget slot(int index) {
+      // 1) Saved on the server
+      if (index < uploaded.length) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(context.r(16)),
+          child: networkImage(uploaded[index]),
+        );
+      }
+
+      // 2) Uploaded to Firebase, waiting for the Upload button
+      final pendingIndex = index - uploaded.length;
+      if (pendingIndex < pending.length) {
+        return Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(context.r(16)),
+              child: networkImage(pending[pendingIndex]),
+            ),
+            Positioned(
+              top: context.h(4),
+              right: context.w(4),
+              child: GestureDetector(
+                onTap: () =>
+                    setState(() => _pending[key]?.removeAt(pendingIndex)),
+                child: Container(
+                  padding: EdgeInsets.all(context.w(3)),
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    size: context.sp(14),
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+
+      // 3) Empty slot: tap to pick + upload to Firebase
+      return InkWell(
+        onTap: () => _onPickPhoto(key: key),
+        borderRadius: BorderRadius.circular(context.r(16)),
+        child: Container(
+          height: context.w(85),
+          decoration: BoxDecoration(
+            color: CustomColors.darkPurple.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(context.r(16)),
+            border: Border.all(
+              color: CustomColors.darkPurple.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.add_a_photo_rounded,
+                color: CustomColors.darkPurple,
+                size: context.sp(22),
+              ),
+              SizedBox(height: context.h(4)),
+              Text(
+                "Photo ${index + 1}",
+                style: CustomFonts.black12w600.copyWith(
+                  color: CustomColors.darkPurple,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Container(
       margin: EdgeInsets.only(bottom: context.h(16)),
@@ -354,65 +471,12 @@ class _PostTreatmentInstructionsScreenState
           SizedBox(height: context.h(16)),
           Row(
             children: List.generate(requiredPhotos, (index) {
-              final hasPhoto = index < uploaded.length;
               return Expanded(
                 child: Padding(
                   padding: EdgeInsets.only(
                     right: index < requiredPhotos - 1 ? context.w(10) : 0,
                   ),
-                  child: hasPhoto
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(context.r(16)),
-                          child: CachedNetworkImage(
-                            imageUrl: uploaded[index],
-                            height: context.w(85),
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              height: context.w(85),
-                              color: Colors.grey.shade100,
-                              child: const Center(
-                                child: CupertinoActivityIndicator(),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              height: context.w(85),
-                              color: Colors.grey.shade100,
-                              child: const Icon(Icons.image_not_supported),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          height: context.w(85),
-                          decoration: BoxDecoration(
-                            color: CustomColors.darkPurple.withValues(
-                              alpha: 0.05,
-                            ),
-                            borderRadius: BorderRadius.circular(context.r(16)),
-                            border: Border.all(
-                              color: CustomColors.darkPurple.withValues(
-                                alpha: 0.3,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_a_photo_rounded,
-                                color: CustomColors.darkPurple,
-                                size: context.sp(22),
-                              ),
-                              SizedBox(height: context.h(4)),
-                              Text(
-                                "Photo ${index + 1}",
-                                style: CustomFonts.black12w600.copyWith(
-                                  color: CustomColors.darkPurple,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                  child: slot(index),
                 ),
               );
             }),
@@ -426,199 +490,198 @@ class _PostTreatmentInstructionsScreenState
               text: 'Upload',
               backgroundColor: CustomColors.darkPurple,
               textColor: Colors.white,
-              onPressed: isCompleted
+              onPressed: (isCompleted || pending.isEmpty)
                   ? null
-                  : () => _onUpload(item: item, milestone: milestone),
+                  : () => _onSubmit(item: item, milestone: milestone, key: key),
             ),
           ),
         ],
       ),
     );
   }
-
   // ---------------- Guidelines tab ----------------
 
-  Widget _buildInstructionCard(
-    BuildContext context, {
-    required InstructionData item,
-  }) {
-    final instructions = _parseInstructions(item.preTreatmentInstructions);
-    final areaName = item.areaName;
+  // Widget _buildInstructionCard(
+  //   BuildContext context, {
+  //   required InstructionData item,
+  // }) {
+  //   final instructions = _parseInstructions(item.preTreatmentInstructions);
+  //   final areaName = item.areaName;
 
-    return Container(
-      margin: EdgeInsets.only(bottom: context.h(24)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(context.w(6)),
-                decoration: BoxDecoration(
-                  color: CustomColors.purpleColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Iconsax.mask,
-                  color: CustomColors.darkPurple,
-                  size: context.sp(18),
-                ),
-              ),
-              SizedBox(width: context.w(10)),
-              Expanded(
-                child: Text(
-                  (item.treatmentName ?? 'Treatment').capitalize,
-                  style: CustomFonts.black18w600,
-                ),
-              ),
-              if (areaName != null && areaName.isNotEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.w(10),
-                    vertical: context.h(4),
-                  ),
-                  decoration: BoxDecoration(
-                    color: CustomColors.darkPurple.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(context.r(12)),
-                  ),
-                  child: Text(
-                    areaName,
-                    style: CustomFonts.black12w600.copyWith(
-                      color: CustomColors.darkPurple,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: context.h(12)),
-          Container(
-            padding: EdgeInsets.all(context.w(20)),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(context.r(24)),
-              border: Border.all(color: Colors.grey.shade200, width: 1.5),
-              boxShadow: CustomColors.cardShadow,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int i = 0; i < instructions.length; i++) ...[
-                  if (i > 0)
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: context.h(10)),
-                      child: const Divider(
-                        color: CustomColors.greyColor,
-                        height: 1,
-                      ),
-                    ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(context.w(6)),
-                        decoration: BoxDecoration(
-                          color: CustomColors.darkPurple.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check_circle_rounded,
-                          color: CustomColors.darkPurple,
-                          size: context.sp(16),
-                        ),
-                      ),
-                      SizedBox(width: context.w(12)),
-                      Expanded(
-                        child: Text(
-                          instructions[i],
-                          style: CustomFonts.black14w600.copyWith(
-                            height: 1.35,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                if (item.preTreatmentAttachments.isNotEmpty) ...[
-                  SizedBox(height: context.h(16)),
-                  const Divider(color: CustomColors.greyColor, height: 1),
-                  SizedBox(height: context.h(12)),
-                  Text(
-                    "AFTERCARE ATTACHMENTS",
-                    style: CustomFonts.darkPurple10w700.copyWith(
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                  SizedBox(height: context.h(8)),
-                  Wrap(
-                    spacing: context.w(8),
-                    runSpacing: context.h(8),
-                    children: item.preTreatmentAttachments
-                        .map((att) => _buildAttachmentChip(context, att))
-                        .toList(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //   return Container(
+  //     margin: EdgeInsets.only(bottom: context.h(24)),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Container(
+  //               padding: EdgeInsets.all(context.w(6)),
+  //               decoration: BoxDecoration(
+  //                 color: CustomColors.purpleColor.withValues(alpha: 0.15),
+  //                 shape: BoxShape.circle,
+  //               ),
+  //               child: Icon(
+  //                 Iconsax.mask,
+  //                 color: CustomColors.darkPurple,
+  //                 size: context.sp(18),
+  //               ),
+  //             ),
+  //             SizedBox(width: context.w(10)),
+  //             Expanded(
+  //               child: Text(
+  //                 (item.treatmentName ?? 'Treatment').capitalize,
+  //                 style: CustomFonts.black18w600,
+  //               ),
+  //             ),
+  //             if (areaName != null && areaName.isNotEmpty)
+  //               Container(
+  //                 padding: EdgeInsets.symmetric(
+  //                   horizontal: context.w(10),
+  //                   vertical: context.h(4),
+  //                 ),
+  //                 decoration: BoxDecoration(
+  //                   color: CustomColors.darkPurple.withValues(alpha: 0.08),
+  //                   borderRadius: BorderRadius.circular(context.r(12)),
+  //                 ),
+  //                 child: Text(
+  //                   areaName,
+  //                   style: CustomFonts.black12w600.copyWith(
+  //                     color: CustomColors.darkPurple,
+  //                   ),
+  //                 ),
+  //               ),
+  //           ],
+  //         ),
+  //         SizedBox(height: context.h(12)),
+  //         Container(
+  //           padding: EdgeInsets.all(context.w(20)),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(context.r(24)),
+  //             border: Border.all(color: Colors.grey.shade200, width: 1.5),
+  //             boxShadow: CustomColors.cardShadow,
+  //           ),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               for (int i = 0; i < instructions.length; i++) ...[
+  //                 if (i > 0)
+  //                   Padding(
+  //                     padding: EdgeInsets.symmetric(vertical: context.h(10)),
+  //                     child: const Divider(
+  //                       color: CustomColors.greyColor,
+  //                       height: 1,
+  //                     ),
+  //                   ),
+  //                 Row(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Container(
+  //                       padding: EdgeInsets.all(context.w(6)),
+  //                       decoration: BoxDecoration(
+  //                         color: CustomColors.darkPurple.withValues(alpha: 0.1),
+  //                         shape: BoxShape.circle,
+  //                       ),
+  //                       child: Icon(
+  //                         Icons.check_circle_rounded,
+  //                         color: CustomColors.darkPurple,
+  //                         size: context.sp(16),
+  //                       ),
+  //                     ),
+  //                     SizedBox(width: context.w(12)),
+  //                     Expanded(
+  //                       child: Text(
+  //                         instructions[i],
+  //                         style: CustomFonts.black14w600.copyWith(
+  //                           height: 1.35,
+  //                           color: Colors.black87,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //               if (item.preTreatmentAttachments.isNotEmpty) ...[
+  //                 SizedBox(height: context.h(16)),
+  //                 const Divider(color: CustomColors.greyColor, height: 1),
+  //                 SizedBox(height: context.h(12)),
+  //                 Text(
+  //                   "AFTERCARE ATTACHMENTS",
+  //                   style: CustomFonts.darkPurple10w700.copyWith(
+  //                     letterSpacing: 1.0,
+  //                   ),
+  //                 ),
+  //                 SizedBox(height: context.h(8)),
+  //                 Wrap(
+  //                   spacing: context.w(8),
+  //                   runSpacing: context.h(8),
+  //                   children: item.preTreatmentAttachments
+  //                       .map((att) => _buildAttachmentChip(context, att))
+  //                       .toList(),
+  //                 ),
+  //               ],
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildAttachmentChip(
-    BuildContext context,
-    PreTreatmentAttachment att,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          final url = att.url;
-          if (url != null && url.isNotEmpty) {
-            final uri = Uri.parse(url);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
-          }
-        },
-        borderRadius: BorderRadius.circular(context.r(12)),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.w(12),
-            vertical: context.h(8),
-          ),
-          decoration: BoxDecoration(
-            color: CustomColors.darkPurple.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(context.r(12)),
-            border: Border.all(
-              color: CustomColors.darkPurple.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Iconsax.document_download,
-                size: context.sp(16),
-                color: CustomColors.darkPurple,
-              ),
-              SizedBox(width: context.w(6)),
-              Flexible(
-                child: Text(
-                  att.name ?? 'Attachment',
-                  style: CustomFonts.black12w600.copyWith(
-                    color: CustomColors.darkPurple,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // Widget _buildAttachmentChip(
+  //   BuildContext context,
+  //   PreTreatmentAttachment att,
+  // ) {
+  //   return Material(
+  //     color: Colors.transparent,
+  //     child: InkWell(
+  //       onTap: () async {
+  //         final url = att.url;
+  //         if (url != null && url.isNotEmpty) {
+  //           final uri = Uri.parse(url);
+  //           if (await canLaunchUrl(uri)) {
+  //             await launchUrl(uri, mode: LaunchMode.externalApplication);
+  //           }
+  //         }
+  //       },
+  //       borderRadius: BorderRadius.circular(context.r(12)),
+  //       child: Container(
+  //         padding: EdgeInsets.symmetric(
+  //           horizontal: context.w(12),
+  //           vertical: context.h(8),
+  //         ),
+  //         decoration: BoxDecoration(
+  //           color: CustomColors.darkPurple.withValues(alpha: 0.08),
+  //           borderRadius: BorderRadius.circular(context.r(12)),
+  //           border: Border.all(
+  //             color: CustomColors.darkPurple.withValues(alpha: 0.2),
+  //           ),
+  //         ),
+  //         child: Row(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             Icon(
+  //               Iconsax.document_download,
+  //               size: context.sp(16),
+  //               color: CustomColors.darkPurple,
+  //             ),
+  //             SizedBox(width: context.w(6)),
+  //             Flexible(
+  //               child: Text(
+  //                 att.name ?? 'Attachment',
+  //                 style: CustomFonts.black12w600.copyWith(
+  //                   color: CustomColors.darkPurple,
+  //                 ),
+  //                 overflow: TextOverflow.ellipsis,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildTopBanner(BuildContext context) {
     return Container(

@@ -9,6 +9,7 @@ import '../exceptions/app_exception.dart';
 import '../models/base_state_model.dart';
 import '../models/requests/change_payment_status_request.dart';
 import '../models/requests/instructions_request.dart';
+import '../models/requests/per_treatment_photos_request.dart';
 import '../models/requests/post_treatment_photos_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
@@ -153,6 +154,10 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // Instructions
+  // ---------------------------------------------------------------------------
+
   Future<void> preInstructions({required InstructionsRequest request}) async {
     return await runSafely(() async {
       state = state.copyWith(loading: true);
@@ -204,23 +209,27 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     );
   }
 
-  Future<void> uploadMilestonePhoto({
+  // ---------------------------------------------------------------------------
+  // Image upload (shared)
+  // ---------------------------------------------------------------------------
+
+  /// Picks an image and uploads it to Firebase. Returns the download URL.
+  /// [folder] decides the Firebase storage sub-path.
+  Future<String?> uploadPostTreatmentImage({
     required ImageSource source,
-    required int treatmentId,
-    required int areaId,
-    required PhotoMilestone milestone,
-    required InstructionsRequest insRequest,
+    String folder = 'post-treatment-photos',
   }) async {
-    final ok = await runSafely<bool>(() async {
+    return await runSafely<String?>(() async {
       final picked = await ImagePicker().pickImage(
         source: source,
+        imageQuality: 85,
         preferredCameraDevice: CameraDevice.front,
       );
       if (picked == null) return null;
 
       EasyLoading.show(
         status: 'Uploading photo...',
-        maskType: EasyLoadingMaskType.black, // blocks double taps
+        maskType: EasyLoadingMaskType.black,
       );
 
       final email = ref.read(authViewModel).authData?.user?.primaryEmail;
@@ -229,36 +238,123 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       }
 
       final url = await MediaService().uploadImage(
-        '$email/post-treatment-photos/${DateTime.now().millisecondsSinceEpoch}_${picked.name}',
+        '$email/$folder/${DateTime.now().millisecondsSinceEpoch}_${picked.name}',
         picked,
       );
       if (url == null || url.isEmpty) {
         throw const AppException('Failed to upload image');
       }
 
-      final photos = [...milestone.uploadedPhotos, url];
-      final requiredPhotos = milestone.requiredPhotos ?? 0;
-
-      return await updatPostTreatmentPhotos(
-        request: PostTreatmentPhotosRequest(
-          appointmentId: insRequest.appointmentId,
-          treatmentId: treatmentId,
-          areaId: areaId,
-          photoMilestone: PhotoMilestoneRequest(
-            title: milestone.title ?? '',
-            isUpload: photos.length >= requiredPhotos,
-            numberOfDays: milestone.numberOfDays ?? 0,
-            requiredPhotos: requiredPhotos,
-            uploadedPhotos: photos,
-          ),
-        ),
-        insRequest: insRequest,
-      );
+      EasyLoading.dismiss();
+      return url;
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Post-treatment milestone photos
+  // ---------------------------------------------------------------------------
+
+  /// Sends already-uploaded Firebase URLs (saved + newly added) to the API.
+  Future<bool> submitMilestonePhotos({
+    required int treatmentId,
+    required int areaId,
+    required PhotoMilestone milestone,
+    required List<String> newPhotos,
+    required InstructionsRequest insRequest,
+  }) async {
+    final photos = [...milestone.uploadedPhotos, ...newPhotos];
+    final requiredPhotos = milestone.requiredPhotos ?? 0;
+
+    EasyLoading.show(
+      status: 'Saving photos...',
+      maskType: EasyLoadingMaskType.black,
+    );
+
+    final ok = await updatPostTreatmentPhotos(
+      request: PostTreatmentPhotosRequest(
+        appointmentId: insRequest.appointmentId,
+        treatmentId: treatmentId,
+        areaId: areaId,
+        photoMilestone: PhotoMilestoneRequest(
+          title: milestone.title ?? '',
+          isUpload: photos.length >= requiredPhotos,
+          numberOfDays: milestone.numberOfDays ?? 0,
+          requiredPhotos: requiredPhotos,
+          uploadedPhotos: photos,
+        ),
+      ),
+      insRequest: insRequest,
+    );
 
     // On failure, onError already dismissed the loader and showed the message.
-    if (ok == true) EasyLoading.showSuccess('Photo uploaded');
+    if (ok) EasyLoading.showSuccess('Photos saved');
+    return ok;
   }
+
+  // ---------------------------------------------------------------------------
+  // Pre-treatment (doctor) photos
+  // ---------------------------------------------------------------------------
+
+  Future<void> getPerTreatmentPhotos({required int appointmentId}) async {
+    await runSafely(() async {
+      state = state.copyWith(loading: true, errorMessage: null);
+
+      final response = await repo.getPerTreatmentPhotos(
+        appointmentId: appointmentId,
+      );
+
+      state = state.copyWith(loading: false, perTreatmentPhotos: response.data);
+    });
+  }
+
+  Future<bool> savePerTreatmentPhotos({
+    required PerTreatmentPhotosRequest request,
+  }) async {
+    final result = await runSafely<bool>(() async {
+      state = state.copyWith(loading: true, errorMessage: null);
+
+      final response = await repo.savePerTreatmentPhotos(request: request);
+
+      state = state.copyWith(
+        loading: false,
+        // Falls back to what we sent if the API returns no data.
+        perTreatmentPhotos: response.data , // adjust
+      );
+
+      return true;
+    });
+
+    return result ?? false;
+  }
+
+  /// Uploads to Firebase first, then sends the URLs to savePerTreatmentPhotos.
+  Future<bool> addPerTreatmentPhoto({
+    required int appointmentId,
+    required ImageSource source,
+  }) async {
+    final url = await uploadPostTreatmentImage(
+      source: source,
+      folder: 'pre-treatment-photos',
+    );
+    if (url == null) return false; // cancelled or failed (error already shown)
+
+    EasyLoading.show(
+      status: 'Saving photo...',
+      maskType: EasyLoadingMaskType.black,
+    );
+
+    final ok = await savePerTreatmentPhotos(
+      request: PerTreatmentPhotosRequest(
+        appointmentId: appointmentId, // adjust
+        imageUrls: [...state.perTreatmentPhotos, url], // adjust
+      ),
+    );
+
+    if (ok) EasyLoading.showSuccess('Photo saved');
+    return ok;
+  }
+
+  // ---------------------------------------------------------------------------
 
   void updateStatus(AppointmentStatusEvent event) {
     if (state.appointmentDetail == null) {
@@ -294,6 +390,8 @@ class AppointmentState extends BaseStateModel {
   final List<InstructionData> preInstruction;
   final List<InstructionData> postInstruction;
   final List<PostTreatmentPhotoData> postTreatmentPhoto;
+  final List<String> perTreatmentPhotos;
+
   const AppointmentState({
     super.loading = false,
     super.errorMessage,
@@ -305,6 +403,7 @@ class AppointmentState extends BaseStateModel {
     this.preInstruction = const [],
     this.postInstruction = const [],
     this.postTreatmentPhoto = const [],
+    this.perTreatmentPhotos = const [],
   });
 
   @override
@@ -319,6 +418,7 @@ class AppointmentState extends BaseStateModel {
     List<InstructionData>? preInstruction,
     List<InstructionData>? postInstruction,
     List<PostTreatmentPhotoData>? postTreatmentPhoto,
+    List<String>? perTreatmentPhotos,
   }) {
     return AppointmentState(
       loading: loading ?? this.loading,
@@ -331,6 +431,7 @@ class AppointmentState extends BaseStateModel {
       preInstruction: preInstruction ?? this.preInstruction,
       postInstruction: postInstruction ?? this.postInstruction,
       postTreatmentPhoto: postTreatmentPhoto ?? this.postTreatmentPhoto,
+      perTreatmentPhotos: perTreatmentPhotos ?? this.perTreatmentPhotos,
     );
   }
 }

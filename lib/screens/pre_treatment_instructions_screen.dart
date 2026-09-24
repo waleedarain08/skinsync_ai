@@ -1,37 +1,38 @@
-import 'dart:io';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../models/requests/instructions_request.dart';
 import '../models/responses/appointment_detail_response.dart';
-import '../models/responses/instructions_response.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
-import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
 import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/dialogs/image_source_dialog.dart';
+import '../widgets/instruction_card_widget.dart';
 
 class PreTreatmentInstructionsScreen extends ConsumerStatefulWidget {
   static const String routeName = "/PreTreatmentInstructionsScreen";
+
   final List<DetailedAppointmentTreatment>? treatments;
 
   const PreTreatmentInstructionsScreen({super.key, this.treatments});
 
   @override
-  ConsumerState<PreTreatmentInstructionsScreen> createState() => _PreTreatmentInstructionsScreenState();
+  ConsumerState<PreTreatmentInstructionsScreen> createState() =>
+      _PreTreatmentInstructionsScreenState();
 }
 
 class _PreTreatmentInstructionsScreenState
     extends ConsumerState<PreTreatmentInstructionsScreen> {
-  File? pickedImage;
+  static const int _maxPhotos = 3;
+
   bool _loaded = false;
 
   @override
@@ -45,7 +46,7 @@ class _PreTreatmentInstructionsScreenState
     if (appointmentId == null) return null;
 
     final sessionIds = (widget.treatments ?? [])
-        .map((t) => t.sessionId) // <-- adjust to your real field name
+        .map((t) => t.sessionId)
         .whereType<int>()
         .toSet()
         .toList();
@@ -59,26 +60,41 @@ class _PreTreatmentInstructionsScreenState
   Future<void> _load() async {
     final request = _buildRequest();
     if (request != null) {
-      await ref
-          .read(appointmentProvider.notifier)
-          .preInstructions(request: request);
+      final vm = ref.read(appointmentProvider.notifier);
+      await Future.wait([
+        vm.preInstructions(request: request),
+        vm.getPerTreatmentPhotos(appointmentId: request.appointmentId),
+      ]);
     }
     if (mounted) setState(() => _loaded = true);
   }
 
-  List<String> _parseInstructions(String? raw) {
-    if (raw == null) return [];
-    return raw
-        .split('\n')
-        .map((l) => l.replaceFirst(RegExp(r'^\s*[•\-*]\s*'), '').trim())
-        .where((l) => l.isNotEmpty)
-        .toList();
+  /// Pick -> upload to Firebase -> savePerTreatmentPhotos (all in the VM).
+  Future<void> _addPhoto() async {
+    final request = _buildRequest();
+    if (request == null) {
+      EasyLoading.showError('Appointment not found');
+      return;
+    }
+
+    final source = await showImageSourceDialog(context,showGallery: false);
+    if (source == null || !mounted) return;
+
+    await ref
+        .read(appointmentProvider.notifier)
+        .addPerTreatmentPhoto(
+          appointmentId: request.appointmentId,
+          source: source,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     final instructions = ref.watch(
       appointmentProvider.select((s) => s.preInstruction),
+    );
+    final photos = ref.watch(
+      appointmentProvider.select((s) => s.perTreatmentPhotos),
     );
 
     return DefaultTabController(
@@ -106,7 +122,9 @@ class _PreTreatmentInstructionsScreenState
             Expanded(
               child: TabBarView(
                 children: [
-                  // Tab 1: Guidelines List
+                  // ---------------------------------------------------------
+                  // TAB 1 - GUIDELINES
+                  // ---------------------------------------------------------
                   !_loaded
                       ? const AppLoader()
                       : SingleChildScrollView(
@@ -136,24 +154,30 @@ class _PreTreatmentInstructionsScreenState
                                 )
                               else
                                 ...instructions.map(
-                                  (item) =>
-                                      _buildInstructionCard(context, item: item),
+                                  (item) => InstructionCard(
+                                    item: item,
+                                    rawInstructions: item.instructions,
+                                  ),
                                 ),
                             ],
                           ),
                         ),
 
-                  // Tab 2: Doctor Photos (unchanged)
-                  SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      context.w(20),
-                      context.h(10),
-                      context.w(20),
-                      context.h(20),
-                    ),
-                    child: _buildPickImageCard(context),
-                  ),
+                  // ---------------------------------------------------------
+                  // TAB 2 - DOCTOR PHOTOS
+                  // ---------------------------------------------------------
+                  !_loaded
+                      ? const AppLoader()
+                      : SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            context.w(20),
+                            context.h(10),
+                            context.w(20),
+                            context.h(20),
+                          ),
+                          child: _buildDoctorPhotos(context, photos),
+                        ),
                 ],
               ),
             ),
@@ -174,61 +198,147 @@ class _PreTreatmentInstructionsScreenState
       ),
     );
   }
-Widget _buildPickImageCard(BuildContext context) {
+
+ Widget _buildDoctorPhotos(BuildContext context, List<String> photos) {
+  // Always show at least 3 boxes; if the server ever returns more, show them all.
+  final slotCount = photos.length > _maxPhotos ? photos.length : _maxPhotos;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _buildDoctorPhotoBanner(context),
+      SizedBox(height: context.h(24)),
+      Text("Your Photos", style: CustomFonts.black18w600),
+      SizedBox(height: context.h(6)),
+      Text(
+        "Add up to $_maxPhotos photos for your treatment record.",
+        style: CustomFonts.grey12w400,
+      ),
+      SizedBox(height: context.h(16)),
+      GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: context.w(10),
+        crossAxisSpacing: context.w(10),
+        children: [
+          for (int i = 0; i < slotCount; i++)
+            i < photos.length
+                ? _buildPhotoTile(context, url: photos[i], index: i)
+                : _buildAddTile(context, index: i),
+        ],
+      ),
+    ],
+  );
+}
+
+Widget _buildAddTile(BuildContext context, {required int index}) {
   return InkWell(
-    onTap: () async {
-      final source = await showImageSourceDialog(context);
-
-      if (source == null) return;
-
-      // Replace this with your actual image picker logic
-      // depending on what ImageSource your dialog returns.
-    },
-    borderRadius: BorderRadius.circular(context.r(20)),
+    onTap: _addPhoto,
+    borderRadius: BorderRadius.circular(context.r(16)),
     child: Container(
-      width: double.infinity,
-      height: context.w(220),
       decoration: BoxDecoration(
         color: CustomColors.darkPurple.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(context.r(20)),
+        borderRadius: BorderRadius.circular(context.r(16)),
         border: Border.all(
           color: CustomColors.darkPurple.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
-      child: pickedImage != null
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(context.r(20)),
-              child: Image.file(
-                pickedImage!,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.add_a_photo_rounded,
-                  color: CustomColors.darkPurple,
-                  size: context.sp(40),
-                ),
-                SizedBox(height: context.h(10)),
-                Text(
-                  "Pick Image",
-                  style: CustomFonts.black16w600.copyWith(
-                    color: CustomColors.darkPurple,
-                  ),
-                ),
-              ],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.add_a_photo_rounded,
+            color: CustomColors.darkPurple,
+            size: context.sp(28),
+          ),
+          SizedBox(height: context.h(6)),
+          Text(
+            "Photo ${index + 1}",
+            style: CustomFonts.black12w600.copyWith(
+              color: CustomColors.darkPurple,
             ),
+          ),
+          SizedBox(height: context.h(2)),
+          Text("Add", style: CustomFonts.grey12w400),
+        ],
+      ),
     ),
   );
 }
+ 
+  Widget _buildPhotoTile(
+    BuildContext context, {
+    required String url,
+    required int index,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(context.r(16)),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CachedNetworkImage(
+            imageUrl: url,
+            fit: BoxFit.cover,
+            placeholder: (_, __) => Container(
+              color: Colors.grey.shade100,
+              child: const Center(child: CupertinoActivityIndicator()),
+            ),
+            errorWidget: (_, __, ___) => Container(
+              color: Colors.grey.shade100,
+              child: const Icon(Icons.image_not_supported),
+            ),
+          ),
+          Positioned(
+            left: context.w(6),
+            bottom: context.h(6),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.w(7),
+                vertical: context.h(3),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(context.r(8)),
+              ),
+              child: Text(
+                "Photo ${index + 1}",
+                style: CustomFonts.white10w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 
   Widget _buildTopBanner(BuildContext context) {
+    return _buildBanner(
+      context,
+      icon: Iconsax.clipboard_text,
+      title: "Pre-Treatment Guidelines",
+      subtitle:
+          "Follow these essential care guidelines prior to your visit for optimal results.",
+    );
+  }
+
+  Widget _buildDoctorPhotoBanner(BuildContext context) {
+    return _buildBanner(
+      context,
+      icon: Iconsax.camera,
+      title: "Doctor Photos",
+      subtitle: "Upload photos as requested by your practitioner.",
+    );
+  }
+
+  Widget _buildBanner(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(context.w(20)),
@@ -250,7 +360,7 @@ Widget _buildPickImageCard(BuildContext context) {
               ),
             ),
             child: Icon(
-              Iconsax.clipboard_text,
+              icon,
               color: CustomColors.blackColor,
               size: context.sp(26),
             ),
@@ -260,13 +370,10 @@ Widget _buildPickImageCard(BuildContext context) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Pre-Treatment Guidelines",
-                  style: CustomFonts.black18w600,
-                ),
+                Text(title, style: CustomFonts.black18w600),
                 SizedBox(height: context.h(4)),
                 Text(
-                  "Follow these essential care guidelines prior to your visit for optimal results.",
+                  subtitle,
                   style: CustomFonts.black12w600.copyWith(
                     color: Colors.black87,
                   ),
@@ -275,402 +382,6 @@ Widget _buildPickImageCard(BuildContext context) {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // Widget _buildTopDoctorBanner(BuildContext context) {
-  //   return Container(
-  //     width: double.infinity,
-  //     padding: EdgeInsets.all(context.w(20)),
-  //     decoration: BoxDecoration(
-  //       gradient: CustomColors.checkInGradient,
-  //       borderRadius: BorderRadius.circular(context.r(24)),
-  //       boxShadow: CustomColors.cardShadow,
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         Container(
-  //           padding: EdgeInsets.all(context.w(12)),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white.withValues(alpha: 0.35),
-  //             shape: BoxShape.circle,
-  //             border: Border.all(
-  //               color: Colors.white.withValues(alpha: 0.5),
-  //               width: 1.5,
-  //             ),
-  //           ),
-  //           child: Icon(
-  //             Iconsax.camera,
-  //             color: CustomColors.blackColor,
-  //             size: context.sp(26),
-  //           ),
-  //         ),
-  //         SizedBox(width: context.w(14)),
-  //         Expanded(
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text(
-  //                 "Doctor Baseline Photos",
-  //                 style: CustomFonts.black18w600,
-  //               ),
-  //               SizedBox(height: context.h(4)),
-  //               Text(
-  //                 "Pre-procedure clinical photos captured by your practitioner during consultation.",
-  //                 style: CustomFonts.black12w600.copyWith(
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  Widget _buildInstructionCard(
-  BuildContext context, {
-  required InstructionData item,
-}) {
-  final instructions = _parseInstructions(item.preTreatmentInstructions);
-
-    return Container(
-      margin: EdgeInsets.only(bottom: context.h(24)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(context.w(6)),
-                decoration: BoxDecoration(
-                  color: CustomColors.purpleColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Iconsax.mask,
-                  color: CustomColors.darkPurple,
-                  size: context.sp(18),
-                ),
-              ),
-              SizedBox(width: context.w(10)),
-              Expanded(
-                child: Text(
-                  item.treatmentName?.capitalize ?? 'N/A',
-                  style: CustomFonts.black18w600,
-                ),
-              ),
-              if (item.areaName != null && item.areaName!.isNotEmpty)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.w(10),
-                    vertical: context.h(4),
-                  ),
-                  decoration: BoxDecoration(
-                    color: CustomColors.darkPurple.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(context.r(12)),
-                  ),
-                  child: Text(
-                    item.areaName!,
-                    style: CustomFonts.black12w600.copyWith(
-                      color: CustomColors.darkPurple,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: context.h(12)),
-          Container(
-            padding: EdgeInsets.all(context.w(20)),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(context.r(24)),
-              border: Border.all(color: Colors.grey.shade200, width: 1.5),
-              boxShadow: CustomColors.cardShadow,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int i = 0; i < instructions.length; i++) ...[
-                  if (i > 0)
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: context.h(10)),
-                      child: const Divider(
-                        color: CustomColors.greyColor,
-                        height: 1,
-                      ),
-                    ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(context.w(6)),
-                        decoration: BoxDecoration(
-                          color:
-                              CustomColors.darkPurple.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.check_circle_rounded,
-                          color: CustomColors.darkPurple,
-                          size: context.sp(16),
-                        ),
-                      ),
-                      SizedBox(width: context.w(12)),
-                      Expanded(
-                        child: Text(
-                          instructions[i],
-                          style: CustomFonts.black14w600.copyWith(
-                            height: 1.35,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                if (item.preTreatmentAttachments.isNotEmpty) ...[
-                  SizedBox(height: context.h(16)),
-                  const Divider(color: CustomColors.greyColor, height: 1),
-                  SizedBox(height: context.h(12)),
-                  Text(
-                    "ATTACHMENTS & GUIDES",
-                    style: CustomFonts.darkPurple10w700.copyWith(
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                  SizedBox(height: context.h(8)),
-                  Wrap(
-                    spacing: context.w(8),
-                    runSpacing: context.h(8),
-                    children: item.preTreatmentAttachments
-                        .map((att) => _buildAttachmentChip(context, att))
-                        .toList(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Widget _buildDoctorPhotoSection(
-  //   BuildContext context, {
-  //   required PreTreatmentInstructionItem item,
-  // }) {
-  //   final photos = item.doctorPhotos.isNotEmpty
-  //       ? item.doctorPhotos
-  //       : [
-  //           DoctorTreatmentPhoto(
-  //             id: "dp_pre_f1",
-  //             url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500",
-  //             title: "Pre-Procedure Frontal View",
-  //             doctorName: "Dr. Sarah Johnson",
-  //             dateTaken: DateTime.now().subtract(const Duration(days: 2)),
-  //             note: "Clinical baseline photograph before treatment.",
-  //           ),
-  //           DoctorTreatmentPhoto(
-  //             id: "dp_pre_f2",
-  //             url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500",
-  //             title: "Pre-Procedure Right Angle 45°",
-  //             doctorName: "Dr. Sarah Johnson",
-  //             dateTaken: DateTime.now().subtract(const Duration(days: 2)),
-  //             note: "Facial contour and symmetry baseline.",
-  //           ),
-  //         ];
-
-  //   return Container(
-  //     margin: EdgeInsets.only(bottom: context.h(24)),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           children: [
-  //             Container(
-  //               padding: EdgeInsets.all(context.w(6)),
-  //               decoration: BoxDecoration(
-  //                 color: CustomColors.purpleColor.withValues(alpha: 0.15),
-  //                 shape: BoxShape.circle,
-  //               ),
-  //               child: Icon(
-  //                 Iconsax.mask,
-  //                 color: CustomColors.darkPurple,
-  //                 size: context.sp(18),
-  //               ),
-  //             ),
-  //             SizedBox(width: context.w(10)),
-  //             Expanded(
-  //               child: Text(
-  //                 item.treatmentName.capitalize,
-  //                 style: CustomFonts.black18w600,
-  //               ),
-  //             ),
-  //             if (item.areaName != null && item.areaName!.isNotEmpty)
-  //               Container(
-  //                 padding: EdgeInsets.symmetric(
-  //                   horizontal: context.w(10),
-  //                   vertical: context.h(4),
-  //                 ),
-  //                 decoration: BoxDecoration(
-  //                   color: CustomColors.darkPurple.withValues(alpha: 0.08),
-  //                   borderRadius: BorderRadius.circular(context.r(12)),
-  //                 ),
-  //                 child: Text(
-  //                   item.areaName!,
-  //                   style: CustomFonts.black12w600.copyWith(
-  //                     color: CustomColors.darkPurple,
-  //                   ),
-  //                 ),
-  //               ),
-  //           ],
-  //         ),
-  //         SizedBox(height: context.h(12)),
-  //         Container(
-  //           padding: EdgeInsets.all(context.w(16)),
-  //           decoration: BoxDecoration(
-  //             color: Colors.white,
-  //             borderRadius: BorderRadius.circular(context.r(24)),
-  //             border: Border.all(color: Colors.grey.shade200, width: 1.5),
-  //             boxShadow: CustomColors.cardShadow,
-  //           ),
-  //           child: Column(
-  //             children: [
-  //               for (int i = 0; i < photos.length; i++) ...[
-  //                 if (i > 0)
-  //                   Padding(
-  //                     padding: EdgeInsets.symmetric(vertical: context.h(12)),
-  //                     child: const Divider(color: CustomColors.greyColor, height: 1),
-  //                   ),
-  //                 Row(
-  //                   crossAxisAlignment: CrossAxisAlignment.center,
-  //                   children: [
-  //                     ClipRRect(
-  //                       borderRadius: BorderRadius.circular(context.r(16)),
-  //                       child: CachedNetworkImage(
-  //                         imageUrl: photos[i].url,
-  //                         height: context.w(85),
-  //                         width: context.w(85),
-  //                         fit: BoxFit.cover,
-  //                         placeholder: (context, url) => Container(
-  //                           height: context.w(85),
-  //                           width: context.w(85),
-  //                           color: Colors.grey.shade100,
-  //                           child: const Center(
-  //                             child: CupertinoActivityIndicator(),
-  //                           ),
-  //                         ),
-  //                         errorWidget: (context, url, error) => Container(
-  //                           height: context.w(85),
-  //                           width: context.w(85),
-  //                           color: Colors.grey.shade100,
-  //                           child: const Icon(Icons.image_not_supported),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     SizedBox(width: context.w(14)),
-  //                     Expanded(
-  //                       child: Column(
-  //                         crossAxisAlignment: CrossAxisAlignment.start,
-  //                         children: [
-  //                           Text(
-  //                             photos[i].title,
-  //                             style: CustomFonts.black16w700,
-  //                           ),
-  //                           SizedBox(height: context.h(4)),
-  //                           Row(
-  //                             children: [
-  //                               Icon(
-  //                                 Iconsax.user,
-  //                                 size: context.sp(14),
-  //                                 color: CustomColors.darkPurple,
-  //                               ),
-  //                               SizedBox(width: context.w(4)),
-  //                               Flexible(
-  //                                 child: Text(
-  //                                   "Taken by: ${photos[i].doctorName ?? 'Practitioner'}",
-  //                                   style: CustomFonts.darkPurple12w600,
-  //                                   overflow: TextOverflow.ellipsis,
-  //                                 ),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                           if (photos[i].note != null) ...[
-  //                             SizedBox(height: context.h(4)),
-  //                             Text(
-  //                               photos[i].note!,
-  //                               style: CustomFonts.grey12w400,
-  //                               maxLines: 2,
-  //                               overflow: TextOverflow.ellipsis,
-  //                             ),
-  //                           ],
-  //                         ],
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ],
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
- Widget _buildAttachmentChip(
-  BuildContext context,
-  PreTreatmentAttachment att,
-) {
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: () async {
-        final url = att.url;
-        if (url != null && url.isNotEmpty) {
-          final uri = Uri.parse(url);
-          if (await canLaunchUrl(uri)) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
-        }
-      },
-        borderRadius: BorderRadius.circular(context.r(12)),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.w(12),
-            vertical: context.h(8),
-          ),
-          decoration: BoxDecoration(
-            color: CustomColors.darkPurple.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(context.r(12)),
-            border: Border.all(
-              color: CustomColors.darkPurple.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Iconsax.document_download,
-                size: context.sp(16),
-                color: CustomColors.darkPurple,
-              ),
-              SizedBox(width: context.w(6)),
-              Flexible(
-                child: Text(
-                  att.name?.capitalize ?? 'N/A',
-                  style: CustomFonts.black12w600.copyWith(
-                    color: CustomColors.darkPurple,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
