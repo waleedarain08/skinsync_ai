@@ -7,6 +7,7 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../models/responses/appointments_list_response.dart';
 import '../services/websocket_service.dart';
+import '../view_models/appointment_view_model.dart';
 import '../view_models/auth_view_model.dart';
 import '../view_models/bottom_nav_view_model.dart';
 import '../view_models/chat_view_model.dart';
@@ -47,43 +48,49 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
       ref.read(subscriptionProvider.notifier).fetchSubscriptionPlans();
       ref.read(formsViewModel.notifier).fetchForms();
       _wsInstance.connect(
-        onEvent: (event) {
-          try {
-            switch (event.type) {
-              case .error:
-                final error = event.data['error'] as String?;
-                if (error != null) {
-                  EasyLoading.showError(error);
-                }
-                break;
-              case .appointment:
-                break;
-              case .newAppointment:
-                log('DATA: ${event.data}');
-                ref
-                    .read(authViewModel.notifier)
-                    .addAppointment(AppointmentItem.fromJson(event.data));
-                break;
-              case .message:
-                if (ref.exists(chatProvider)) {
-                  ref.read(chatProvider.notifier).addMessage(.fromJson(event.data));
-                }
-                break;
-              case .newChat:
-                if (ref.exists(chatProvider)) {
-                  ref.read(chatProvider.notifier).addChat(.fromJson(event.data));
-                }
-                break;
-              case .subscription:
-                // TODO: Handle this case.
-                throw UnimplementedError();
-            }
-          } catch (_) {
-            log(' Ignoring parsing errors');
-          }
-        },
+        onEvent: _onEvent,
       );
     });
+  }
+
+  Future<void> _onEvent(WsEvent event) async {
+    try {
+      switch (event.type) {
+        case .error:
+          final error = event.data['error'] as String?;
+          if (error != null) {
+            EasyLoading.showError(error);
+          }
+          break;
+        case .appointment:
+          break;
+        case .newAppointment:
+          log('DATA: ${event.data}');
+          ref
+              .read(authViewModel.notifier)
+              .addAppointment(AppointmentItem.fromJson(event.data));
+          break;
+        case .message:
+          if (ref.exists(chatProvider)) {
+            ref.read(chatProvider.notifier).addMessage(.fromJson(event.data));
+          }
+          break;
+        case .newChat:
+          if (ref.exists(chatProvider)) {
+            ref.read(chatProvider.notifier).addChat(.fromJson(event.data));
+          }
+          break;
+        case .apptStatusChanged:
+          if (ref.exists(appointmentProvider)) {
+            ref.read(appointmentProvider.notifier).updateStatus(.fromJson(event.data));
+          }
+        case .subscription:
+        // TODO: Handle this case.
+          throw UnimplementedError();
+      }
+    } catch (_) {
+      log(' Ignoring parsing errors');
+    }
   }
 
   @override

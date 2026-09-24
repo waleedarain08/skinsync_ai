@@ -233,7 +233,8 @@ enum EventType {
   newAppointment('new_appointment'),
   newChat('new_chat'),
   error('error'),
-  subscription('subscription');
+  subscription('subscription'),
+  apptStatusChanged('appointment_status_changed');
 
   final String value;
   const EventType(this.value);

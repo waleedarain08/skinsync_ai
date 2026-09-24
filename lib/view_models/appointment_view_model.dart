@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../models/base_state_model.dart';
 import '../models/requests/change_payment_status_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
+import '../models/responses/appointment_status_event.dart';
 import '../models/responses/appointment_type_list_response.dart';
 import '../models/responses/appointments_list_response.dart';
 import '../models/responses/scan_qr_response.dart';
@@ -17,11 +20,12 @@ import '../services/appointment_service.dart';
 import '../services/encryption_service.dart';
 import 'base_view_model.dart';
 
-final appointmentProvider = NotifierProvider<AppointmentViewModel, AppointmentState>(
-  () => AppointmentViewModel(
-    repo: AppointmentService(apiClient: ApiBaseHelper()),
-  ),
-);
+final appointmentProvider =
+    NotifierProvider<AppointmentViewModel, AppointmentState>(
+      () => AppointmentViewModel(
+        repo: AppointmentService(apiClient: ApiBaseHelper()),
+      ),
+    );
 
 class AppointmentViewModel extends BaseViewModel<AppointmentState> {
   AppointmentViewModel({required this.repo})
@@ -74,6 +78,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       state = state.copyWith(loading: false, appointmentDetail: response.data);
     });
   }
+
   Future<ScanQrResponse?> scanQrCode({
     required int clinicId,
     required int appointmentId,
@@ -91,18 +96,16 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       return data;
     });
   }
-Future<bool?> changePaymentStatus({
+
+  Future<bool?> changePaymentStatus({
     required String paymentStatus,
     required int appointmentId,
   }) async {
     return await runSafely(() async {
       EasyLoading.show(status: 'Checking in...');
-       await repo.changePaymentStatus(
+      await repo.changePaymentStatus(
         appointmentId: appointmentId,
-        request: ChangePaymentStatusRequest(
-          paymentStatus: paymentStatus
-         
-        ),
+        request: ChangePaymentStatusRequest(paymentStatus: paymentStatus),
       );
       EasyLoading.dismiss();
       await getAppointmentDetail(appointmentId);
@@ -110,24 +113,25 @@ Future<bool?> changePaymentStatus({
     });
   }
 
- Future<ScanQrResponse?> decodeQrCode(
-  String qrCode, {
-  required int appointmentId,
-}) async {
-  return await runSafely(() async {
-    final decrypted = await EncryptionService().decode(cipherText: qrCode);
-    if (decrypted == null) {
-      throw const AppException('Could not decode QR code');
-    }
+  Future<ScanQrResponse?> decodeQrCode(
+    String qrCode, {
+    required int appointmentId,
+  }) async {
+    return await runSafely(() async {
+      final decrypted = await EncryptionService().decode(cipherText: qrCode);
+      if (decrypted == null) {
+        throw const AppException('Could not decode QR code');
+      }
 
-    final clinicId = int.tryParse(decrypted);
-    if (clinicId == null) {
-      throw const AppException('Invalid QR code');
-    }
+      final clinicId = int.tryParse(decrypted);
+      if (clinicId == null) {
+        throw const AppException('Invalid QR code');
+      }
 
-    return await scanQrCode(clinicId: clinicId, appointmentId: appointmentId);
-  });
-}
+      return await scanQrCode(clinicId: clinicId, appointmentId: appointmentId);
+    });
+  }
+
   Future<String?> encryptAppointmentData(AppointmentDetailData? data) async {
     return await runSafely<String?>(() async {
       final appointmentId = data?.id;
@@ -140,6 +144,22 @@ Future<bool?> changePaymentStatus({
         message: '$appointmentId/$doctorId/$clinicId',
       );
     });
+  }
+
+  void updateStatus(AppointmentStatusEvent event) {
+    if (state.appointmentDetail == null) {
+      log('Appointment detail not found');
+      return;
+    }
+    if (state.appointmentDetail!.id != event.appointmentId) {
+      log('Appointment details with different id found!');
+      return;
+    }
+    state = state.copyWith(
+      appointmentDetail: state.appointmentDetail!.copyWith(
+        status: event.status,
+      ),
+    );
   }
 
   @override
@@ -184,7 +204,7 @@ class AppointmentState extends BaseStateModel {
       simulations: simulations ?? this.simulations,
       appointmentsResponse: appointmentsResponse ?? this.appointmentsResponse,
       appointmentDetail: appointmentDetail ?? this.appointmentDetail,
-      scanQrResponse:scanQrResponse?? this.scanQrResponse
+      scanQrResponse: scanQrResponse ?? this.scanQrResponse,
     );
   }
 }

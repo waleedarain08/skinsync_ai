@@ -15,16 +15,6 @@ class AppointmentDetailResponse extends BaseResponseModel {
     message = json['message'];
     data = json['data'] != null ? AppointmentDetailData.fromJson(json['data']) : null;
   }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['is_success'] = isSuccess;
-    data['message'] = message;
-    if (this.data != null) {
-      data['data'] = this.data!.toJson();
-    }
-    return data;
-  }
 }
 
 class AppointmentPatient {
@@ -128,34 +118,51 @@ class AppointmentDetailData {
     createdAt = json['created_at'];
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['appointment_key'] = appointmentKey;
-    if (clinic != null) data['clinic'] = clinic!.toJson();
-    if (doctor != null) data['doctor'] = doctor!.toJson();
-    if (patient != null) data['patient'] = patient!.toJson();
-    if (appointmentType != null) data['appointment_type'] = appointmentType!.toJson();
-    data['date'] = date;
-    data['start_time'] = startTime;
-    data['end_time'] = endTime;
-    data['is_invite_clinic'] = isInviteClinic;
-    if (simulations != null) data['simulations'] = simulations!.toJson();
-    if (treatments != null) {
-      data['treatments'] = treatments!.map((v) => v.toJson()).toList();
-    }
-    data['treatment_total'] = treatmentTotal;
-    if (paymentType != null) data['payment_type'] = paymentType!.toJson();
-    data['discount_type'] = discountType;
-    data['discount'] = discount;
-    data['booking_type'] = bookingType;
-    data['status'] = status;
-    data['created_at'] = createdAt;
-    return data;
+  AppointmentDetailData copyWith({
+    int? id,
+    int? chatId,
+    String? appointmentKey,
+    AppointmentClinic? clinic,
+    AppointmentDoctor? doctor,
+    AppointmentPatient? patient,
+    AppointmentTypeData? appointmentType,
+    int? date,
+    int? startTime,
+    int? endTime,
+    bool? isInviteClinic,
+    Simulations? simulations,
+    List<DetailedAppointmentTreatment>? treatments,
+    double? treatmentTotal,
+    PaymentType? paymentType,
+    String? discountType,
+    double? discount,
+    String? bookingType,
+    String? status,
+    String? createdAt,
+  }) {
+    return AppointmentDetailData(
+      id: id ?? this.id,
+      chatId: chatId ?? this.chatId,
+      appointmentKey: appointmentKey ?? this.appointmentKey,
+      clinic: clinic ?? this.clinic,
+      doctor: doctor ?? this.doctor,
+      patient: patient ?? this.patient,
+      appointmentType: appointmentType ?? this.appointmentType,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isInviteClinic: isInviteClinic ?? this.isInviteClinic,
+      simulations: simulations ?? this.simulations,
+      treatments: treatments ?? this.treatments,
+      treatmentTotal: treatmentTotal ?? this.treatmentTotal,
+      paymentType: paymentType ?? this.paymentType,
+      discountType: discountType ?? this.discountType,
+      discount: discount ?? this.discount,
+      bookingType: bookingType ?? this.bookingType,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
-
-  // Compatibility getter
-  int? get appointmentId => id;
 }
 
 class PaymentType {
