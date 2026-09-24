@@ -169,12 +169,12 @@ class TreatmentService implements TreatmentRepository {
   }
 
   @override
-  Future<ClinicalJourneyResponse> getClinicalJourney() async {
+  Future<ClinicalJourneyResponse> getClinicalJourney({required int clinicId}) async {
     
     final jsonResponse = await _apiClient.httpRequest(
       endPoint: EndPoints.clinicalJourney,
       requestType: .get,
-      params: '',
+      params: '?clinic_id=$clinicId',
     );
     // Check HTTP status code
     if (jsonResponse.statusCode >= 200 && jsonResponse.statusCode < 300) {

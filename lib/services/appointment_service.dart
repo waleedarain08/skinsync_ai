@@ -3,12 +3,16 @@ import 'dart:convert';
 import '../exceptions/app_exception.dart';
 import '../models/requests/appointment_request.dart';
 import '../models/requests/change_payment_status_request.dart';
+import '../models/requests/instructions_request.dart';
+import '../models/requests/post_treatment_photos_request.dart';
 import '../models/requests/scan_qr_request.dart';
 import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointment_response.dart';
 import '../models/responses/appointment_type_list_response.dart';
 import '../models/responses/appointments_list_response.dart';
 import '../models/responses/base_response_model.dart';
+import '../models/responses/instructions_response.dart';
+import '../models/responses/post_treatment_photos_response.dart';
 import '../models/responses/scan_qr_response.dart';
 import '../models/responses/simulation_history_response.dart';
 import '../repositories/appointment_repository.dart';
@@ -134,7 +138,72 @@ class AppointmentService implements AppointmentRepository {
     }
     return data;
   }
+   @override
+ Future<InstructionsResponse> postInstructions({
+    required InstructionsRequest request,
+  })async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.postInstructions,
+      requestType: .post,
+      requestBody: request.toJson(),
+      params: '',
+    );
+    final data = InstructionsResponse.fromJson(jsonDecode(response.body));
+    if (!(data.status ?? false)) {
+      throw AppException(data.message ?? 'Something went wrong!');
+    }
+    return data;
+  }
+   @override
+  Future<InstructionsResponse> preInstructions ({
+    required InstructionsRequest request,
+  })async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.preInstructions,
+      requestType: .post,
+      requestBody: request.toJson(),
+      params: '',
+    );
+    final data = InstructionsResponse.fromJson(jsonDecode(response.body));
+    if (!(data.status ?? false)) {
+      throw AppException(data.message ?? 'Something went wrong!');
+    }
+    return data;
+  }
+   @override
+  Future<PostTreatmentPhotosResponse> postTreatmentPhotos({
+    required InstructionsRequest request,
+  })async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.postTreatmentPhotos,
+      requestType: .post,
+      requestBody: request.toJson(),
+      params: '',
+    );
+    final data = PostTreatmentPhotosResponse.fromJson(jsonDecode(response.body));
+    if (!(data.status ?? false)) {
+      throw AppException(data.message ?? 'Something went wrong!');
+    }
+    return data;
+  }
 
+
+ @override
+ Future<BaseResponseModel> updatePostTreatmentPhotos({
+    required PostTreatmentPhotosRequest request,
+  })async {
+    final response = await _apiClient.httpRequest(
+      endPoint: EndPoints.postTreatmentPhotos,
+      requestType: .patch,
+      requestBody: request.toJson(),
+      params: '',
+    );
+    final data = BaseResponseModel.fromJson(jsonDecode(response.body));
+    if (!(data.status ?? false)) {
+      throw AppException(data.message ?? 'Something went wrong!');
+    }
+    return data;
+  }
  @override
   Future<BaseResponseModel> changePaymentStatus({
     required int appointmentId,

@@ -15,22 +15,23 @@ import '../../utils/color_constant.dart';
 import '../../utils/custom_fonts.dart';
 import '../../utils/date_time_utils.dart';
 
-class ClinicalJourneyScreen extends ConsumerStatefulWidget {
-  const ClinicalJourneyScreen({super.key});
+class TreatmentClinicalJourneyScreen extends ConsumerStatefulWidget {
+  final int clinicId;
+  const TreatmentClinicalJourneyScreen({super.key, required this.clinicId});
 
-  static const String routeName = "/ClinicalJourneyScreen";
+  static const String routeName = "/TreatmentClinicalJourneyScreen";
 
   @override
-  ConsumerState<ClinicalJourneyScreen> createState() =>
+  ConsumerState<TreatmentClinicalJourneyScreen> createState() =>
       _ClinicalJourneyScreenState();
 }
 
-class _ClinicalJourneyScreenState extends ConsumerState<ClinicalJourneyScreen> {
+class _ClinicalJourneyScreenState extends ConsumerState<TreatmentClinicalJourneyScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(treatmentViewModel.notifier).getClinicalJourney();
+      ref.read(treatmentViewModel.notifier).getClinicalJourney(clinicId:widget.clinicId);
     });
   }
 
@@ -41,7 +42,7 @@ class _ClinicalJourneyScreenState extends ConsumerState<ClinicalJourneyScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const CustomAppBar(title: "Clinical Journey"),
+      appBar: const CustomAppBar(title: "Treatment Journey"),
       body: state.loading && journey == null
           ? const Center(child: CircularProgressIndicator())
           : journey == null

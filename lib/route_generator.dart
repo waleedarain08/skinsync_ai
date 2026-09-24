@@ -11,7 +11,7 @@ import 'models/responses/simulation_history_response.dart';
 import 'models/responses/treatment_area_list_response.dart';
 import 'models/responses/treatment_category_list_response.dart';
 import 'models/responses/treatment_list_response.dart';
-import 'screens/clinical_journey/clinical_journey_screen.dart';
+import 'screens/clinical_journey/treatment_clinical_journey_screen.dart';
 import 'screens/my_care_screen.dart';
 import 'screens/additional_info_screen.dart';
 import 'screens/allergy_and_medical_history.dart';
@@ -487,10 +487,11 @@ class RouteGenerator {
           settings: const RouteSettings(name: MyCareScreen.routeName),
           builder: (_) => const MyCareScreen(),
         );
-      case ClinicalJourneyScreen.routeName:
+      case TreatmentClinicalJourneyScreen.routeName:
+       final clinicId = settings.arguments as int;
         return MaterialPageRoute(
-          settings: const RouteSettings(name: ClinicalJourneyScreen.routeName),
-          builder: (_) => const ClinicalJourneyScreen(),
+          settings: const RouteSettings(name: TreatmentClinicalJourneyScreen.routeName),
+          builder: (_) =>  TreatmentClinicalJourneyScreen(clinicId: clinicId,),
         );
       case MyTreatmentProgressScreen.routeName:
         final args = settings.arguments as Map<String, dynamic>?;
@@ -526,14 +527,15 @@ class RouteGenerator {
           ),
           builder: (_) => TreatmentRequestsScreen(isTreatmentRequest: arg),
         );
-      case SharedTreatmentRequestsScreen.routeName:
-        return MaterialPageRoute(
-          settings: RouteSettings(
-            name: SharedTreatmentRequestsScreen.routeName,
-            arguments: args,
-          ),
-          builder: (_) => SharedTreatmentRequestsScreen(title: args as String?),
-        );
+     case SharedTreatmentRequestsScreen.routeName:
+  return MaterialPageRoute(
+    settings: RouteSettings(
+      name: SharedTreatmentRequestsScreen.routeName,
+      arguments: args, // the screen reads this via ModalRoute
+    ),
+    builder: (_) =>
+        SharedTreatmentRequestsScreen(title: args is String ? args : null),
+  );
       case PatientTreatmentRequestsScreen.routeName:
         return MaterialPageRoute(
           settings: const RouteSettings(

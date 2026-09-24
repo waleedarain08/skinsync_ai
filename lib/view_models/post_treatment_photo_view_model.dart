@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import '../models/base_state_model.dart';
 import '../models/responses/doctor_treatment_photo_model.dart';
 import '../models/responses/post_treatment_photo_model.dart';
+import '../services/media_service.dart';
+import 'auth_view_model.dart';
 
 final postTreatmentPhotoProvider =
     NotifierProvider<PostTreatmentPhotoViewModel, PostTreatmentPhotoState>(() {
@@ -18,52 +20,89 @@ class PostTreatmentPhotoViewModel extends Notifier<PostTreatmentPhotoState> {
   }
 
   Future<void> addPhotoToMilestone({
-    required int treatmentId,
-    required String milestoneTitle,
-    required ImageSource source,
-  }) async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: source,
-      preferredCameraDevice: CameraDevice.front,
+  required int treatmentId,
+  required String milestoneTitle,
+  required ImageSource source,
+}) async {
+  final pickedFile = await ImagePicker().pickImage(
+    source: source,
+    preferredCameraDevice: CameraDevice.front,
+  );
+
+  if (pickedFile == null) return;
+  final authData = ref.read(authViewModel).authData;
+  try {
+    state = state.copyWith(loading: true, errorMessage: null);
+
+    final email = authData?.user?.primaryEmail;
+
+    if (email == null || email.isEmpty) {
+      throw Exception('User email not found');
+    }
+
+    final imagePath =
+        '$email/post-treatment-photos/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}';
+
+    final imageUrl = await MediaService().uploadImage(
+      imagePath,
+      pickedFile,
     );
-    if (pickedFile == null) return;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      throw Exception('Failed to upload image');
+    }
 
     final newPhoto = UploadedPhoto(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      url: pickedFile.path,
+      url: imageUrl,
       label: "New Upload",
       uploadedAt: DateTime.now(),
     );
 
     final updatedItems = state.photoItems.map((item) {
-      if (item.treatmentId == treatmentId || item.treatmentName == milestoneTitle) {
-        final updatedMilestones = item.photoMilestones.map((m) {
-          if (m.title == milestoneTitle) {
-            final newPhotos = [...m.uploadedPhotos, newPhoto];
-            return PhotoMilestoneItem(
-              numberOfDays: m.numberOfDays,
-              requiredPhotos: m.requiredPhotos,
-              title: m.title,
-              uploadedPhotos: newPhotos,
-            );
-          }
-          return m;
-        }).toList();
-
-        return PostTreatmentPhotoItem(
-          treatmentId: item.treatmentId,
-          treatmentName: item.treatmentName,
-          areaName: item.areaName,
-          requirePostTreatmentPhotos: item.requirePostTreatmentPhotos,
-          photoMilestones: updatedMilestones,
-        );
+      if (item.treatmentId != treatmentId) {
+        return item;
       }
-      return item;
+
+      final updatedMilestones = item.photoMilestones.map((milestone) {
+        if (milestone.title != milestoneTitle) {
+          return milestone;
+        }
+
+        final newPhotos = [
+          ...milestone.uploadedPhotos,
+          newPhoto,
+        ];
+
+        return PhotoMilestoneItem(
+          numberOfDays: milestone.numberOfDays,
+          requiredPhotos: milestone.requiredPhotos,
+          title: milestone.title,
+          uploadedPhotos: newPhotos,
+        );
+      }).toList();
+
+      return PostTreatmentPhotoItem(
+        treatmentId: item.treatmentId,
+        treatmentName: item.treatmentName,
+        areaName: item.areaName,
+        requirePostTreatmentPhotos: item.requirePostTreatmentPhotos,
+        photoMilestones: updatedMilestones,
+        doctorPhotos: item.doctorPhotos,
+      );
     }).toList();
 
-    state = state.copyWith(photoItems: updatedItems);
+    state = state.copyWith(
+      loading: false,
+      photoItems: updatedItems,
+    );
+  } catch (e) {
+    state = state.copyWith(
+      loading: false,
+      errorMessage: e.toString(),
+    );
   }
-
+}
   List<PostTreatmentPhotoItem> _getDummyPhotoItems() {
     return [
       PostTreatmentPhotoItem(

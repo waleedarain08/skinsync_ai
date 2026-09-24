@@ -8,6 +8,7 @@ import '../../utils/custom_fonts.dart';
 Future<ImageSource?> showImageSourceDialog(
   BuildContext context, {
   String title = 'Select Image Source',
+  bool showGallery = true,
 }) async {
   return await showModalBottomSheet<ImageSource>(
     context: context,
@@ -36,22 +37,28 @@ Future<ImageSource?> showImageSourceDialog(
             Text(title, style: CustomFonts.black16w600),
             SizedBox(height: dialogContext.h(12)),
             const Divider(height: 1, color: CustomColors.greyColor),
-            ListTile(
-              leading: Container(
-                padding: EdgeInsets.all(dialogContext.w(8)),
-                decoration: BoxDecoration(
-                  color: CustomColors.purpleColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+            if (showGallery) ...[
+              ListTile(
+                leading: Container(
+                  padding: EdgeInsets.all(dialogContext.w(8)),
+                  decoration: BoxDecoration(
+                    color: CustomColors.purpleColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.photo_library_outlined,
+                    color: CustomColors.darkPurple,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.photo_library_outlined,
-                  color: CustomColors.darkPurple,
+                title: Text(
+                  'Choose from Gallery',
+                  style: CustomFonts.black14w600,
                 ),
+                onTap: () =>
+                    Navigator.pop(dialogContext, ImageSource.gallery),
               ),
-              title: Text('Choose from Gallery', style: CustomFonts.black14w600),
-              onTap: () => Navigator.pop(dialogContext, ImageSource.gallery),
-            ),
-            const Divider(height: 1, color: CustomColors.greyColor),
+              const Divider(height: 1, color: CustomColors.greyColor),
+            ],
             ListTile(
               leading: Container(
                 padding: EdgeInsets.all(dialogContext.w(8)),

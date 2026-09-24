@@ -10,7 +10,18 @@ import '../widgets/app_loader.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_search_field.dart';
 import '../widgets/requested_clinic_treatment_widget.dart';
+import 'clinical_journey/treatment_clinical_journey_screen.dart';
 import 'patient_treatment_requests_screen.dart';
+
+class SharedTreatmentRequestsArgs {
+  final String? title;
+  final bool openJourneyOnTap;
+
+  const SharedTreatmentRequestsArgs({
+    this.title,
+    this.openJourneyOnTap = false,
+  });
+}
 
 class SharedTreatmentRequestsScreen extends ConsumerStatefulWidget {
   static const String routeName = '/shared-treatment-requests';
@@ -74,9 +85,11 @@ class _SharedTreatmentRequestsScreenState
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(clinicProvider.select((s) => s.loading));
-    final argsTitle = ModalRoute.of(context)?.settings.arguments as String?;
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    final argsObj = routeArgs is SharedTreatmentRequestsArgs ? routeArgs : null;
+    final argsTitle = routeArgs is String ? routeArgs : argsObj?.title;
     final screenTitle = widget.title ?? argsTitle ?? 'Shared Treatment Request';
-
+    final openJourneyOnTap = argsObj?.openJourneyOnTap ?? false;
     return Scaffold(
       appBar: CustomAppBar(showTitle: true, title: screenTitle),
       body: Stack(
@@ -117,14 +130,18 @@ class _SharedTreatmentRequestsScreenState
                                 child: RequestClinicTreatmentCard(
                                   data: request,
                                   onTap: () {
-                                    if (request.id != null) {
-                                      Navigator.pushNamed(
-                                        context,
-                                        PatientTreatmentRequestsScreen
-                                            .routeName,
-                                        arguments: request.id,
-                                      );
-                                    }
+                                    final clinicId = request.id;
+                                    if (clinicId == null) return;
+
+                                    Navigator.pushNamed(
+                                      context,
+                                      openJourneyOnTap
+                                          ? TreatmentClinicalJourneyScreen
+                                                .routeName
+                                          : PatientTreatmentRequestsScreen
+                                                .routeName,
+                                      arguments: clinicId,
+                                    );
                                   },
                                 ),
                               );

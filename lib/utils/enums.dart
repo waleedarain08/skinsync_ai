@@ -110,6 +110,9 @@ enum EndPoints {
   qrScan('v1/qrscan'),
   clinic('v1/clinic'),
   chats('v1/chats'),
+  postTreatmentPhotos("v1/appointment/post-treatment-photos"),
+  postInstructions('v1/appointment/post-instructions'),
+  preInstructions('v1/appointment/pre-instructions'),
   messages('v1/chats/messages');
 
   final String path;
@@ -121,9 +124,9 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-   // apiQa('https://api-dev.skinsyncai.com/api/');
+   apiQa('https://api-dev.skinsyncai.com/api/');
 
-  apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
+ // apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);

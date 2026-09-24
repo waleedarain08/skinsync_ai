@@ -4,10 +4,13 @@ import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 import '../screens/face_pose_capture_screen.dart';
 import '../screens/consent_forms/face_consent_screen.dart';
-import '../screens/clinical_journey/clinical_journey_screen.dart';
+import '../screens/treatment_request_detail_screen.dart';
+import '../screens/treatment_requests_screen.dart';
 import '../utils/color_constant.dart';
 import '../utils/custom_fonts.dart';
+import '../view_models/treatment_requests_view_model.dart';
 import 'custom_button.dart';
+import 'dialogs/save_option_confirmation_dialog.dart';
 
 void showMScanFaceDialog(BuildContext context) {
   showDialog(
@@ -62,7 +65,7 @@ void showMScanFaceDialog(BuildContext context) {
                   CustomButton(
                     text: "Scan Your Face",
                     borderRadius: context.r(26),
-                    textColor: Colors.white,
+                   
                     onPressed: () {
                       Navigator.pop(dialogContext); // close dialog
                       FaceConsentScreen.checkAndProceed(
@@ -81,34 +84,75 @@ void showMScanFaceDialog(BuildContext context) {
                   // Button 2: Select Treatment Areas (Secondary Button)
                   Consumer(
                     builder: (consumerContext, ref, _) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(context.r(25)),
-                          border: Border.all(
-                            color: CustomColors.darkPurple,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: CustomButton(
-                          text: "Save Option",
-                          textColor: Colors.white,
-                          borderRadius: context.r(26),
-                          onPressed: () {
-                            Navigator.pop(dialogContext); // close dialog
+                      return CustomButton(
+                        isBorder: true,
+                        text: "Save Option",
+                       
+                        borderRadius: context.r(26),
+                        onPressed: () {
+                         final journeyState = ref.read(treatmentRequestsProvider);
+    final selectedGroup = journeyState.selectedGroup;
 
-                            // final treatment = ref
-                            //     .read(checkoutViewModel)
-                            //     .selectedTreatments;
-                            Navigator.pushNamed(
-                              context,
-                              ClinicalJourneyScreen.routeName,
-                              // arguments: {
-                              //   'title': treatment?.name ?? 'Focus Areas',
-                              //   'treatmentId': treatment?.id,
-                              // },
-                            );
-                          },
-                        ),
+    if (selectedGroup == null) {
+      Navigator.pushNamed(
+        context,
+        TreatmentRequestsScreen.routeName,
+        arguments: false,
+      );
+    } else {
+      showSaveOptionConfirmationDialog(
+        screenContext: context,
+        groupName: selectedGroup.name ?? 'Unknown Group',
+        onConfirm: () async {
+          final result = await ref
+              .read(treatmentRequestsProvider.notifier)
+              .createTjOptions();
+          if (result == true) {
+            final result2 = await ref
+                .read(treatmentRequestsProvider.notifier)
+                .fetchOptions(selectedGroup.id ?? 0);
+            if (result2 == true) {
+              Navigator.popUntil(
+                context,
+                ModalRoute.withName(TreatmentRequestDetailScreen.routeName),
+              );
+            }
+            // rootScaffoldMessengerKey.currentState?.showSnackBar(
+            //         SnackBar(
+            //           content: const Text(
+            //             'Your journey is ready! Tap the Journey button in the top-right corner to view it.',
+            //           ),
+            //           duration: const Duration(seconds: 3),
+            //           persist: false,
+            //           behavior: SnackBarBehavior.floating,
+            //           margin: EdgeInsets.only(
+            //             left: context.w(16),
+            //             right: context.w(16),
+            //             bottom: context.h(80),
+            //           ),
+            //           action: SnackBarAction(
+            //             label: '✕',
+            //             onPressed: () {
+            //               rootScaffoldMessengerKey.currentState
+            //                   ?.hideCurrentSnackBar();
+            //             },
+            //           ),
+            //         ),
+            //       );
+            final groupId = ref
+                .read(treatmentRequestsProvider)
+                .selectedGroup
+                ?.id;
+            if (groupId != null) {
+              await ref
+                  .read(treatmentRequestsProvider.notifier)
+                  .fetchOptions(groupId, showloading: false);
+            }
+          }
+        },
+      );
+    }
+                        },
                       );
                     },
                   ),
@@ -121,4 +165,6 @@ void showMScanFaceDialog(BuildContext context) {
       );
     },
   );
+
+  
 }
