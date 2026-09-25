@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -6,6 +7,7 @@ import '../../../models/responses/appointment_detail_response.dart';
 import '../../../utils/color_constant.dart';
 import '../../../utils/custom_fonts.dart';
 import '../../../utils/enums.dart';
+import '../../../view_models/appointment_view_model.dart';
 import '../../custom_button.dart';
 
 class FinancialSummaryDialog extends StatelessWidget {
@@ -44,8 +46,6 @@ class FinancialSummaryDialog extends StatelessWidget {
     } else {
       statusColor = Colors.redAccent;
     }
-
-
 
     final String discountDisplay = isPercentage
         ? "-$discountVal%"
@@ -130,14 +130,36 @@ class FinancialSummaryDialog extends StatelessWidget {
 
             SizedBox(height: context.h(28)),
 
-            SizedBox(
-              width: double.infinity,
-              height: context.h(50),
-              child: CustomButton(
-                onPressed: () => Navigator.pop(context),
-                text: "Pay Now",
-                isBorder: true,
-              ),
+            Consumer(
+              builder: (context, ref, _) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: context.h(50),
+                  child: CustomButton(
+                    onPressed: () {
+                      if (paymentStatus == .paid) {
+                        Navigator.pop(context);
+                      } else {
+                        ref
+                            .read(appointmentProvider.notifier)
+                            .changePaymentStatus(
+                              paymentStatus: "paid",
+                              appointmentId: detail!.id!,
+                            )
+                            .then((value) {
+                              if (value == true) {
+                                Navigator.pop(context);
+                              }
+                            });
+                      }
+                    },
+                    text: paymentStatus == PaymentStatus.paid
+                        ? "Close"
+                        : "Pay Now",
+                    isBorder: true,
+                  ),
+                );
+              },
             ),
           ],
         ),

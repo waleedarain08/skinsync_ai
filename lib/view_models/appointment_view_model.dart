@@ -25,6 +25,8 @@ import '../services/api_base_helper.dart';
 import '../services/appointment_service.dart';
 import '../services/encryption_service.dart';
 import '../services/media_service.dart';
+import '../services/websocket_service.dart';
+import '../utils/enums.dart';
 import 'auth_view_model.dart';
 import 'base_view_model.dart';
 
@@ -117,6 +119,17 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       );
       EasyLoading.dismiss();
       await getAppointmentDetail(appointmentId);
+      if (paymentStatus == PaymentStatus.paid.name) {
+        final appointment = state.appointmentDetail;
+        if (appointment != null) {
+          await WebSocketService().sendMessage(
+            chatId: appointment.chatId!,
+            type: .text,
+            content:
+                '${appointment.patient?.name ?? 'Patient'} has paid for the appointment # ${appointment.appointmentKey ?? 'N/A'}',
+          );
+        }
+      }
       return true;
     });
   }
@@ -154,7 +167,6 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     });
   }
 
- 
   Future<void> preInstructions({required InstructionsRequest request}) async {
     return await runSafely(() async {
       state = state.copyWith(loading: true);
@@ -206,7 +218,6 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     );
   }
 
-  
   Future<String?> uploadPostTreatmentImage({
     required ImageSource source,
     String folder = 'post-treatment-photos',
@@ -242,7 +253,6 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     });
   }
 
-  
   Future<bool> submitMilestonePhotos({
     required int treatmentId,
     required int areaId,
@@ -278,6 +288,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     if (result) EasyLoading.showSuccess('Photos saved');
     return result;
   }
+
   Future<void> getPerTreatmentPhotos({required int appointmentId}) async {
     await runSafely(() async {
       state = state.copyWith(loading: true, errorMessage: null);
@@ -301,7 +312,7 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       state = state.copyWith(
         loading: false,
         // Falls back to what we sent if the API returns no data.
-        perTreatmentPhotos: response.data , // adjust
+        perTreatmentPhotos: response.data, // adjust
       );
 
       return true;
@@ -336,7 +347,6 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
     return result;
   }
 
-
   void updateStatus(AppointmentStatusEvent event) {
     if (state.appointmentDetail == null) {
       log('Appointment detail not found');
@@ -368,7 +378,9 @@ class AppointmentViewModel extends BaseViewModel<AppointmentState> {
       if (response.isSuccess == true) {
         await getAppointmentDetail(appointmentId);
         EasyLoading.dismiss();
-        EasyLoading.showSuccess(response.message ?? "Status updated successfully");
+        EasyLoading.showSuccess(
+          response.message ?? "Status updated successfully",
+        );
         return true;
       }
 
