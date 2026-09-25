@@ -5,6 +5,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
+import '../models/responses/appointment_detail_response.dart';
 import '../models/responses/appointments_list_response.dart';
 import '../services/websocket_service.dart';
 import '../view_models/appointment_view_model.dart';
@@ -47,9 +48,7 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
       ref.read(treatmentViewModel.notifier).init();
       ref.read(subscriptionProvider.notifier).fetchSubscriptionPlans();
       ref.read(formsViewModel.notifier).fetchForms();
-      _wsInstance.connect(
-        onEvent: _onEvent,
-      );
+      _wsInstance.connect(onEvent: _onEvent);
     });
   }
 
@@ -70,6 +69,12 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
               .read(authViewModel.notifier)
               .addAppointment(AppointmentItem.fromJson(event.data));
           break;
+        case .rescheduleAppointment:
+          final details = AppointmentDetailData.fromJson(event.data);
+          ref
+              .read(authViewModel.notifier)
+              .addAppointment(details.toAppointmentItem());
+          break;
         case .message:
           if (ref.exists(chatProvider)) {
             ref.read(chatProvider.notifier).addMessage(.fromJson(event.data));
@@ -82,10 +87,12 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
           break;
         case .apptStatusChanged:
           if (ref.exists(appointmentProvider)) {
-            ref.read(appointmentProvider.notifier).updateStatus(.fromJson(event.data));
+            ref
+                .read(appointmentProvider.notifier)
+                .updateStatus(.fromJson(event.data));
           }
         case .subscription:
-        // TODO: Handle this case.
+          // TODO: Handle this case.
           throw UnimplementedError();
       }
     } catch (_) {

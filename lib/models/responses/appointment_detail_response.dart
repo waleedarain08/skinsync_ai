@@ -190,6 +190,34 @@ class AppointmentDetailData {
     data['created_at'] = createdAt;
     return data;
   }
+  
+  AppointmentItem toAppointmentItem() {
+    return AppointmentItem(
+      appointmentKey: appointmentKey,
+      appointmentId: id,
+      status: status,
+      appointmentType: appointmentType?.title,
+      appointmentTypeId: appointmentType?.id,
+      clinic: clinic,
+      date: date,
+      doctor: doctor,
+      slot: AppointmentSlot(
+        startTime: startTime,
+        endTime: endTime,
+      ),
+      treatments: treatments?.map((t) => AppointmentTreatment(
+        status: t.treatmentStatus,
+        treatmentName: t.treatmentName,
+        areaName: t.areaName,
+        areaId: t.areaId,
+        material: t.material,
+        sessionId: t.sessionId,
+        sessionName: t.sessionName,
+        treatmentId: t.treatmentId,
+        treatmentImage: t.treatmentImage,
+      )).toList(),
+    );
+  }
 }
 
 class PaymentType {

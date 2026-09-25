@@ -265,6 +265,7 @@ enum EventType {
   message('message'),
   appointment('appointment'),
   newAppointment('new_appointment'),
+  rescheduleAppointment('reschedule_appointment'),
   newChat('new_chat'),
   error('error'),
   subscription('subscription'),
