@@ -91,6 +91,7 @@ class _BottomNavPageState extends ConsumerState<BottomNavPage>
                 .read(appointmentProvider.notifier)
                 .updateStatus(.fromJson(event.data));
           }
+          break;
         case .subscription:
           // TODO: Handle this case.
           throw UnimplementedError();

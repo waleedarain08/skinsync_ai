@@ -23,7 +23,7 @@ class PlanApprovalChatBubble extends StatelessWidget {
     final apptData = message.appointmentData;
     final apptId = apptData?.id;
     final apptKey = apptData?.appointmentKey ?? 'N/A';
-    final doctorName = apptData?.doctor?.name ?? message.senderName ?? 'Doctor';
+    // final doctorName = apptData?.doctor?.name ?? message.senderName ?? 'Doctor';
 
     return Container(
       constraints: BoxConstraints(maxWidth: context.w(320)),
@@ -36,10 +36,7 @@ class PlanApprovalChatBubble extends StatelessWidget {
           bottomLeft: Radius.circular(isMe ? context.r(16) : context.r(2)),
           bottomRight: Radius.circular(isMe ? context.r(2) : context.r(16)),
         ),
-        border: Border.all(
-          color: Colors.green.shade400,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.green.shade400, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -69,7 +66,7 @@ class PlanApprovalChatBubble extends StatelessWidget {
               SizedBox(width: context.w(8)),
               Expanded(
                 child: Text(
-                  "Treatment Plan Approved",
+                  "Treatment Plan Confirmed",
                   style: CustomFonts.black14w700.copyWith(
                     color: Colors.green.shade900,
                   ),
@@ -85,7 +82,7 @@ class PlanApprovalChatBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(context.r(10)),
                 ),
                 child: Text(
-                  "APPROVED",
+                  apptData?.status?.toUpperCase() ?? 'N/A',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: context.sp(9),
@@ -106,11 +103,8 @@ class PlanApprovalChatBubble extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  message.content ??
-                      "Dr. $doctorName has approved your treatment plan.",
-                  style: CustomFonts.black13w600.copyWith(
-                    height: 1.35,
-                  ),
+                  'Patient has confirmed the treatment plan.',
+                  style: CustomFonts.black13w600.copyWith(height: 1.35),
                 ),
                 if (apptKey != 'N/A') ...[
                   SizedBox(height: context.h(8)),

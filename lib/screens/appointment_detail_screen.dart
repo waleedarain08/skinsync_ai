@@ -8,8 +8,8 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../models/responses/appointments_list_response.dart';
 import '../models/responses/appointment_detail_response.dart';
+import '../models/responses/appointments_list_response.dart';
 import '../services/websocket_service.dart';
 import '../utils/assets.dart';
 import '../utils/color_constant.dart';
@@ -20,20 +20,20 @@ import '../utils/string_utils.dart';
 import '../view_models/appointment_view_model.dart';
 import '../view_models/forms_view_model.dart';
 import '../widgets/app_loader.dart';
+import '../widgets/appointment_journey/summary_tile.dart';
 import '../widgets/care_card.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/appointment_journey/summary_tile.dart';
-import '../widgets/dialogs/appointment_details/financial_summary_dialog.dart';
 import '../widgets/dialogs/appointment_details/appointment_info_dialog.dart';
-import '../widgets/dialogs/appointment_details/treatment_details_dialog.dart';
+import '../widgets/dialogs/appointment_details/financial_summary_dialog.dart';
 import '../widgets/dialogs/appointment_details/simulation_details_dialog.dart';
+import '../widgets/dialogs/appointment_details/treatment_details_dialog.dart';
 import 'appointment_forms_screen.dart';
-import 'pre_treatment_instructions_screen.dart';
 import 'post_treatment_instructions_screen.dart';
+import 'pre_treatment_instructions_screen.dart';
+import 'qr_scan_screen.dart';
 import 'recovery_journey_screen.dart';
 import 'treatment_progress/my_treatment_progress_screen.dart';
-import 'qr_scan_screen.dart';
 
 class AppointmentDetailScreen extends ConsumerStatefulWidget {
   static const String routeName = '/AppointmentDetailScreen';
@@ -277,7 +277,8 @@ class _AppointmentDetailScreenState
               ),
               child: Column(
                 children: [
-                  _buildCheckInCard(context, detail?.id, paymentStatus),
+                  if (detail?.status == AppointmentStatus.confirmed.value)
+                    _buildCheckInCard(context, detail?.id, paymentStatus),
                   SizedBox(height: context.h(16)),
 
                   // Financial Summary (Placed directly below Check-in card)
@@ -704,57 +705,66 @@ class _AppointmentDetailScreenState
   }
 
   Widget _buildBottomBar(AppointmentDetailData? detail) {
-    final isInReview = detail?.status == AppointmentStatus.awaitingPatient.value;
+    final isInReview =
+        detail?.status == AppointmentStatus.awaitingPatient.value;
     if (!isInReview) {
       return const SizedBox.shrink();
     }
+    final paymentStatus = PaymentStatus.fromApi(detail?.paymentType?.status);
     return Container(
-    padding: EdgeInsets.symmetric(
-      horizontal: context.w(16),
-      vertical: context.h(12),
-    ),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.08),
-          blurRadius: 15,
-          offset: const Offset(0, -4),
-        ),
-      ],
-    ),
-    child: SafeArea(
-      child: SizedBox(
-        width: double.infinity,
-        height: context.h(52),
-        child: CustomButton(
-          onPressed: () async {
-            if (detail?.id != null) {
-              final success = await ref
-                  .read(appointmentProvider.notifier)
-                  .updateAppointmentStatus(
-                appointmentId: detail!.id!,
-                status: AppointmentStatus.confirmed.value,
-              );
-              if (success == true && detail.chatId != null) {
-                try {
-                  await WebSocketService().sendMessage(
-                    chatId: detail.chatId!,
-                    type: .planApproval,
-                    content: jsonEncode(detail.copyWith(status: AppointmentStatus.confirmed.value).toJson()),
-                  );
-                } catch (e) {
-                  debugPrint(
-                    'Failed to send approval chat message: $e',
-                  );
+      padding: EdgeInsets.symmetric(
+        horizontal: context.w(16),
+        vertical: context.h(12),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 15,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          height: context.h(52),
+          child: CustomButton(
+            onPressed: () async {
+              if (detail != null &&
+                  detail.id == widget.appointment.appointmentId &&
+                  paymentStatus.hasBalanceDue) {
+                return _showFinancialDialog(context, detail);
+              }
+              if (detail?.id != null) {
+                final success = await ref
+                    .read(appointmentProvider.notifier)
+                    .updateAppointmentStatus(
+                      appointmentId: detail!.id!,
+                      status: AppointmentStatus.confirmed.value,
+                    );
+                if (success == true && detail.chatId != null) {
+                  try {
+                    await WebSocketService().sendMessage(
+                      chatId: detail.chatId!,
+                      type: .planApproval,
+                      content: jsonEncode(
+                        detail
+                            .copyWith(status: AppointmentStatus.confirmed.value)
+                            .toJson(),
+                      ),
+                    );
+                  } catch (e) {
+                    debugPrint('Failed to send approval chat message: $e');
+                  }
                 }
               }
-            }
-          },
-          text: "Approve Treatment Plan",
+            },
+            text: "Approve Treatment Plan",
+          ),
         ),
       ),
-    ),
     );
   }
 

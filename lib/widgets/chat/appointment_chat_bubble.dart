@@ -80,7 +80,8 @@ class AppFontsExt {
   TextStyle get black13w600 => CustomFonts.black13w600;
   TextStyle get black12w600 => CustomFonts.black12w600;
   TextStyle get black14w400 => CustomFonts.black14w400;
-  TextStyle get purple11w600 => CustomFonts.darkPurple12w600.copyWith(fontSize: 11.sp);
+  TextStyle get purple11w600 =>
+      CustomFonts.darkPurple12w600.copyWith(fontSize: 11.sp);
   TextStyle get grey12w400 => CustomFonts.grey12w400;
   TextStyle get grey13w500 => CustomFonts.grey13w400;
   TextStyle get white14w600 => CustomFonts.white14w600;
@@ -100,13 +101,13 @@ class AppointmentChatBubble extends StatelessWidget {
     final isMe = message.isMe;
     final appointment = message.appointmentData;
     final apptStatus = AppointmentStatus.fromValue(appointment?.status);
-    final isInReview = apptStatus.isInReview ||
+    final isInReview =
+        apptStatus.isInReview ||
         apptStatus.isChangesRequested ||
         apptStatus.isAwaitingPatient;
-    final headerTitle =
-        isInReview ? 'Treatment Plan' : 'Appointment Receipt & Summary';
-    final buttonText =
-        isInReview ? 'View / Modify Treatment Plan' : 'View Appointment Details';
+    final headerTitle = isInReview
+        ? 'Treatment Plan'
+        : 'Appointment Receipt & Summary';
 
     return Container(
       constraints: BoxConstraints(maxWidth: context.w(340)),
@@ -214,7 +215,7 @@ class AppointmentChatBubble extends StatelessWidget {
             Consumer(
               builder: (_, ref, _) {
                 return CustomButton(
-                  text: buttonText,
+                  text: 'View Treatment Plan',
                   height: context.h(48),
                   borderRadius: context.r(12),
                   onPressed: () {
@@ -247,7 +248,7 @@ class AppointmentChatBubble extends StatelessWidget {
     final patient = appt.patient;
     final patientName = patient?.name ?? 'Patient';
     final patientEmail = patient?.email ?? '';
-    final patientPhone = patient?.phoneNumber ?? '';
+    final patientPhone = patient?.phone ?? '';
     final bookingMethod = appt.bookingType?.toUpperCase() ?? '';
     final appointmentType = appt.appointmentType?.title ?? '';
 
@@ -256,8 +257,9 @@ class AppointmentChatBubble extends StatelessWidget {
       if (appointmentType.isNotEmpty) appointmentType,
     ].join(' | ');
 
-    final dateStr =
-    appt.date != null ? DateTimeUtils.formatTimestamp(appt.date!) : '';
+    final dateStr = appt.date != null
+        ? DateTimeUtils.formatTimestamp(appt.date!)
+        : '';
     final timeSlot = appt.startTime != null && appt.endTime != null
         ? '${DateTimeUtils.formatTimestampToTime(appt.startTime!)} - ${DateTimeUtils.formatTimestampToTime(appt.endTime!)}'
         : appt.startTime != null
@@ -289,10 +291,7 @@ class AppointmentChatBubble extends StatelessWidget {
                     color: AppColors.purple.withValues(alpha: 0.1),
                     borderRadius: context.appBorderRadius(all: 12),
                   ),
-                  child: Text(
-                    tagText,
-                    style: context.fonts.purple11w600,
-                  ),
+                  child: Text(tagText, style: context.fonts.purple11w600),
                 ),
               ],
             ],
@@ -302,8 +301,11 @@ class AppointmentChatBubble extends StatelessWidget {
             Row(
               children: [
                 if (patientEmail.isNotEmpty) ...[
-                  const Icon(Icons.email_outlined,
-                      size: 14, color: AppColors.grey),
+                  const Icon(
+                    Icons.email_outlined,
+                    size: 14,
+                    color: AppColors.grey,
+                  ),
                   context.horizontalSpace(4),
                   Expanded(
                     child: Text(
@@ -315,8 +317,11 @@ class AppointmentChatBubble extends StatelessWidget {
                   context.horizontalSpace(8),
                 ],
                 if (patientPhone.isNotEmpty) ...[
-                  const Icon(Icons.phone_outlined,
-                      size: 14, color: AppColors.grey),
+                  const Icon(
+                    Icons.phone_outlined,
+                    size: 14,
+                    color: AppColors.grey,
+                  ),
                   context.horizontalSpace(4),
                   Text(patientPhone, style: context.fonts.grey12w400),
                 ],
@@ -326,8 +331,11 @@ class AppointmentChatBubble extends StatelessWidget {
           const Divider(height: 20, color: AppColors.border),
           Row(
             children: [
-              const Icon(Icons.calendar_month_outlined,
-                  size: 16, color: AppColors.purple),
+              const Icon(
+                Icons.calendar_month_outlined,
+                size: 16,
+                color: AppColors.purple,
+              ),
               context.horizontalSpace(6),
               Flexible(
                 child: Text(
@@ -338,8 +346,11 @@ class AppointmentChatBubble extends StatelessWidget {
                 ),
               ),
               context.horizontalSpace(12),
-              const Icon(Icons.access_time_rounded,
-                  size: 16, color: AppColors.purple),
+              const Icon(
+                Icons.access_time_rounded,
+                size: 16,
+                color: AppColors.purple,
+              ),
               context.horizontalSpace(6),
               Flexible(
                 child: Text(
@@ -358,8 +369,7 @@ class AppointmentChatBubble extends StatelessWidget {
 
   Widget _buildPractitionersSection(BuildContext context, Doctor doctor) {
     final docName = doctor.name;
-    final roleOrSpec =
-        doctor.specialization;
+    final roleOrSpec = doctor.specialization;
 
     return BorderdContainerWidget(
       padding: context.appEdgeInsets(all: 14),
@@ -384,8 +394,7 @@ class AppointmentChatBubble extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.person,
-                        size: 14, color: AppColors.purple),
+                    const Icon(Icons.person, size: 14, color: AppColors.purple),
                     context.horizontalSpace(6),
                     Text(
                       '$docName ($roleOrSpec)',
@@ -402,7 +411,9 @@ class AppointmentChatBubble extends StatelessWidget {
   }
 
   Widget _buildTreatmentsSection(
-      BuildContext context, List<DetailedAppointmentTreatment> treatments) {
+    BuildContext context,
+    List<DetailedAppointmentTreatment> treatments,
+  ) {
     return BorderdContainerWidget(
       padding: context.appEdgeInsets(all: 14),
       child: Column(
@@ -445,10 +456,7 @@ class AppointmentChatBubble extends StatelessWidget {
                         ),
                         if (details.isNotEmpty) ...[
                           context.verticalSpace(2),
-                          Text(
-                            details,
-                            style: context.fonts.grey12w400,
-                          ),
+                          Text(details, style: context.fonts.grey12w400),
                         ],
                       ],
                     ),
@@ -467,7 +475,9 @@ class AppointmentChatBubble extends StatelessWidget {
   }
 
   Widget _buildFinancialSection(
-      BuildContext context, AppointmentDetailData appt) {
+    BuildContext context,
+    AppointmentDetailData appt,
+  ) {
     final total = appt.treatmentTotal ?? 0.0;
     final discountType = (appt.discountType ?? 'FIXED').toUpperCase();
     final discountValue = appt.discount ?? 0.0;
@@ -475,8 +485,10 @@ class AppointmentChatBubble extends StatelessWidget {
         ? total * (discountValue / 100)
         : discountValue;
     const amountPaid = 0.0;
-    final remainingPayable =
-    (total - discountAmount - amountPaid).clamp(0.0, double.infinity);
+    final remainingPayable = (total - discountAmount - amountPaid).clamp(
+      0.0,
+      double.infinity,
+    );
 
     final payment = appt.paymentType;
     final paymentTypeStr = payment?.type?.toUpperCase() ?? 'N/A';
@@ -537,10 +549,7 @@ class AppointmentChatBubble extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Remaining Payable',
-                  style: context.fonts.white14w600,
-                ),
+                Text('Remaining Payable', style: context.fonts.white14w600),
                 Text(
                   '\$${remainingPayable.toStringAsFixed(2)}',
                   style: context.fonts.white14w600,
@@ -598,42 +607,42 @@ class AppointmentChatBubble extends StatelessWidget {
                         height: context.h(80),
                         child: url.startsWith('http')
                             ? CachedNetworkImage(
-                          imageUrl: url,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: AppColors.softGrey,
-                            child: const Center(
-                              child: SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                                imageUrl: url,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: AppColors.softGrey,
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            color: AppColors.palePurple,
-                            child: const Icon(
-                              Icons.broken_image_outlined,
-                              size: 22,
-                              color: AppColors.grey,
-                            ),
-                          ),
-                        )
+                                errorWidget: (context, url, error) => Container(
+                                  color: AppColors.palePurple,
+                                  child: const Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 22,
+                                    color: AppColors.grey,
+                                  ),
+                                ),
+                              )
                             : Image.asset(
-                          url,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                                color: AppColors.palePurple,
-                                child: const Icon(
-                                  Icons.broken_image_outlined,
-                                  size: 22,
-                                  color: AppColors.grey,
-                                ),
+                                url,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                      color: AppColors.palePurple,
+                                      child: const Icon(
+                                        Icons.broken_image_outlined,
+                                        size: 22,
+                                        color: AppColors.grey,
+                                      ),
+                                    ),
                               ),
-                        ),
                       ),
                     ),
                     context.verticalSpace(6),

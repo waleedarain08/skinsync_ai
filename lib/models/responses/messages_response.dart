@@ -172,9 +172,6 @@ class Message {
 
   AppointmentDetailData? get appointmentData {
     try {
-      if (type != MessageType.appointment) {
-        return null;
-      }
       if (content == null) {
         return null;
       }
@@ -262,7 +259,9 @@ class SessionCompletionData {
   factory SessionCompletionData.fromJson(Map<String, dynamic> json) {
     return SessionCompletionData(
       appointmentId: json['appointment_id'] as int? ?? json['id'] as int?,
-      appointmentKey: json['appointment_key'] as String? ?? json['appointmentKey'] as String?,
+      appointmentKey:
+          json['appointment_key'] as String? ??
+          json['appointmentKey'] as String?,
       doctorName: json['doctor_name'] as String?,
       treatmentName: json['treatment_name'] as String?,
       areaName: json['area_name'] as String?,

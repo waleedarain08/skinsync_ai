@@ -125,9 +125,9 @@ enum Status { active, inactive }
 
 enum BaseUrls {
   api('https://api.skinsyncai.com/api/'),
-   apiQa('https://api-dev.skinsyncai.com/api/');
+  // apiQa('https://api-dev.skinsyncai.com/api/');
 
- // apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
+  apiQa('https://gecko-pure-gator.ngrok-free.app/api/');
 
   final String url;
   const BaseUrls(this.url);
@@ -149,19 +149,32 @@ enum PaymentStatus {
     }
   }
 
+  bool get isPaid => this == PaymentStatus.paid;
+  bool get isUnpaid => this == PaymentStatus.unpaid;
+  bool get isHalfPayment => this == PaymentStatus.halfPayment;
+
   String get label => switch (this) {
-        PaymentStatus.paid => 'PAID',
-        PaymentStatus.unpaid => 'UNPAID',
-        PaymentStatus.halfPayment => 'HALF PAID',
-      };
+    PaymentStatus.paid => 'PAID',
+    PaymentStatus.unpaid => 'UNPAID',
+    PaymentStatus.halfPayment => 'HALF PAID',
+  };
 
   /// Balance still outstanding -> auto-open the financial dialog
   bool get hasBalanceDue => this != PaymentStatus.paid;
 
   /// Flip this if half-paid patients shouldn't be able to check in
   bool get canCheckIn => this != PaymentStatus.unpaid;
-}
 
+  static PaymentStatus fromValue(String? value) {
+    if (value == null) return PaymentStatus.unpaid;
+    final val = value.toLowerCase().trim();
+    if (val == 'paid') return PaymentStatus.paid;
+    if (val == 'half_payment' || val == 'half-payment' || val == 'half') {
+      return PaymentStatus.halfPayment;
+    }
+    return PaymentStatus.unpaid;
+  }
+}
 
 enum ViewType { grid, map }
 
@@ -255,7 +268,7 @@ enum MessageType {
     if (value == null) return MessageType.text;
     final val = value.toLowerCase();
     return MessageType.values.firstWhere(
-          (e) => e.value.toLowerCase() == val,
+      (e) => e.value.toLowerCase() == val,
       orElse: () => MessageType.text,
     );
   }
@@ -277,11 +290,9 @@ enum EventType {
   static EventType fromValue(String? value) {
     if (value == null) {
       throw const AppException('Event type cannot be null');
-    };
+    }
     final val = value.toLowerCase();
-    return EventType.values.firstWhere(
-      (e) => e.value.toLowerCase() == val,
-    );
+    return EventType.values.firstWhere((e) => e.value.toLowerCase() == val);
   }
 }
 
