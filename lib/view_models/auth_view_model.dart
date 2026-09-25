@@ -28,6 +28,7 @@ import '../services/media_service.dart';
 import '../utils/biometric_helper.dart';
 import '../utils/enums.dart';
 import '../utils/secure_storage_service.dart';
+import '../utils/timezone_utils.dart';
 import 'base_view_model.dart';
 
 final authViewModel = NotifierProvider(() {
@@ -176,8 +177,13 @@ class AuthViewModel extends BaseViewModel<AuthState> {
   Future<bool?> callSignInApi(BaseSignInRequest request) async {
     return await runSafely(() async {
       state = state.copyWith(loading: true);
+      final tzInfo = await TimezoneUtils.getTimezoneInfo();
+      final updatedRequest = request.copyWith(
+        timezone: tzInfo['timezone'],
+        utcOffset: tzInfo['utc_offset'],
+      );
       final BaseResponseModel response = await _authRepository.signInApi(
-        signInRequest: request,
+        signInRequest: updatedRequest,
       );
       state = state.copyWith(loading: false);
       return response.isSuccess == true;
@@ -277,10 +283,13 @@ class AuthViewModel extends BaseViewModel<AuthState> {
 
   Future<bool?> callVerifyOtpApi() async {
     String? fcmToken = await _getFcmToken();
+    final tzInfo = await TimezoneUtils.getTimezoneInfo();
     final request = OtpRequest(
       email: emailController.text,
       otp: otpController.text,
       fcmToken: fcmToken ?? '',
+      timezone: tzInfo['timezone'],
+      utcOffset: tzInfo['utc_offset'],
     );
     return await runSafely(() async {
       final savedEmail = await SecureStorage().getUserEmail();
@@ -312,6 +321,7 @@ class AuthViewModel extends BaseViewModel<AuthState> {
   Future<bool?> callOnboardingProfileApi() async {
     return await runSafely(() async {
       state = state.copyWith(loading: true);
+      final tzInfo = await TimezoneUtils.getTimezoneInfo();
 
       final request = OnBoardingProfileRequest(
         name: nameController.text,
@@ -324,6 +334,8 @@ class AuthViewModel extends BaseViewModel<AuthState> {
         profileImageUrl:
             state.profileImage ?? state.authData?.user?.profileImageUrl,
         dob: dobController.text,
+        timezone: tzInfo['timezone'],
+        utcOffset: tzInfo['utc_offset'],
       );
       log('SDFSDXgs--$request');
       final BaseResponseModel response = await _authRepository
@@ -387,6 +399,7 @@ class AuthViewModel extends BaseViewModel<AuthState> {
       final user = await GoogleAuthService().signIn();
       final idToken = await user.getIdToken();
       String? fcmToken = await _getFcmToken();
+      final tzInfo = await TimezoneUtils.getTimezoneInfo();
 
       log("google sign IDToken ${idToken.toString}");
       String type = Platform.isIOS ? 'apple' : 'android';
@@ -395,6 +408,8 @@ class AuthViewModel extends BaseViewModel<AuthState> {
           deviceType: type,
           idToken: idToken.toString(),
           fcmToken: fcmToken ?? '',
+          timezone: tzInfo['timezone'],
+          utcOffset: tzInfo['utc_offset'],
         ),
       );
       if (response.isSuccess ?? false) {
@@ -425,11 +440,15 @@ class AuthViewModel extends BaseViewModel<AuthState> {
       final user = await AppleAuthService().signIn();
       final idToken = await user.getIdToken();
       String? fcmToken = await _getFcmToken();
+      final tzInfo = await TimezoneUtils.getTimezoneInfo();
+
       final response = await _authRepository.appleSignInApi(
         request: SocialLoginRequest(
           deviceType: type,
           idToken: idToken.toString(),
           fcmToken: fcmToken ?? '',
+          timezone: tzInfo['timezone'],
+          utcOffset: tzInfo['utc_offset'],
         ),
       );
       if (response.isSuccess ?? false) {

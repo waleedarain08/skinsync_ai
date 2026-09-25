@@ -61,7 +61,7 @@ android {
         }
         debug {
             // Debug ko defaults par chor dein taake debug certificates override na hon
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }

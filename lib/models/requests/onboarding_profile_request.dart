@@ -1,4 +1,4 @@
-class OnBoardingProfileRequest  {
+class OnBoardingProfileRequest {
   final String name;
   final String phoneNumber;
   final String emailAddress;
@@ -8,6 +8,8 @@ class OnBoardingProfileRequest  {
   final String? cc;
   final String? country;
   final String? dob;
+  final String? timezone;
+  final String? utcOffset;
 
   OnBoardingProfileRequest({
     required this.name,
@@ -18,7 +20,9 @@ class OnBoardingProfileRequest  {
     this.profileImageUrl,
     this.cc,
     this.country,
-    this. dob
+    this.dob,
+    this.timezone,
+    this.utcOffset,
   });
 
   Map<String, dynamic> toJson() {
@@ -31,7 +35,9 @@ class OnBoardingProfileRequest  {
       'profile_image_url': profileImageUrl,
       'cc': cc,
       'country': country,
-      'dob' : dob
+      'dob': dob,
+      // if (timezone != null) 'timezone': timezone,
+      // if (utcOffset != null) 'utc_offset': utcOffset,
     };
   }
 }

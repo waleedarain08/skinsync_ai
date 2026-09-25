@@ -12,6 +12,7 @@ import '../repositories/auth_repository.dart';
 import '../utils/biometric_helper.dart';
 import '../utils/enums.dart';
 import '../utils/secure_storage_service.dart';
+import '../utils/timezone_utils.dart';
 import 'api_base_helper.dart';
 
 class AuthService implements AuthRepository {
@@ -96,10 +97,15 @@ class AuthService implements AuthRepository {
     if (key == null) {
       throw const AppException('Biometrics not registered');
     }
+    final tzInfo = await TimezoneUtils.getTimezoneInfo();
     final response = await _apiClient.httpRequest(
       endPoint: EndPoints.biometricLogin,
       requestType: .post,
-      requestBody: {"biometric_token": key},
+      requestBody: {
+        "biometric_token": key,
+        "timezone": tzInfo["timezone"],
+        "utc_offset": tzInfo["utc_offset"],
+      },
       params: '',
     );
     if (response.statusCode >= 200 && response.statusCode < 300) {
