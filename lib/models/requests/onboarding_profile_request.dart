@@ -36,8 +36,8 @@ class OnBoardingProfileRequest {
       'cc': cc,
       'country': country,
       'dob': dob,
-      if (timezone != null) 'timezone': timezone,
-      if (utcOffset != null) 'utc_offset': utcOffset,
+      // if (timezone != null) 'timezone': timezone,
+      // if (utcOffset != null) 'utc_offset': utcOffset,
     };
   }
 }
